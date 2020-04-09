@@ -3,3 +3,7 @@
 //
 
 #include "StateMachine.h"
+
+void TakeSymbol(char symbol){
+    
+}

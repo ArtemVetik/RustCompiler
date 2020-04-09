@@ -10,10 +10,8 @@
 #include <algorithm>
 
 class State {
-protected:
-    std::vector<char> _symbols;
-
 public:
+    virtual bool Contains(char sym) = 0;
     virtual bool CanTransitTo(char sym) = 0;
 };
 
