@@ -9,6 +9,7 @@
 
 class IDState : public State{
 public:
+    bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
 };
 
