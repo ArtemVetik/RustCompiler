@@ -10,13 +10,8 @@
 
 class NumState : public  State{
 public:
-    NumState(){
-        _symbols = {'1'};
-    }
-
-    bool CanTransitTo(char sym) override{
-        return std::find(_symbols.begin(), _symbols.end(), sym) != _symbols.end();
-    }
+    bool Contains(char sym) override;
+    bool CanTransitTo(char sym) override;
 };
 
 
