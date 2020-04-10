@@ -15,5 +15,9 @@ State* Transition::GetState(const State* const &currentState, const char symbol)
 }
 
 Transition::~Transition() {
+    for (auto state : _states) {
+        delete state;
+    }
 
+    _states.clear();
 }

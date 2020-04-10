@@ -5,6 +5,7 @@
 
 class NumState : public State {
 public:
+    ~NumState() override = default;
     bool Contains(char sym) const override;
     bool CanTransitTo(char sym) const override;
     void Debug() const override {std::cout << "NumState" << std::endl;}
