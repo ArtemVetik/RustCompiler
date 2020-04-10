@@ -7,6 +7,7 @@ class IDState : public State{
 public:
     bool Contains(char sym) const override;
     bool CanTransitTo(char sym) const override;
+    void Debug() const override {std::cout << "IDState" << std::endl;}
 };
 
 #endif //RUSTCOMPILER_IDSTATE_H

@@ -7,6 +7,7 @@
 #include "RealNumState.h"
 #include "IgnoreState.h"
 #include "StringState.h"
+#include "SeparatorState.h"
 #include <vector>
 
 class Transition {
@@ -15,6 +16,7 @@ private:
 
 public:
     Transition();
+    ~Transition();
 
     State* GetState(const State* const &currentState, char symbol);
 };

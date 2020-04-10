@@ -7,6 +7,7 @@ class NumState : public State {
 public:
     bool Contains(char sym) const override;
     bool CanTransitTo(char sym) const override;
+    void Debug() const override {std::cout << "NumState" << std::endl;}
 };
 
 #endif //RUSTCOMPILER_NUMSTATE_H
