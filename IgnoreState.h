@@ -10,8 +10,8 @@ private:
 
 public:
     ~IgnoreState() override = default;
-    bool Contains(char sym) const override ;
-    bool CanTransitTo(char sym) const override;
+    bool Contains(char sym) override;
+    bool CanTransitTo(char sym) override;
     void Debug() const override {std::cout << "IgnoreState" << std::endl;}
 };
 
