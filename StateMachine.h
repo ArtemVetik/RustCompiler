@@ -1,7 +1,3 @@
-//
-// Created by artem on 10.04.2020.
-//
-
 #ifndef RUSTCOMPILER_STATEMACHINE_H
 #define RUSTCOMPILER_STATEMACHINE_H
 

@@ -1,7 +1,3 @@
-//
-// Created by artem on 10.04.2020.
-//
-
 #ifndef RUSTCOMPILER_TRANSITION_H
 #define RUSTCOMPILER_TRANSITION_H
 
@@ -9,11 +5,10 @@
 
 class Transition {
 private:
-    std::vector<State*> _statements;
+    std::vector<State*> _states;
 
 public:
-    State* GetState(State* currentState, char symbol);
+    State* GetState(const State* const &currentState, char symbol);
 };
-
 
 #endif //RUSTCOMPILER_TRANSITION_H
