@@ -2,6 +2,7 @@
 #define RUSTCOMPILER_TRANSITION_H
 
 #include "State.h"
+#include <vector>
 
 class Transition {
 private:

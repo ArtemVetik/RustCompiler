@@ -1,7 +1,9 @@
 #include <iostream>
+#include <string>
 
 int main() {
-    char s = '\"';
-    std::cout << s;
+    std::string _separators = "+-*/%=><{}[];(),.";
+    char c = ';';
+    std::cout << (_separators.find(c));
     return 0;
 }

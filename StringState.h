@@ -2,8 +2,11 @@
 #define RUSTCOMPILER_STRINGSTATE_H
 
 #include "State.h"
+#include <string>
 
 class StringState : public State{
+
+public:
     bool Contains(char sym) const override;
     bool CanTransitTo(char sym) const override;
 };
