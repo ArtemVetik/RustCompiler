@@ -9,8 +9,10 @@ int main() {
     std::ifstream file("test.txt");
 
     char sym;
-    while (1){
+    while (!file.eof()) {
+        file >> sym;
         stateMachine.TakeSymbol(sym);
+        if (file.eof()) break;
     }
 
     file.close();
