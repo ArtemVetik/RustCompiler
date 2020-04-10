@@ -9,6 +9,7 @@ private:
     std::string _ignoreSymbols = " \n\r\t";
 
 public:
+    ~IgnoreState() override = default;
     bool Contains(char sym) const override ;
     bool CanTransitTo(char sym) const override;
     void Debug() const override {std::cout << "IgnoreState" << std::endl;}
