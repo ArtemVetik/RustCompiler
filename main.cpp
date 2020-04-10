@@ -1,9 +1,18 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include "StateMachine.h"
 
 int main() {
-    std::string _separators = "+-*/%=><{}[];(),.";
-    char c = ';';
-    std::cout << (_separators.find(c));
+    StateMachine stateMachine;
+
+    std::ifstream file("test.txt");
+
+    char sym;
+    while (1){
+        stateMachine.TakeSymbol(sym);
+    }
+
+    file.close();
     return 0;
 }

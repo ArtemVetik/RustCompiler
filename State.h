@@ -2,8 +2,10 @@
 #define RUSTCOMPILER_STATE_H
 
 #include <iostream>
+#include <string>
 
 class State {
+
 public:
     virtual bool Contains(char sym) const = 0;
     virtual bool CanTransitTo(char sym) const = 0;
