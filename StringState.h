@@ -14,9 +14,7 @@ public:
     ~StringState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    void Debug() const override {std::cout << "StringState" << std::endl;}
-
-
+    TokenType* GetTokenType(const std::string value){}
 };
 
 #endif //RUSTCOMPILER_STRINGSTATE_H

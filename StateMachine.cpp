@@ -18,7 +18,6 @@ void StateMachine::TakeSymbol(char symbol) {
     _buffer += symbol;
 
     _currentState = _transition.GetState(_currentState, symbol);
-     if (_currentState) _currentState->Debug();
 }
 
 void StateMachine::End(){

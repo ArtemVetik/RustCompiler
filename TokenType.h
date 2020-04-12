@@ -60,6 +60,8 @@ enum TokenType {
     COM,        // ,
     DOT,        // .
     QUOTE,      // "
+
+    IGNORE,
 };
 
 #endif //RUSTCOMPILER_TOKENTYPE_H

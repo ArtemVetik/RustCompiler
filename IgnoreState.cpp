@@ -7,3 +7,7 @@ bool IgnoreState::Contains(const char sym) {
 bool IgnoreState::CanTransitTo(const char sym) {
     return Contains(sym);
 }
+
+TokenType* IgnoreState::GetTokenType(const std::string value){
+    return nullptr;
+}
