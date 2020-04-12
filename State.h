@@ -11,7 +11,7 @@ public:
     virtual bool Contains(char sym) = 0;
     virtual bool CanTransitTo(char sym) = 0;
     virtual void Debug() const = 0;
-    virtual TokenType GetTokenType(const std::string value) = 0;
+    virtual TokenType* GetTokenType(std::string value) = 0;
     virtual ~State() = 0;
 };
 

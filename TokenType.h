@@ -35,7 +35,6 @@ enum TokenType {
     PLUS,       // +
     MINUS,      // -
     MULT,       // *
-    SL,         // /
     MOD,        // Вещественная
     DIV,        // Целая часть
 
@@ -59,7 +58,6 @@ enum TokenType {
     RGBR,       // )
     COM,        // ,
     DOT,        // .
-    QUOTE,      // "
 };
 
 #endif //RUSTCOMPILER_TOKENTYPE_H
