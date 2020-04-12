@@ -7,3 +7,7 @@ bool IDState::Contains(const char sym) {
 bool IDState::CanTransitTo(const char sym) {
     return sym == '_' || (sym >= 'a' && sym <= 'z') || (sym >= 'A' && sym <= 'Z');
 }
+
+TokenType* IDState::GetTokenType(const std::string value){
+
+}

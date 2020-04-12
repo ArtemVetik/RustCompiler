@@ -8,7 +8,7 @@ public:
     ~NumState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    void Debug() const override {std::cout << "NumState" << std::endl;}
+    TokenType* GetTokenType(const std::string value) override{}
 };
 
 #endif //RUSTCOMPILER_NUMSTATE_H

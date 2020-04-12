@@ -6,7 +6,7 @@
 
 class SeparatorState : public State {
 private:
-    std::string _separators = "+-*/%=><!{}[];(),";
+    std::string _separators = "+-*/%=><{}[];(),";
     std::vector<std::pair<std::string, TokenType>> _tokenPair;
 
 public:
@@ -15,7 +15,7 @@ public:
     void Init();
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    void Debug() const override {std::cout << "SeparatorState" << std::endl;}
+    TokenType* GetTokenType(std::string value) override{};
 };
 
 #endif //RUSTCOMPILER_SEPARATORSTATE_H
