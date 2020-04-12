@@ -3,6 +3,7 @@
 
 #include <string>
 #include "TokenType.h"
+#include <utility>
 
 class Token {
 private:
@@ -10,7 +11,7 @@ private:
     TokenType _type;
 
 public:
-    Token(const TokenType &type, const std::string &value);
+    Token(const TokenType &type, std::string value);
 };
 
 #endif //RUSTCOMPILER_TOKEN_H

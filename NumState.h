@@ -2,13 +2,14 @@
 #define RUSTCOMPILER_NUMSTATE_H
 
 #include "State.h"
+#include <algorithm>
 
 class NumState : public State {
 public:
     ~NumState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    TokenType* GetTokenType(const std::string value) override{}
+    Token* GetToken(std::string value) override;
 };
 
 #endif //RUSTCOMPILER_NUMSTATE_H

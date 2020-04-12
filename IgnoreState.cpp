@@ -8,6 +8,6 @@ bool IgnoreState::CanTransitTo(const char sym) {
     return Contains(sym);
 }
 
-TokenType* IgnoreState::GetTokenType(const std::string value){
+Token * IgnoreState::GetToken(const std::string value){
     return nullptr;
 }

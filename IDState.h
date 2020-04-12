@@ -14,7 +14,7 @@ public:
     ~IDState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    TokenType* GetTokenType(const std::string value) override;
+    Token * GetToken(std::string value) override;
 };
 
 #endif //RUSTCOMPILER_IDSTATE_H

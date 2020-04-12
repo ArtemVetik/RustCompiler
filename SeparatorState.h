@@ -3,6 +3,7 @@
 
 #include "State.h"
 #include <vector>
+#include <algorithm>
 
 class SeparatorState : public State {
 private:
@@ -15,7 +16,7 @@ public:
     void Init();
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    TokenType* GetTokenType(std::string value) override{};
+    Token* GetToken(std::string value) override;
 };
 
 #endif //RUSTCOMPILER_SEPARATORSTATE_H
