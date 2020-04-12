@@ -4,7 +4,6 @@
 #include "State.h"
 #include "IDState.h"
 #include "NumState.h"
-#include "RealNumState.h"
 #include "IgnoreState.h"
 #include "StringState.h"
 #include "SeparatorState.h"

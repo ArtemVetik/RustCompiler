@@ -5,12 +5,12 @@
 
 class SeparatorState : public State {
 private:
-    std::string _separators = "+-*/%=><{}[];(),.";
+    std::string _separators = "+-*/%=><{}[];(),";
 
 public:
     ~SeparatorState() override = default;
-    bool Contains(char sym) const override;
-    bool CanTransitTo(char sym) const override;
+    bool Contains(char sym) override;
+    bool CanTransitTo(char sym) override;
     void Debug() const override {std::cout << "SeparatorState" << std::endl;}
 };
 

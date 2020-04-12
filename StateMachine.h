@@ -14,6 +14,7 @@ private:
 public:
     StateMachine();
     void TakeSymbol(char symbol);
+    void End();
 };
 
 

@@ -1,9 +1,9 @@
 #include "NumState.h"
 
-bool NumState::Contains(const char sym) const {
-    return sym >= '0' && sym <= '9';
+bool NumState::Contains(const char sym) {
+    return (sym >= '0' && sym <= '9') || sym == '.';
 }
 
-bool NumState::CanTransitTo(const char sym) const {
+bool NumState::CanTransitTo(const char sym) {
     return Contains(sym);
 }

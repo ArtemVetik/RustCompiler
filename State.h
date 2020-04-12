@@ -7,8 +7,8 @@
 class State {
 
 public:
-    virtual bool Contains(char sym) const = 0;
-    virtual bool CanTransitTo(char sym) const = 0;
+    virtual bool Contains(char sym) = 0;
+    virtual bool CanTransitTo(char sym) = 0;
     virtual void Debug() const = 0;
     virtual ~State() = 0;
 };

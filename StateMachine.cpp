@@ -13,10 +13,15 @@ void StateMachine::TakeSymbol(char symbol) {
 
     // ... create token
 
-    if (_currentState) _currentState->Debug();
-    std::cout << _buffer<< std::endl;
+    std::cout << _buffer << std::endl << "------------------------" << std::endl;
+    _buffer = "";
+    _buffer += symbol;
 
     _currentState = _transition.GetState(_currentState, symbol);
+     if (_currentState) _currentState->Debug();
+}
+
+void StateMachine::End(){
+    std::cout << _buffer << std::endl << "------------------------" << std::endl;
     _buffer = "";
-    std::cout << _currentState << std::endl;
 }
