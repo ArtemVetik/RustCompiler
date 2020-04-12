@@ -6,8 +6,9 @@ enum TokenType {
     ID,      // Константа
     DLM,     // Разделитель
     KEY,     // Ключевое слово
+    INTNUM,  //
     RNUM,    // Вещественное число
-    WRITE,   // Writeln
+    PRINTLN,   // Println
     READ,    // Readln
     STRING,  // Стока
 
@@ -19,6 +20,8 @@ enum TokenType {
     WHILE,
     DO,
     THEN,
+    LET,
+    FOR,
     IF,
     ELSE,
     OR,
@@ -48,6 +51,7 @@ enum TokenType {
     ASLS,       // <=
     NASSIG,     // <>
     EQUAL,      // =
+    EXCL,       // !
 
     LBLBR,      // {
     RBLBR,      // }

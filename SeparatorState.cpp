@@ -27,6 +27,7 @@ void SeparatorState::Init() {
     _tokenPair.emplace_back(std::make_pair(")", RGBR));
     _tokenPair.emplace_back(std::make_pair(",", COM));
     _tokenPair.emplace_back(std::make_pair(".", DOT));
+    _tokenPair.emplace_back(std::make_pair("!", EXCL));
 }
 
 Token* SeparatorState::GetToken(const std::string value) {

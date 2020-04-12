@@ -5,6 +5,7 @@
 #include "TokenType.h"
 #include "Token.h"
 #include <string>
+#include <algorithm>
 
 class State {
 public:

@@ -4,8 +4,9 @@
 #include "StateMachine.h"
 
 int main() {
-    StateMachine stateMachine;
+    system("chcp 1251");
 
+    StateMachine stateMachine;
     std::ifstream file("test.txt");
 
     char sym;

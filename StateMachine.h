@@ -4,6 +4,7 @@
 #include "State.h"
 #include "Transition.h"
 #include <string>
+#include <cstdlib>
 
 class StateMachine {
 private:
