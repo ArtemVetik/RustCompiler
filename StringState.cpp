@@ -16,5 +16,5 @@ bool StringState::CanTransitTo(const char sym) {
 }
 
 Token* StringState::GetToken(const std::string value) {
-    return new Token(STRING, value);
+    return new Token(STRING, value, 0);
 }

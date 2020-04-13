@@ -8,7 +8,7 @@
 
 class StateMachine {
 private:
-    State *_currentState;
+    State* _currentState;
     Transition _transition;
     std::string _buffer;
 

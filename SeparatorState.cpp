@@ -31,9 +31,11 @@ void SeparatorState::Init() {
 }
 
 Token* SeparatorState::GetToken(const std::string value) {
-    auto foundToken = std::find_if(_tokenPair.cbegin(), _tokenPair.cend(), [&](const std::pair<std::string, TokenType> &token) {return token.first == value;});
+    auto foundToken = std::find_if(_tokenPair.cbegin(), _tokenPair.cend(), [&value](const std::pair<std::string, TokenType> &token) {return token.first == value;});
+    int id = std::distance(_tokenPair.cbegin(), foundToken);
+
     if (foundToken != _tokenPair.cend())
-        return new Token(foundToken->second, value);
+        return new Token(foundToken->second, value, id);
     return nullptr;
 }
 
