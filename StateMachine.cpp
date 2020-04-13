@@ -12,14 +12,7 @@ void StateMachine::TakeSymbol(char symbol) {
     }
     
     if (_currentState){
-        Token* token = _currentState->GetToken(_buffer);
-        if (!token)
-        {
-            if (!SplitSeparators(_buffer))
-                throw LexError(_buffer);
-        }
-        else if (token->GetType() != IGNORE)
-            _tokens.emplace_back(token);
+        End();
     }
 
     _buffer = "";
@@ -32,10 +25,8 @@ void StateMachine::End(){
     Token* token = _currentState->GetToken(_buffer);
     if (!token)
     {
-        if (!SplitSeparators(_buffer)){
-            _buffer = "@!QWSFASF";
+        if (!SplitSeparators(_buffer))
             throw LexError(_buffer.c_str());
-        }
     }
     else if (token->GetType() != IGNORE)
         _tokens.emplace_back(token);

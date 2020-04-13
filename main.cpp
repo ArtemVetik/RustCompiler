@@ -20,7 +20,7 @@ int main() {
         }
         catch (std::exception& error){
             std::cout << error.what() << std::endl;
-            return -1;
+            return 0;
         }
     }
 
@@ -29,7 +29,7 @@ int main() {
     }
     catch (std::exception& error){
         std::cout << error.what() << std::endl;
-        return -2;
+        return 0;
     }
 
     stateMachine.PrintTokens();
