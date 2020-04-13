@@ -20,7 +20,7 @@ void StateMachine::TakeSymbol(char symbol) {
                 throw -228;
             }
         }
-        else
+        else if (token->GetType() != IGNORE)
             _tokens.emplace_back(token);
     }
 
@@ -39,7 +39,8 @@ void StateMachine::End(){
             throw -228;
         }
     }
-    _tokens.emplace_back(token);
+    else if (token->GetType() != IGNORE)
+        _tokens.emplace_back(token);
 }
 
 bool StateMachine::SplitSeparators(std::string buffer){

@@ -1,10 +1,10 @@
-#include <iostream>
 #include <string>
 #include <fstream>
 #include "StateMachine.h"
 
 int main() {
     system("chcp 1251");
+    system("cls");
 
     StateMachine stateMachine;
     std::ifstream file("test.txt");
@@ -21,6 +21,5 @@ int main() {
     stateMachine.PrintTokens();
 
     file.close();
-
     return 0;
 }
