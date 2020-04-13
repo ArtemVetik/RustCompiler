@@ -10,16 +10,25 @@ enum TokenType {
     STRING,  // Строка
 
     // Ключевые слова
-    INTEGER,   // i32
-    REAL,     // f32
-    LET,     // let
-    FOR,    // for
-    IF,    // if
-    ELSE, // else
+    FUNCTION,   // fn
+    INTEGER,    // i32
+    REAL,       // f32
+    UINT,       // usize
+    LET,        // let
+    MUT,        // mut
+    FOR,        // for
+    IF,         // if
+    LOOP,       // loop
+    WHILE,      // while
+    ELSE,       // else
+    BREAK,      // break
+    AS,         // as
 
     // Разделители
     PLUS,       // +
     MINUS,      // -
+    PLUSEQUAL,  // +=
+    MINUSEQUAL, // -=
     MULT,       // *
     MOD,        // Вещественная часть
     DIV,        // Целая часть
@@ -54,15 +63,24 @@ public:
             case ID:return std::string("ID");
             case INTNUM:return std::string("INTNUM");
             case RNUM:return std::string("RNUM");
+            case UINT:return std::string("UINT");
             case STRING:return std::string("STRING");
             case INTEGER:return std::string("INTEGER");
             case REAL:return std::string("REAL");
+            case BREAK:return std::string("BREAK");
+            case AS:return std::string("AS");
             case LET:return std::string("LET");
+            case MUT:return std::string("MUT");
             case FOR:return std::string("FOR");
             case IF:return std::string("IF");
             case ELSE:return std::string("ELSE");
             case PLUS:return std::string("PLUS");
             case MINUS:return std::string("MINUS");
+            case LOOP:return std::string("LOOP");
+            case WHILE:return std::string("WHILE");
+            case FUNCTION:return std::string("FUNCTION");
+            case PLUSEQUAL:return std::string("PLUSEQUAL");
+            case MINUSEQUAL:return std::string("MINUSEQUAL");
             case MULT:return std::string("MULT");
             case MOD:return std::string("MOD");
             case DIV:return std::string("DIV");

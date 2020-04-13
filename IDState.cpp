@@ -31,11 +31,18 @@ Token* IDState::GetToken(const std::string &value) {
 }
 
 void IDState::InitKeyWords() {
+    _keyWords.emplace_back(std::make_pair("fn", FUNCTION));
     _keyWords.emplace_back(std::make_pair("for", FOR));
     _keyWords.emplace_back(std::make_pair("if", IF));
-    _keyWords.emplace_back("else", ELSE);
-    _keyWords.emplace_back("let", LET);
-    _keyWords.emplace_back("f32", REAL);
-    _keyWords.emplace_back("i32", INTEGER);
-    _keyWords.emplace_back("println", PRINTLN);
+    _keyWords.emplace_back(std::make_pair("loop", LOOP));
+    _keyWords.emplace_back(std::make_pair("while", WHILE));
+    _keyWords.emplace_back(std::make_pair("else", ELSE));
+    _keyWords.emplace_back(std::make_pair("let", LET));
+    _keyWords.emplace_back(std::make_pair("mut", MUT));
+    _keyWords.emplace_back(std::make_pair("f32", REAL));
+    _keyWords.emplace_back(std::make_pair("i32", INTEGER));
+    _keyWords.emplace_back(std::make_pair("usize", UINT));
+    _keyWords.emplace_back(std::make_pair("println", PRINTLN));
+    _keyWords.emplace_back(std::make_pair("break", BREAK));
+    _keyWords.emplace_back(std::make_pair("as", AS));
 }

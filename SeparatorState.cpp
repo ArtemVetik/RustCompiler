@@ -7,6 +7,8 @@ SeparatorState::SeparatorState() {
 void SeparatorState::Init() {
     _tokenPair.emplace_back(std::make_pair("+", PLUS));
     _tokenPair.emplace_back(std::make_pair("-", MINUS));
+    _tokenPair.emplace_back(std::make_pair("+=", PLUSEQUAL));
+    _tokenPair.emplace_back(std::make_pair("-=", MINUSEQUAL));
     _tokenPair.emplace_back(std::make_pair("*", MULT));
     _tokenPair.emplace_back(std::make_pair("/", DIV));
     _tokenPair.emplace_back(std::make_pair("%", MOD));
@@ -39,7 +41,7 @@ Token* SeparatorState::GetToken(const std::string &value) {
     return nullptr;
 }
 
-std::vector<Token*> SeparatorState::SplitTokens(std::string value){
+std::vector<Token*> SeparatorState::SplitTokens(const std::string &value){
     std::vector<Token*> tokens;
     for (char i : value){
         tokens.emplace_back(GetToken(std::string(1,i)));

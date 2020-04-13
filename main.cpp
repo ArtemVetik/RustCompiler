@@ -7,7 +7,7 @@ int main() {
     system("cls");
 
     StateMachine stateMachine;
-    std::ifstream file("test.txt");
+    std::ifstream file("test2.txt");
 
     char sym;
     while (!file.eof()){
