@@ -12,6 +12,9 @@ private:
     Transition _transition;
     std::string _buffer;
 
+    std::vector<Token*> _tokens;
+
+    bool SplitSeparators(std::string buffer);
 public:
     StateMachine();
     void TakeSymbol(char symbol);

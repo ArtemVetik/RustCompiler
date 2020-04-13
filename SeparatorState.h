@@ -16,6 +16,7 @@ public:
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
     Token* GetToken(std::string value) override;
+    std::vector<Token*> SplitTokens(std::string value);
 };
 
 #endif //RUSTCOMPILER_SEPARATORSTATE_H

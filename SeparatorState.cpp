@@ -37,6 +37,15 @@ Token* SeparatorState::GetToken(const std::string value) {
     return nullptr;
 }
 
+std::vector<Token*> SeparatorState::SplitTokens(std::string value){
+    std::vector<Token*> tokens;
+    for (char i : value){
+        tokens.emplace_back(GetToken(std::string(1,i)));
+    }
+
+    return tokens;
+}
+
 bool SeparatorState::Contains(const char sym) {
     return _separators.find(sym) != std::string::npos;
 }
