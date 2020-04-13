@@ -23,6 +23,7 @@ Token* IDState::GetToken(const std::string value) {
     else {
         if (idToken == _idTable.cend()) {
             _idTable.emplace_back(value);
+            idToken = _idTable.cend() - 1;
         }
         int id = std::distance(_idTable.cbegin(), idToken);
         return new Token(ID, value, id);

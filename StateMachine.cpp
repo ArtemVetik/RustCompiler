@@ -20,7 +20,8 @@ void StateMachine::TakeSymbol(char symbol) {
                 throw -228;
             }
         }
-        _tokens.emplace_back(token);
+        else
+            _tokens.emplace_back(token);
     }
 
     _buffer = "";
@@ -48,11 +49,17 @@ bool StateMachine::SplitSeparators(std::string buffer){
 
     std::vector<Token*> tokens = separatorState->SplitTokens(buffer);
 
-    for (int i = 0; i < tokens.size(); ++i) {
-        if (tokens[i] == nullptr)
+    for (Token* token : tokens) {
+        if (token == nullptr)
             return false;
-        _tokens.emplace_back(tokens[i]);
+        _tokens.emplace_back(token);
     }
 
     return true;
+}
+
+void StateMachine::PrintTokens(){
+    for (Token* token : _tokens){
+        token->PrintToken();
+    }
 }

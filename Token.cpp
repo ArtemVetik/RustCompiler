@@ -12,6 +12,6 @@ TokenType Token::GetType() const {
 }
 
 void Token::PrintToken() const {
-    std::cout << AAAPrintTokenType(_type) << std::string("-", 10) << _value << std::string("-", 10) << _id << std::endl;
-    
+    std::cout << AAAPrintTokenType(_type) << "\t" << _value << "\t" << _id << std::endl;
+    std::cout << std::string(20,'-') << std::endl;
 }

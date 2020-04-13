@@ -54,7 +54,7 @@ public:
             case DOT:return std::string("DOT");
             case EXCL:return std::string("EXLC");
             case PRINTLN:return std::string("PRINTLN");
-            case IGNORE:return std::string("IGNOREs");
+            case IGNORE:return std::string("IGNORE");
         }
     }
 };
