@@ -8,7 +8,7 @@ bool NumState::CanTransitTo(const char sym) {
     return Contains(sym);
 }
 
-Token* NumState::GetToken(const std::string value) {
+Token* NumState::GetToken(const std::string &value) {
     int pointCount = std::count(value.cbegin(), value.cend(), '.');
     switch(pointCount) {
         case 0 :

@@ -30,7 +30,7 @@ void SeparatorState::Init() {
     _tokenPair.emplace_back(std::make_pair("!", EXCL));
 }
 
-Token* SeparatorState::GetToken(const std::string value) {
+Token* SeparatorState::GetToken(const std::string &value) {
     auto foundToken = std::find_if(_tokenPair.cbegin(), _tokenPair.cend(), [&value](const std::pair<std::string, TokenType> &token) {return token.first == value;});
     int id = std::distance(_tokenPair.cbegin(), foundToken);
 

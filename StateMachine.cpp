@@ -15,10 +15,8 @@ void StateMachine::TakeSymbol(char symbol) {
         Token* token = _currentState->GetToken(_buffer);
         if (!token)
         {
-            if (!SplitSeparators(_buffer)){
-                std::cout << "ERROR: " << _buffer << std::endl;
-                throw -228;
-            }
+            if (!SplitSeparators(_buffer))
+                throw LexError(_buffer);
         }
         else if (token->GetType() != IGNORE)
             _tokens.emplace_back(token);
@@ -35,8 +33,8 @@ void StateMachine::End(){
     if (!token)
     {
         if (!SplitSeparators(_buffer)){
-            std::cout << "ERROR: " << _buffer << std::endl;
-            throw -228;
+            _buffer = "@!QWSFASF";
+            throw LexError(_buffer.c_str());
         }
     }
     else if (token->GetType() != IGNORE)
@@ -59,7 +57,7 @@ bool StateMachine::SplitSeparators(std::string buffer){
     return true;
 }
 
-void StateMachine::PrintTokens(){
+void StateMachine::PrintTokens() {
     for (Token* token : _tokens){
         token->PrintToken();
     }

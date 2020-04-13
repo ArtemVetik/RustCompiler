@@ -15,7 +15,7 @@ public:
     void Init();
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    Token* GetToken(std::string value) override;
+    Token* GetToken(const std::string &value) override;
     std::vector<Token*> SplitTokens(std::string value);
 };
 

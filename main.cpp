@@ -14,9 +14,23 @@ int main() {
         file.get(sym);
         if (file.eof())
             break;
-        stateMachine.TakeSymbol(sym);
+
+        try{
+            stateMachine.TakeSymbol(sym);
+        }
+        catch (std::exception& error){
+            std::cout << error.what() << std::endl;
+            return -1;
+        }
     }
-    stateMachine.End();
+
+    try{
+        stateMachine.End();
+    }
+    catch (std::exception& error){
+        std::cout << error.what() << std::endl;
+        return -2;
+    }
 
     stateMachine.PrintTokens();
 
