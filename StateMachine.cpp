@@ -26,7 +26,7 @@ void StateMachine::End(){
     if (!token)
     {
         if (!SplitSeparators(_buffer))
-            throw LexError(_buffer.c_str());
+            throw LexError(_buffer);
     }
     else if (token->GetType() != IGNORE)
         _tokens.emplace_back(token);
@@ -52,4 +52,10 @@ void StateMachine::PrintTokens() {
     for (Token* token : _tokens){
         token->PrintToken();
     }
+}
+
+StateMachine::~StateMachine() {
+    for (auto token : _tokens)
+        delete token;
+    _tokens.clear();
 }

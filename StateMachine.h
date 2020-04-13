@@ -18,6 +18,7 @@ private:
     bool SplitSeparators(std::string buffer);
 public:
     StateMachine();
+    ~StateMachine();
     void TakeSymbol(char symbol);
     void End();
     void PrintTokens();

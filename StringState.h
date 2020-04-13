@@ -10,7 +10,6 @@ private:
 
 public:
     StringState();
-
     ~StringState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
