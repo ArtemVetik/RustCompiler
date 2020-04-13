@@ -1,21 +1,24 @@
 #ifndef RUSTCOMPILER_TOKEN_H
 #define RUSTCOMPILER_TOKEN_H
 
+#include <iostream>
 #include <string>
-#include "TokenType.h"
 #include <utility>
+#include "TokenType.h"
 
 class Token {
 private:
-    std::string _value;
     TokenType _type;
+    std::string _value;
+    int _id;
 
 public:
-    Token(const TokenType &type, std::string value);
-    std::string Value();
-    TokenType Type();
+    Token(const TokenType &type, std::string value, int id);
+    std::string GetValue() const;
+    TokenType GetType() const;
+    void PrintToken() const;
 
-    std::string AAAPrintTokenType(TokenType type){
+    std::string AAAPrintTokenType(TokenType type) const {
         switch (type){
             case ID:return std::string("ID");
             case INTNUM:return std::string("INTNUM");

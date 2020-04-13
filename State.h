@@ -2,6 +2,7 @@
 #define RUSTCOMPILER_STATE_H
 
 #include <iostream>
+#include <algorithm>
 #include "TokenType.h"
 #include "Token.h"
 #include <string>

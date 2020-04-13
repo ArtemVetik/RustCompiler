@@ -17,12 +17,15 @@ Token* IDState::GetToken(const std::string value) {
     auto idToken = std::find(_idTable.cbegin(), _idTable.cend(), value);
 
     if (keyToken != _keyWords.cend()) {
-        return new Token(keyToken->second, value);
+        int id = std::distance(_keyWords.cbegin(), keyToken);
+        return new Token(keyToken->second, value, id);
     }
     else {
-        if (idToken == _idTable.cend())
+        if (idToken == _idTable.cend()) {
             _idTable.emplace_back(value);
-        return new Token(ID, value);
+        }
+        int id = std::distance(_idTable.cbegin(), idToken);
+        return new Token(ID, value, id);
     }
 }
 

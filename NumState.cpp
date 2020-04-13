@@ -14,9 +14,9 @@ Token* NumState::GetToken(const std::string value) {
     int pointCount = std::count(value.cbegin(), value.cend(), '.');
     switch(pointCount) {
         case 0 :
-            return new Token(INTNUM, value);
+            return new Token(INTNUM, value, -1);
         case 1 :
-            return new Token(RNUM, value);
+            return new Token(RNUM, value,1);
         default:
             return nullptr;
     }

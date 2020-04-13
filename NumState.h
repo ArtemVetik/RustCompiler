@@ -2,7 +2,6 @@
 #define RUSTCOMPILER_NUMSTATE_H
 
 #include "State.h"
-#include <algorithm>
 
 class NumState : public State {
 public:
