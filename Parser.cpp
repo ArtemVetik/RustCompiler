@@ -40,7 +40,7 @@ bool Parser::Mult(Token* const &token) {
     if (MinTerminal(*_currentToken)){
         _currentToken++;
 
-    while((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == IMP){
+    while((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND){
         _currentToken++;
         if (!MinTerminal(*_currentToken))
             return false;
