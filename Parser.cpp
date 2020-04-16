@@ -6,12 +6,12 @@ Parser::Parser(const std::vector<Token *> &tokens) : _currentToken(_currentToken
 }
 
 bool Parser::BoolExpr(Token* const &token) {
-    if (Add(*_currentToken)){
-        while (IsCompOperation(*_currentToken)){
-            _currentToken++;
+    if (Add(*_currentToken))
+    {
+        while (IsCompOperation(*_currentToken))
+        {
             if (!Add(*_currentToken))
                 return false;
-            _currentToken++;
         }
         return true;
     }
@@ -20,15 +20,16 @@ bool Parser::BoolExpr(Token* const &token) {
 }
 
 bool Parser::Add(Token* const &token) {
-    if (Mult(*_currentToken)) {
-        _currentToken++;
+    if (_currentToken >= _tokens.end())
+        return false;
 
-        while((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS ||
-              (*_currentToken)->GetType() == LOR) {
+    if (Mult(*_currentToken)) {
+        while((_currentToken < _tokens.end()) &&
+        ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
+        {
             _currentToken++;
             if (!Mult(*_currentToken))
                 return false;
-            _currentToken++;
         }
         return true;
     }
@@ -37,47 +38,61 @@ bool Parser::Add(Token* const &token) {
 }
 
 bool Parser::Mult(Token* const &token) {
-    if (MinTerminal(*_currentToken)){
-        _currentToken++;
+    if (_currentToken >= _tokens.end())
+        return false;
 
-    while((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND){
-        _currentToken++;
-        if (!MinTerminal(*_currentToken))
-            return false;
-        _currentToken++;
+    if (MinTerminal(*_currentToken)){
+        while((_currentToken < _tokens.end()) &&
+                ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
+        {
+            _currentToken++;
+            if (!MinTerminal(*_currentToken))
+                return false;
+        }
+        return true;
     }
-    return true;
-}
 
     return false;
 }
 
 bool Parser::MinTerminal(Token* const &token) {
+    if (_currentToken >= _tokens.end())
+        return false;
+    auto saveToken = _currentToken;
+
     if (IsLiteral(*(_currentToken))) {
-        _currentToken++;
         return true;
     }
-    else if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
+
+    _currentToken = saveToken;
+    if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
             (*_currentToken)->GetType() == EXCL) {
         _currentToken++;
         if (MinTerminal(*_currentToken)) {
-            _currentToken++;
             return true;
         }
         else return false;
     }
-    else if ((*_currentToken)->GetType() == LFBR && BoolExpr(*(++_currentToken)) &&
-                        (*(++_currentToken))->GetType() == RGBR) {
+
+    _currentToken = saveToken;
+    if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        return true;
+        if (BoolExpr(*_currentToken)){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
+                _currentToken++;
+                return true;
+            }
+        }
     }
 
     return false;
 }
 
 bool Parser::IsLiteral(Token* const &token) {
-    if (IsString(*_currentToken) || IsChar(*_currentToken) || IsBool(*_currentToken) || IsNum(*_currentToken)){
-        _currentToken++;
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if (IsString(*_currentToken) || IsChar(*_currentToken) || IsBool(*_currentToken) || IsNum(*_currentToken) || IsID(*_currentToken)){
         return true;
     }
     return false;
@@ -125,6 +140,9 @@ bool Parser::IsID(Token* const &token) {
 }
 
 bool Parser::IsCompOperation(Token* const &token) {
+    if (_currentToken >= _tokens.end())
+        return false;
+
     if (token->GetType() == MORE || token->GetType() == LESS || token->GetType() == ASMR || token->GetType() == ASLS ||
                                                                 token->GetType() == NASSIG || token->GetType() == EQUAL)
     {

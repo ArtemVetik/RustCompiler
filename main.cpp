@@ -18,6 +18,10 @@ int main() {
     }
 
     Parser parser(lexer.GetTokens());
+    if (!parser.Analyze())
+        std::cout << "Синтаксическая ошибка" << std::endl;
+    else
+        std::cout << "Ура111!!!1" << std::endl;
 
     return 0;
 }
