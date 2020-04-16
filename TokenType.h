@@ -30,11 +30,13 @@ enum TokenType {
     PLUSEQUAL,  // +=
     MINUSEQUAL, // -=
     MULT,       // *
-    MOD,        // Вещественная часть
+    MOD,        // %
     DIV,        // /
     ASSIG,      // =
     EXCL,       // !
-    IMP,        // &&
+    LAND,       // &&
+    LOR,        // ||
+
 
     // Операции отношения
     MORE,       // >
@@ -105,6 +107,8 @@ public:
             case EXCL:return std::string("EXLC");
             case PRINTLN:return std::string("PRINTLN");
             case IGNORE:return std::string("IGNORE");
+            case LAND:return std::string("LAND");
+            case LOR:return std::string("LOR");
         }
         return std::string("");
     }
