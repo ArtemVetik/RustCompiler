@@ -33,6 +33,7 @@ enum TokenType {
     MOD,        // Вещественная часть
     DIV,        // /
     ASSIG,      // =
+    EXCL,       // !
     IMP,        // &&
 
     // Операции отношения
@@ -42,7 +43,6 @@ enum TokenType {
     ASLS,       // <=
     NASSIG,     // <>
     EQUAL,      // =
-    EXCL,       // !
 
     LBLBR,      // {
     RBLBR,      // }
