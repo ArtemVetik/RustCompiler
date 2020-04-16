@@ -1,39 +1,21 @@
 #include <string>
 #include <fstream>
-#include "StateMachine.h"
+#include "Lexer.h"
+
 
 int main() {
     system("chcp 1251");
     system("cls");
 
-    StateMachine stateMachine;
-    std::ifstream file("test2.txt");
-
-    char sym;
-    while (!file.eof()){
-        file.get(sym);
-        if (file.eof())
-            break;
-
-        try{
-            stateMachine.TakeSymbol(sym);
-        }
-        catch (std::exception& error){
-            std::cout << error.what() << std::endl;
-            return 0;
-        }
-    }
+    Lexer lexer("test.txt");
 
     try{
-        stateMachine.End();
+        lexer.Analyze();
     }
     catch (std::exception& error){
         std::cout << error.what() << std::endl;
         return 0;
     }
-
-    stateMachine.PrintTokens();
-
-    file.close();
+    
     return 0;
 }

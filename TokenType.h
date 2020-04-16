@@ -3,7 +3,7 @@
 #include <string>
 
 enum TokenType {
-    ID,      // Константа
+    ID,      // Идентификатор
     INTNUM,  // Целое число
     RNUM,    // Вещественное число
     PRINTLN,  // Println
