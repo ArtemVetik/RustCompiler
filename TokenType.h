@@ -30,8 +30,8 @@ enum TokenType {
     PLUSEQUAL,  // +=
     MINUSEQUAL, // -=
     MULT,       // *
-    MOD,        // Вещественная часть
-    DIV,        // Целая часть
+    MOD,        // %
+    DIV,        // /
     ASSIG,      // =
     EXCL,       // !
     LAND,       // &&
