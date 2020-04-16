@@ -24,3 +24,7 @@ void Lexer::Analyze() {
 
     file.close();
 }
+
+const std::vector<Token *>& Lexer::GetTokens() const{
+    return _stateMachine.GetTokens();
+}

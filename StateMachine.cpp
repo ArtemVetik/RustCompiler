@@ -59,3 +59,7 @@ StateMachine::~StateMachine() {
         delete token;
     _tokens.clear();
 }
+
+const std::vector<Token *> &StateMachine::GetTokens() const {
+    return _tokens;
+}

@@ -1,7 +1,7 @@
 #include <string>
 #include <fstream>
 #include "Lexer.h"
-
+#include "Parser.h"
 
 int main() {
     system("chcp 1251");
@@ -16,6 +16,8 @@ int main() {
         std::cout << error.what() << std::endl;
         return 0;
     }
-    
+
+    Parser parser(lexer.GetTokens());
+
     return 0;
 }

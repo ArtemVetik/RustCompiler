@@ -22,6 +22,8 @@ public:
     void TakeSymbol(char symbol);
     void End();
     void PrintTokens();
+
+    const std::vector<Token*> &GetTokens() const;
 };
 
 
