@@ -31,8 +31,9 @@ enum TokenType {
     MINUSEQUAL, // -=
     MULT,       // *
     MOD,        // Вещественная часть
-    DIV,        // Целая часть
+    DIV,        // /
     ASSIG,      // =
+    IMP,        // &&
 
     // Операции отношения
     MORE,       // >

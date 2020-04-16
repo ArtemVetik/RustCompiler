@@ -1,10 +1,6 @@
-//
-// Created by artem on 16.04.2020.
-//
-
 #include "Lexer.h"
 
-Lexer::Lexer(const std::string &fileName) : _fileName(std::move(fileName)){
+Lexer::Lexer(const std::string &fileName) : _fileName(fileName){
 
 }
 

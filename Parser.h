@@ -11,7 +11,7 @@ private:
     std::vector<Token*>::iterator _currentToken;
 
     bool BoolExpr(Token* const &token);
-    bool SimpleBoolExpr(Token* const &token);
+    bool Add(Token *const &token);
     bool Mult(Token* const &token);
     bool MinTerminal(Token* const &token);
     bool IsLiteral(Token* const &token);
