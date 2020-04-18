@@ -44,7 +44,7 @@ enum TokenType {
     ASMR,       // >=
     ASLS,       // <=
     NASSIG,     // <>
-    EQUAL,      // =
+    EQUAL,      // ==
 
     LBLBR,      // {
     RBLBR,      // }
