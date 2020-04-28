@@ -60,6 +60,6 @@ StateMachine::~StateMachine() {
     _tokens.clear();
 }
 
-const std::vector<Token *> &StateMachine::GetTokens() const {
+const std::vector<Token*>& StateMachine::GetTokens() const {
     return _tokens;
 }

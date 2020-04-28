@@ -151,7 +151,7 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (LetDecl()) {
+    if (BoolExpr()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -302,4 +302,55 @@ bool Parser::LitList() {
     }
 
     return false;
+}
+
+bool Parser::ElseTail() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == ELSE) {
+        _currentToken++;
+        if (IfExpr()) return true;
+        else if ((*_currentToken)->GetType() == LBLBR) {
+            _currentToken++;
+            if (Block()) {
+                if ((*_currentToken)->GetType() == RBLBR) {
+                    _currentToken++;
+                    return true;
+                }
+            }
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::IfExpr() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if ((*_currentToken)->GetType() == IF) {
+        _currentToken++;
+        if (BoolExpr()) {
+            if ((*_currentToken)->GetType() == LBLBR) {
+                _currentToken++;
+                if (Block()) {
+                    if ((*_currentToken)->GetType() == RBLBR) {
+                        _currentToken++;
+                        ElseTail();
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Parser::Block() {
+    
 }

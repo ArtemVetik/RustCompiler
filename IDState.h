@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-class IDState : public State{
+class IDState : public State {
 private:
     std::vector<std::string> _idTable;
     std::vector<std::pair<std::string, TokenType>> _keyWords;

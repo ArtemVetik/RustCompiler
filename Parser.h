@@ -21,7 +21,9 @@ private:
     bool LitList();
     bool Type();
 
-    // Арифметические выражения
+    // Ветвления
+    bool IfExpr();
+    bool ElseTail();
     bool BoolExpr();
     bool Add();
     bool Mult();
@@ -37,6 +39,9 @@ private:
 
     // Знаки отношения
     bool IsCompOperation();
+
+    // Блок - внутри всё что угодно
+    bool Block();
 
 public:
     explicit Parser(const std::vector<Token *> &tokens);
