@@ -40,8 +40,13 @@ private:
     // Знаки отношения
     bool IsCompOperation();
 
+    // Вывод
+    bool Println();
+    bool ExprList();
+
     // Блок - внутри всё что угодно
     bool Block();
+    bool BlockChecker();
 
 public:
     explicit Parser(const std::vector<Token *> &tokens);

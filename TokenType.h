@@ -3,11 +3,12 @@
 #include <string>
 
 enum TokenType {
-    ID,      // Идентификатор
-    INTNUM,  // Целое число
-    RNUM,    // Вещественное число
+    ID,       // Идентификатор
+    INTNUM,   // Целое число
+    RNUM,     // Вещественное число
     PRINTLN,  // Println
-    STRING,  // Строка
+    PRINT,    // Print
+    STRING,   // Строка
 
     // Ключевые слова
     FUNCTION,   // fn
@@ -109,6 +110,7 @@ public:
             case IGNORE:return std::string("IGNORE");
             case LAND:return std::string("LAND");
             case LOR:return std::string("LOR");
+            case PRINT: return std::string("PRINT");
         }
         return std::string("");
     }

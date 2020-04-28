@@ -64,14 +64,13 @@ bool Parser::MinTerminal() {
         return true;
     }
 
-    _currentToken = saveToken;
     if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
         (*_currentToken)->GetType() == EXCL) {
         _currentToken++;
         return MinTerminal();
     }
 
-    _currentToken = saveToken;
+    //_currentToken = saveToken;
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
         if (BoolExpr()){
@@ -148,10 +147,8 @@ bool Parser::IsCompOperation() {
 }
 
 
-
-
 bool Parser::Analyze() {
-    if (BoolExpr()) {
+    if (Block()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -161,10 +158,14 @@ bool Parser::LetDecl() {
     if (_currentToken >= _tokens.end())
         return false;
 
+    auto saveToken = _currentToken;
+
     if ((*_currentToken)->GetType() == LET) {
         _currentToken++;
         if (Pat()){
-            Init();
+            if (!Init()){
+                _currentToken = saveToken;
+            }
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON){
                 _currentToken++;
                 return true;
@@ -179,7 +180,7 @@ bool Parser::Pat() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    auto saveToken = _currentToken;
+    //auto saveToken = _currentToken;
 
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
@@ -192,7 +193,7 @@ bool Parser::Pat() {
         return true;
     }
 
-    _currentToken = saveToken;
+    //_currentToken = saveToken;
     return GroupLet();
 }
 
@@ -245,13 +246,19 @@ bool Parser::Init() {
 
     if ((*_currentToken)->GetType() == ASSIG) {
         _currentToken++;
-        return Expr();
+        auto saveToken = _currentToken;
+        if (Expr())
+            return true;
+        _currentToken = saveToken;
+        if (GroupInit())
+            return true;
+        _currentToken = saveToken;
     }
     return false;
 }
 
 bool Parser::Expr() {
-    return IsLiteral() || GroupInit();
+    return BoolExpr();
 }
 
 bool Parser::Type() {
@@ -284,7 +291,7 @@ bool Parser::LitList() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (IsLiteral()) {
+    if (Expr()) {
         while(_currentToken < _tokens.end()) {
             if ((*_currentToken)->GetType() == COM) {
                 _currentToken++;
@@ -292,9 +299,8 @@ bool Parser::LitList() {
             else
                 break;
 
-            if (_currentToken < _tokens.end() && IsLiteral())
+            if (_currentToken < _tokens.end() && Expr())
                 continue;
-
             else
                 return false;
         }
@@ -307,8 +313,6 @@ bool Parser::LitList() {
 bool Parser::ElseTail() {
     if (_currentToken >= _tokens.end())
         return false;
-
-    auto saveToken = _currentToken;
 
     if ((*_currentToken)->GetType() == ELSE) {
         _currentToken++;
@@ -324,7 +328,6 @@ bool Parser::ElseTail() {
         }
     }
 
-    _currentToken = saveToken;
     return false;
 }
 
@@ -338,9 +341,12 @@ bool Parser::IfExpr() {
             if ((*_currentToken)->GetType() == LBLBR) {
                 _currentToken++;
                 if (Block()) {
-                    if ((*_currentToken)->GetType() == RBLBR) {
+                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                         _currentToken++;
-                        ElseTail();
+                        auto saveToken = _currentToken;
+                        if (!ElseTail()) {
+                            _currentToken = saveToken;
+                        }
                         return true;
                     }
                 }
@@ -352,5 +358,79 @@ bool Parser::IfExpr() {
 }
 
 bool Parser::Block() {
-    
+    if (!BlockChecker())
+        return false;
+
+    auto saveToken = _currentToken;
+    if (!Block())
+        _currentToken = saveToken;
+
+    return true;
+}
+
+bool Parser::BlockChecker() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if (!LetDecl()){
+        _currentToken = saveToken;
+        if (!IfExpr()){
+            _currentToken = saveToken;
+            if (!Println()){
+                _currentToken = saveToken;
+                return false;
+            }
+        }
+    }
+
+    return  true;
+}
+
+bool Parser::Println() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if ((*_currentToken)->GetType() == PRINTLN || (*_currentToken)->GetType() == PRINT) {
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == EXCL) {
+            _currentToken++;
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LFBR) {
+                _currentToken++;
+                if (IsString()) {
+                    auto saveToken = _currentToken;
+                    if (!ExprList()) {
+                        _currentToken = saveToken;
+                    }
+                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
+                        _currentToken++;
+                        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+                            _currentToken++;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Parser::ExprList() {
+    while (_currentToken < _tokens.end()){
+        auto saveToken = _currentToken;
+        if ((*_currentToken)->GetType() == COM){
+            _currentToken++;
+            if (!Expr()){
+                _currentToken = saveToken;
+                return false;
+            }
+        }
+        else
+            return true;
+    }
+
+    return false;
 }
