@@ -11,27 +11,27 @@ private:
     std::vector<Token*>::iterator _currentToken;
 
     // Объявление переменных
-    bool LetDecl(Token* const &token);
-    bool Pat(Token* const &token);
-    bool GroupLet(Token* const &token);
-    bool VarList(Token* const &token);
-    bool Init(Token* const &token);
-    bool Expr(Token* const &token);
-    bool Type(Token* const &token);
+    bool LetDecl();
+    bool Pat();
+    bool GroupLet();
+    bool VarList();
+    bool Init();
+    bool Expr();
+    bool Type();
 
-    bool BoolExpr(Token* const &token);
-    bool Add(Token *const &token);
-    bool Mult(Token* const &token);
-    bool MinTerminal(Token* const &token);
-    bool IsLiteral(Token* const &token);
+    bool BoolExpr();
+    bool Add();
+    bool Mult();
+    bool MinTerminal();
+    bool IsLiteral();
 
-    bool IsString(Token* const &token);
-    bool IsNum(Token* const &token);
-    bool IsChar(Token* const &token);
-    bool IsBool(Token* const &token);
-    bool IsID(Token* const &token);
+    bool IsString();
+    bool IsNum();
+    bool IsChar();
+    bool IsBool();
+    bool IsID();
 
-    bool IsCompOperation(Token* const &token);
+    bool IsCompOperation();
 public:
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();

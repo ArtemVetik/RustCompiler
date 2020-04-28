@@ -5,31 +5,30 @@ Parser::Parser(const std::vector<Token *> &tokens) {
     _currentToken = _tokens.begin();
 }
 
-bool Parser::BoolExpr(Token* const &token) {
-    if (Add(*_currentToken))
+bool Parser::BoolExpr() {
+    if (Add())
     {
-        while (IsCompOperation(*_currentToken))
+        while (IsCompOperation())
         {
-            if (!Add(*_currentToken))
+            if (!Add())
                 return false;
         }
 
         return true;
     }
-
     return false;
 }
 
-bool Parser::Add(Token* const &token) {
+bool Parser::Add() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (Mult(*_currentToken)) {
+    if (Mult()) {
         while((_currentToken < _tokens.end()) &&
         ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
         {
             _currentToken++;
-            if (!Mult(*_currentToken))
+            if (!Mult())
                 return false;
         }
         return true;
@@ -38,16 +37,16 @@ bool Parser::Add(Token* const &token) {
     return false;
 }
 
-bool Parser::Mult(Token* const &token) {
+bool Parser::Mult() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (MinTerminal(*_currentToken)){
+    if (MinTerminal()){
         while((_currentToken < _tokens.end()) &&
                 ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
         {
             _currentToken++;
-            if (!MinTerminal(*_currentToken))
+            if (!MinTerminal())
                 return false;
         }
         return true;
@@ -56,12 +55,12 @@ bool Parser::Mult(Token* const &token) {
     return false;
 }
 
-bool Parser::MinTerminal(Token* const &token) {
+bool Parser::MinTerminal() {
     if (_currentToken >= _tokens.end())
         return false;
     auto saveToken = _currentToken;
 
-    if (IsLiteral(*(_currentToken))) {
+    if (IsLiteral()) {
         return true;
     }
 
@@ -69,7 +68,7 @@ bool Parser::MinTerminal(Token* const &token) {
     if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
             (*_currentToken)->GetType() == EXCL) {
         _currentToken++;
-        if (MinTerminal(*_currentToken)) {
+        if (MinTerminal()) {
             return true;
         }
         else return false;
@@ -78,7 +77,7 @@ bool Parser::MinTerminal(Token* const &token) {
     _currentToken = saveToken;
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        if (BoolExpr(*_currentToken)){
+        if (BoolExpr()){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                 _currentToken++;
                 return true;
@@ -89,15 +88,15 @@ bool Parser::MinTerminal(Token* const &token) {
     return false;
 }
 
-bool Parser::IsLiteral(Token* const &token) {
+bool Parser::IsLiteral() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    return IsString(*_currentToken) || IsChar(*_currentToken) || IsBool(*_currentToken) || IsNum(*_currentToken) || IsID(*_currentToken);
+    return IsString() || IsChar() || IsBool() || IsNum() || IsID();
 }
 
-bool Parser::IsString(Token* const &token) {
-     if (token->GetType() == STRING) {
+bool Parser::IsString() {
+     if ((*_currentToken)->GetType() == STRING) {
          _currentToken++;
          return true;
      }
@@ -105,8 +104,8 @@ bool Parser::IsString(Token* const &token) {
     return false;
 }
 
-bool Parser::IsNum(Token* const &token) {
-    if  (token->GetType() == INTNUM || token->GetType() == RNUM) {
+bool Parser::IsNum() {
+    if  ((*_currentToken)->GetType() == INTNUM || (*_currentToken)->GetType() == RNUM) {
         _currentToken++;
         return true;
     }
@@ -114,12 +113,12 @@ bool Parser::IsNum(Token* const &token) {
     return false;
 }
 
-bool Parser::IsChar(Token* const &token) {
+bool Parser::IsChar() {
     return false;
 }
 
-bool Parser::IsBool(Token* const &token) {
-    if (token->GetValue() == "true" || token->GetValue() == "false") {
+bool Parser::IsBool() {
+    if ((*_currentToken)->GetValue() == "true" || (*_currentToken)->GetValue() == "false") {
         _currentToken++;
         return true;
     }
@@ -128,8 +127,8 @@ bool Parser::IsBool(Token* const &token) {
 
 }
 
-bool Parser::IsID(Token* const &token) {
-    if (token->GetType() == ID) {
+bool Parser::IsID() {
+    if ((*_currentToken)->GetType() == ID) {
         _currentToken++;
         return true;
     }
@@ -137,12 +136,12 @@ bool Parser::IsID(Token* const &token) {
     return false;
 }
 
-bool Parser::IsCompOperation(Token* const &token) {
+bool Parser::IsCompOperation() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (token->GetType() == MORE || token->GetType() == LESS || token->GetType() == ASMR || token->GetType() == ASLS ||
-                                                                token->GetType() == NASSIG || token->GetType() == EQUAL)
+    if ((*_currentToken)->GetType() == MORE || (*_currentToken)->GetType() == LESS || (*_currentToken)->GetType() == ASMR || (*_currentToken)->GetType() == ASLS ||
+            (*_currentToken)->GetType() == NASSIG || (*_currentToken)->GetType() == EQUAL)
     {
         _currentToken++;
         return true;
@@ -155,20 +154,20 @@ bool Parser::IsCompOperation(Token* const &token) {
 
 
 bool Parser::Analyze() {
-    if (LetDecl(*_currentToken)) {
+    if (LetDecl()) {
         return _currentToken == _tokens.end();
     }
     return false;
 }
 
-bool Parser::LetDecl(Token *const &token) {
+bool Parser::LetDecl() {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == LET){
         _currentToken++;
-        if (Pat(*_currentToken)){
-            Init(*_currentToken);
+        if (Pat()){
+            Init();
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON){
                 _currentToken++;
                 return true;
@@ -179,7 +178,7 @@ bool Parser::LetDecl(Token *const &token) {
     return false;
 }
 
-bool Parser::Pat(Token *const &token) {
+bool Parser::Pat() {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -188,25 +187,25 @@ bool Parser::Pat(Token *const &token) {
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
 
-    if (IsID(*_currentToken)) {
+    if (IsID()) {
         if ((*_currentToken)->GetType() == COLON) {
             _currentToken++;
-            return Type(*_currentToken);
+            return Type();
         }
         return true;
     }
 
     _currentToken = saveToken;
-    return GroupLet(*_currentToken);
+    return GroupLet();
 }
 
-bool Parser::GroupLet(Token *const &token) {
+bool Parser::GroupLet() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (token->GetType() == LFBR) {
+    if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        if (VarList(*_currentToken)){
+        if (VarList()){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                 _currentToken++;
                 return true;
@@ -217,13 +216,13 @@ bool Parser::GroupLet(Token *const &token) {
     return false;
 }
 
-bool Parser::VarList(Token *const &token) {
+bool Parser::VarList() {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
-    if (IsID(*_currentToken)){
+    if (IsID()){
         while(_currentToken < _tokens.end()){
             if ((*_currentToken)->GetType() == COM)
                 _currentToken++;
@@ -242,23 +241,23 @@ bool Parser::VarList(Token *const &token) {
     return false;
 }
 
-bool Parser::Init(Token *const &token) {
+bool Parser::Init() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (token->GetType() == ASSIG){
+    if ((*_currentToken)->GetType() == ASSIG){
         _currentToken++;
-        return Expr(*_currentToken);
+        return Expr();
     }
     return false;
 }
 
-bool Parser::Expr(Token *const &token) {
-    return IsLiteral(token);
+bool Parser::Expr() {
+    return IsLiteral();
 }
 
-bool Parser::Type(Token *const &token) {
-    if (token->GetType() == INTEGER || token->GetType() == REAL || token->GetType() == UINT){
+bool Parser::Type() {
+    if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT){
         _currentToken++;
         return true;
     }
