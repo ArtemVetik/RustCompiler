@@ -25,7 +25,7 @@ bool Parser::Add() {
 
     if (Mult()) {
         while((_currentToken < _tokens.end()) &&
-        ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
+              ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
         {
             _currentToken++;
             if (!Mult())
@@ -43,7 +43,7 @@ bool Parser::Mult() {
 
     if (MinTerminal()){
         while((_currentToken < _tokens.end()) &&
-                ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
+              ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
         {
             _currentToken++;
             if (!MinTerminal())
@@ -66,12 +66,9 @@ bool Parser::MinTerminal() {
 
     _currentToken = saveToken;
     if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
-            (*_currentToken)->GetType() == EXCL) {
+        (*_currentToken)->GetType() == EXCL) {
         _currentToken++;
-        if (MinTerminal()) {
-            return true;
-        }
-        else return false;
+        return MinTerminal();
     }
 
     _currentToken = saveToken;
@@ -96,10 +93,10 @@ bool Parser::IsLiteral() {
 }
 
 bool Parser::IsString() {
-     if ((*_currentToken)->GetType() == STRING) {
-         _currentToken++;
-         return true;
-     }
+    if ((*_currentToken)->GetType() == STRING) {
+        _currentToken++;
+        return true;
+    }
 
     return false;
 }
@@ -141,7 +138,7 @@ bool Parser::IsCompOperation() {
         return false;
 
     if ((*_currentToken)->GetType() == MORE || (*_currentToken)->GetType() == LESS || (*_currentToken)->GetType() == ASMR || (*_currentToken)->GetType() == ASLS ||
-            (*_currentToken)->GetType() == NASSIG || (*_currentToken)->GetType() == EQUAL)
+        (*_currentToken)->GetType() == NASSIG || (*_currentToken)->GetType() == EQUAL)
     {
         _currentToken++;
         return true;
@@ -164,7 +161,7 @@ bool Parser::LetDecl() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if ((*_currentToken)->GetType() == LET){
+    if ((*_currentToken)->GetType() == LET) {
         _currentToken++;
         if (Pat()){
             Init();
@@ -222,6 +219,7 @@ bool Parser::VarList() {
 
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
+
     if (IsID()){
         while(_currentToken < _tokens.end()){
             if ((*_currentToken)->GetType() == COM)
@@ -232,7 +230,7 @@ bool Parser::VarList() {
             if ((*_currentToken)->GetType() == MUT)
                 _currentToken++;
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == ID)
-            _currentToken++;
+                _currentToken++;
             else
                 return false;
         }
@@ -245,7 +243,7 @@ bool Parser::Init() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if ((*_currentToken)->GetType() == ASSIG){
+    if ((*_currentToken)->GetType() == ASSIG) {
         _currentToken++;
         return Expr();
     }
@@ -253,12 +251,53 @@ bool Parser::Init() {
 }
 
 bool Parser::Expr() {
-    return IsLiteral();
+    return IsLiteral() || GroupInit();
 }
 
 bool Parser::Type() {
-    if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT){
+    if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
         _currentToken++;
+        return true;
+    }
+
+    return false;
+}
+
+bool Parser::GroupInit() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if ((*_currentToken)->GetType() == LFBR) {
+        _currentToken++;
+        if (LitList()){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
+                _currentToken++;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Parser::LitList() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if (IsLiteral()) {
+        while(_currentToken < _tokens.end()) {
+            if ((*_currentToken)->GetType() == COM) {
+                _currentToken++;
+            }
+            else
+                break;
+
+            if (_currentToken < _tokens.end() && IsLiteral())
+                continue;
+
+            else
+                return false;
+        }
         return true;
     }
 
