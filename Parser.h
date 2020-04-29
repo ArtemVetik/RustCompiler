@@ -52,6 +52,10 @@ private:
     bool ArrayExpr();
     bool ArrayElems();
 
+    // Циклы
+    bool WhileExpr();
+    bool LoopExpr();
+
     // Объявление переменных
     bool VarInit();
 

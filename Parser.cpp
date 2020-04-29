@@ -88,6 +88,13 @@ bool Parser::IsLiteral() {
     if (_currentToken >= _tokens.end())
         return false;
 
+    if (IsID()){
+        auto saveToken = _currentToken;
+        if (!ArrayExpr())
+            _currentToken = saveToken;
+        return true;
+    }
+
     return IsString() || IsChar() || IsBool() || IsNum() || IsID();
 }
 
@@ -391,11 +398,18 @@ bool Parser::BlockChecker() {
             _currentToken = saveToken;
             if (!IfExpr()) {
                 _currentToken = saveToken;
-                if (!Println()) {
+                if (!WhileExpr()) {
                     _currentToken = saveToken;
-                    if (!LetArrayDecl()) {
+                    if (!LoopExpr()) {
                         _currentToken = saveToken;
-                        return false;
+                        if (!Println()) {
+                            _currentToken = saveToken;
+                            if (!LetArrayDecl()) {
+                                _currentToken = saveToken;
+                                return false;
+                            }
+
+                        }
                     }
                 }
             }
@@ -562,6 +576,53 @@ bool Parser::VarInit() {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                 _currentToken++;
                 return true;
+            }
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::WhileExpr() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+    if ((*_currentToken)->GetType() == WHILE){
+        _currentToken++;
+        if (BoolExpr()){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR){
+                _currentToken++;
+                if (Block()){
+                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR){
+                        _currentToken++;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::LoopExpr() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == LOOP) {
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
+            _currentToken++;
+            if (Block()) {
+                if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
+                    _currentToken++;
+                    return true;
+                }
             }
         }
     }
