@@ -36,6 +36,7 @@ enum TokenType {
     ASSIG,      // =
     EXCL,       // !
     LAND,       // &&
+    BAND,       // &
     LOR,        // ||
 
 
@@ -111,6 +112,7 @@ public:
             case LAND:return std::string("LAND");
             case LOR:return std::string("LOR");
             case PRINT: return std::string("PRINT");
+            case BAND: return std::string("BAND");
         }
         return std::string("");
     }

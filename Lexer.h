@@ -11,7 +11,7 @@ private:
      StateMachine _stateMachine;
      std::string _fileName;
 public:
-    explicit Lexer(const std::string &fileName);
+    explicit Lexer(std::string fileName);
     void Analyze();
     const std::vector<Token*>& GetTokens() const;
 };

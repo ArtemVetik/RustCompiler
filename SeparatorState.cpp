@@ -32,6 +32,7 @@ void SeparatorState::Init() {
     _tokenPair.emplace_back(std::make_pair("!", EXCL));
     _tokenPair.emplace_back(std::make_pair("&&", LAND));
     _tokenPair.emplace_back(std::make_pair("||", LOR));
+    _tokenPair.emplace_back(std::make_pair("&", BAND));
 }
 
 Token* SeparatorState::GetToken(const std::string &value) {
@@ -40,13 +41,14 @@ Token* SeparatorState::GetToken(const std::string &value) {
 
     if (foundToken != _tokenPair.cend())
         return new Token(foundToken->second, value, id);
+
     return nullptr;
 }
 
 std::vector<Token*> SeparatorState::SplitTokens(const std::string &value){
     std::vector<Token*> tokens;
     for (char i : value){
-        tokens.emplace_back(GetToken(std::string(1,i)));
+        tokens.emplace_back(GetToken(std::string(1, i)));
     }
 
     return tokens;

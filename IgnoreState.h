@@ -12,7 +12,7 @@ public:
     ~IgnoreState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
-    Token * GetToken(const std::string &value) override;
+    Token* GetToken(const std::string &value) override;
 };
 
 #endif //RUSTCOMPILER_IGNORESTATE_H

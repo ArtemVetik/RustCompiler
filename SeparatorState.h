@@ -6,7 +6,7 @@
 
 class SeparatorState : public State {
 private:
-    std::string _separators = "+-*/%=><{}[];(),:!&|";
+    std::string _separators = "+-*/%=><{}[];(),.:!&|";
     std::vector<std::pair<std::string, TokenType>> _tokenPair;
 
 public:

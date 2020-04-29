@@ -11,7 +11,7 @@ void StateMachine::TakeSymbol(char symbol) {
         return;
     }
     
-    if (_currentState){
+    if (_currentState) {
         End();
     }
 
@@ -32,8 +32,8 @@ void StateMachine::End(){
         _tokens.emplace_back(token);
 }
 
-bool StateMachine::SplitSeparators(std::string buffer){
-    SeparatorState* separatorState = dynamic_cast<SeparatorState*>(_currentState);
+bool StateMachine::SplitSeparators(const std::string& buffer){
+    auto separatorState = dynamic_cast<SeparatorState*>(_currentState);
     if (!separatorState)
         return false;
 
@@ -42,6 +42,7 @@ bool StateMachine::SplitSeparators(std::string buffer){
     for (Token* token : tokens) {
         if (token == nullptr)
             return false;
+
         _tokens.emplace_back(token);
     }
 
@@ -57,6 +58,7 @@ void StateMachine::PrintTokens() {
 StateMachine::~StateMachine() {
     for (auto token : _tokens)
         delete token;
+
     _tokens.clear();
 }
 

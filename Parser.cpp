@@ -155,7 +155,7 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (Block()) {
+    if (InternalFunctionInvoke()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -624,6 +624,96 @@ bool Parser::LoopExpr() {
                     return true;
                 }
             }
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::FunctionInvoke() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken1 = _currentToken;
+
+    if (IsID()) {
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LFBR) {
+            _currentToken++;
+            if (FuncArgument()) {
+                while (_currentToken < _tokens.end()) {
+                    auto saveToken2 = _currentToken;
+                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COM) {
+                        _currentToken++;
+                        if (FuncArgument()) {
+                            continue;
+                        }
+                        else {
+                            _currentToken = saveToken2;
+                            return false;
+                        }
+                    }
+                    else break;
+                }
+            }
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
+                _currentToken++;
+                return true;
+            }
+        }
+    }
+
+    _currentToken = saveToken1;
+    return false;
+}
+
+bool Parser::FuncArgument() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if (!Expr()) {
+        _currentToken = saveToken;
+        if (!ArrayFuncArgument()) {
+            _currentToken = saveToken;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Parser::ArrayFuncArgument() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == BAND) {
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT)
+            _currentToken++;
+        if (IsID()) {
+            return true;
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::InternalFunctionInvoke() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if (IsID()) {
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == DOT) {
+            _currentToken++;
+            if (FunctionInvoke())
+                return true;
         }
     }
 

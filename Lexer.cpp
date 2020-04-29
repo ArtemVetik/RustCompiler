@@ -1,6 +1,8 @@
 #include "Lexer.h"
 
-Lexer::Lexer(const std::string &fileName) : _fileName(fileName){
+#include <utility>
+
+Lexer::Lexer(std::string fileName) : _fileName(std::move(fileName)){
 
 }
 

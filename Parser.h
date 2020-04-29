@@ -56,6 +56,12 @@ private:
     bool WhileExpr();
     bool LoopExpr();
 
+    // Вызов функций
+    bool FunctionInvoke();
+    bool FuncArgument();
+    bool ArrayFuncArgument();
+    bool InternalFunctionInvoke();
+
     // Объявление переменных
     bool VarInit();
 

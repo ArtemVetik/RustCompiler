@@ -15,7 +15,7 @@ private:
 
     std::vector<Token*> _tokens;
 
-    bool SplitSeparators(std::string buffer);
+    bool SplitSeparators(const std::string& buffer);
 public:
     StateMachine();
     ~StateMachine();
@@ -23,7 +23,7 @@ public:
     void End();
     void PrintTokens();
 
-    const std::vector<Token*> &GetTokens() const;
+    const std::vector<Token*>& GetTokens() const;
 };
 
 
