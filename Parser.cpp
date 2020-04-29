@@ -88,6 +88,9 @@ bool Parser::IsLiteral() {
     if (_currentToken >= _tokens.end())
         return false;
 
+    if (FunctionInvoke() || InternalFunctionInvoke())
+        return true;
+
     if (IsID()){
         auto saveToken = _currentToken;
         if (!ArrayExpr())
@@ -95,7 +98,7 @@ bool Parser::IsLiteral() {
         return true;
     }
 
-    return IsString() || IsChar() || IsBool() || IsNum() || IsID();
+    return IsString() || IsChar() || IsBool() || IsNum();
 }
 
 bool Parser::IsString() {
@@ -155,7 +158,7 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (InternalFunctionInvoke()) {
+    if (Block()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -406,7 +409,13 @@ bool Parser::BlockChecker() {
                             _currentToken = saveToken;
                             if (!LetArrayDecl()) {
                                 _currentToken = saveToken;
-                                return false;
+                                if (!Expr() || _currentToken >= _tokens.end() || (*_currentToken++)->GetType()!= SEMICOLON) {
+                                    _currentToken = saveToken;
+                                    if ((*_currentToken++)->GetType() != SEMICOLON){
+                                        _currentToken = saveToken;
+                                        return false;
+                                    }
+                                }
                             }
 
                         }
