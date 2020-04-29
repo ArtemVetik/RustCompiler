@@ -5,6 +5,8 @@
 #include <vector>
 #include "Token.h"
 
+#define print std::cout << "->" <<(*_currentToken)->GetValue() << "<-" << std::endl;
+
 class Parser {
 private:
     std::vector<Token*> _tokens;
@@ -49,6 +51,9 @@ private:
     bool ArrayType();
     bool ArrayExpr();
     bool ArrayElems();
+
+    // Объявление переменных
+    bool VarInit();
 
     // Блок - внутри всё что угодно
     bool Block();

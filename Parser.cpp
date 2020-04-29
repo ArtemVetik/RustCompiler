@@ -148,7 +148,7 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (BoolExpr()) {
+    if (Block()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -158,11 +158,11 @@ bool Parser::LetDecl() {
     if (_currentToken >= _tokens.end())
         return false;
 
-    auto saveToken = _currentToken;
 
     if ((*_currentToken)->GetType() == LET) {
         _currentToken++;
         if (Pat()){
+            auto saveToken = _currentToken;
             if (!Init()){
                 _currentToken = saveToken;
             }
@@ -258,7 +258,18 @@ bool Parser::Init() {
 }
 
 bool Parser::Expr() {
-    return BoolExpr();
+    auto saveToken = _currentToken;
+
+    IsID();
+    if (!ArrayExpr()){
+        _currentToken = saveToken;
+        if (!BoolExpr()){
+            _currentToken = saveToken;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool Parser::Type() {
@@ -376,11 +387,17 @@ bool Parser::BlockChecker() {
 
     if (!LetDecl()){
         _currentToken = saveToken;
-        if (!IfExpr()){
+        if (!VarInit()) {
             _currentToken = saveToken;
-            if (!Println()){
+            if (!IfExpr()) {
                 _currentToken = saveToken;
-                return false;
+                if (!Println()) {
+                    _currentToken = saveToken;
+                    if (!LetArrayDecl()) {
+                        _currentToken = saveToken;
+                        return false;
+                    }
+                }
             }
         }
     }
@@ -436,17 +453,119 @@ bool Parser::ExprList() {
 }
 
 bool Parser::LetArrayDecl() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if ((*_currentToken)->GetType() == LET) {
+        _currentToken++;
+        if ((*_currentToken)->GetType() == MUT)
+            _currentToken++;
+        if (IsID()) {
+            if ((*_currentToken)->GetType() == COLON) {
+                _currentToken++;
+                if (ArrayType()) {
+                    auto saveToken = _currentToken;
+                    if (!Init())
+                        _currentToken = saveToken;
+                    if ((*_currentToken)->GetType() == SEMICOLON) {
+                        _currentToken++;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
     return false;
 }
 
 bool Parser::ArrayType() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+    if ((*_currentToken)->GetType() == SLBR) {
+        _currentToken++;
+        if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
+             _currentToken++;
+
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+               _currentToken++;
+               if (Expr()){
+                   if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
+                       _currentToken++;
+                       return true;
+                   }
+               }
+            }
+        }
+    }
+
+    _currentToken = saveToken;
     return false;
 }
 
 bool Parser::ArrayExpr() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+    if ((*_currentToken)->GetType() == SLBR){
+        _currentToken++;
+        if (ArrayElems()){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
+                _currentToken++;
+                return true;
+            }
+        }
+    }
+
+    _currentToken = saveToken;
     return false;
 }
 
 bool Parser::ArrayElems() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+    if (Expr()){
+        while (_currentToken < _tokens.end()){
+            auto saveToken2 = _currentToken;
+            if ((*_currentToken)->GetType() == COM){
+                _currentToken++;
+                if (!Expr()) {
+                    _currentToken = saveToken2;
+                    return false;
+                }
+            }
+            else
+                break;
+        }
+        return true;
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::VarInit() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+    if (IsID()){
+        auto saveToken2 = _currentToken;
+        if (!ArrayExpr())
+            _currentToken = saveToken2;
+        if (Init()){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+                _currentToken++;
+                return true;
+            }
+        }
+    }
+
+    _currentToken = saveToken;
     return false;
 }
