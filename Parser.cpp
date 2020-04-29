@@ -148,7 +148,7 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (Block()) {
+    if (BoolExpr()) {
         return _currentToken == _tokens.end();
     }
     return false;
@@ -432,5 +432,21 @@ bool Parser::ExprList() {
             return true;
     }
 
+    return false;
+}
+
+bool Parser::LetArrayDecl() {
+    return false;
+}
+
+bool Parser::ArrayType() {
+    return false;
+}
+
+bool Parser::ArrayExpr() {
+    return false;
+}
+
+bool Parser::ArrayElems() {
     return false;
 }

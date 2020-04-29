@@ -44,6 +44,12 @@ private:
     bool Println();
     bool ExprList();
 
+    // Массивы
+    bool LetArrayDecl();
+    bool ArrayType();
+    bool ArrayExpr();
+    bool ArrayElems();
+
     // Блок - внутри всё что угодно
     bool Block();
     bool BlockChecker();
