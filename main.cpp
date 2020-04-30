@@ -7,7 +7,7 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    Lexer lexer("test.txt");
+    Lexer lexer("test3");
 
     try{
         lexer.Analyze();
