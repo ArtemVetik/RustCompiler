@@ -15,6 +15,7 @@ public:
     ~IDState() override = default;
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
+    bool CanTransitTo(State* const &to) const override;
     Token* GetToken(const std::string &value) override;
     void InitKeyWords();
 };

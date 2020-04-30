@@ -158,10 +158,9 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    if (Block()) {
-        return _currentToken == _tokens.end();
-    }
-    return false;
+    while (FunctionDefine());
+
+    return _currentToken == _tokens.end();
 }
 
 bool Parser::LetDecl() {
@@ -421,15 +420,18 @@ bool Parser::BlockChecker() {
                             _currentToken = saveToken;
                             if (!LetArrayDecl()) {
                                 _currentToken = saveToken;
-                                if (!Expr() || _currentToken >= _tokens.end() || (*_currentToken++)->GetType()!= SEMICOLON) {
+                                if (!BlockExit()) {
                                     _currentToken = saveToken;
-                                    if ((*_currentToken++)->GetType() != SEMICOLON){
+                                    if (!Expr() || _currentToken >= _tokens.end() ||
+                                        (*_currentToken++)->GetType() != SEMICOLON) {
                                         _currentToken = saveToken;
-                                        return false;
+                                        if ((*_currentToken++)->GetType() != SEMICOLON) {
+                                            _currentToken = saveToken;
+                                            return false;
+                                        }
                                     }
                                 }
                             }
-
                         }
                     }
                 }
@@ -521,17 +523,17 @@ bool Parser::ArrayType() {
     auto saveToken = _currentToken;
     if ((*_currentToken)->GetType() == SLBR) {
         _currentToken++;
-        if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
-             _currentToken++;
-
+        if (Type()) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                _currentToken++;
-               if (Expr()){
-                   if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
-                       _currentToken++;
-                       return true;
-                   }
+               if (!Expr()) {
+                   _currentToken = saveToken;
+                   return false;
                }
+            }
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
+                _currentToken++;
+                return true;
             }
         }
     }
@@ -753,7 +755,7 @@ bool Parser::FunctionDefine() {
                 _currentToken++;
                 if (FunctionDefineArg()) {
                     while (_currentToken < _tokens.end()) {
-                        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == DOT) {
+                        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COM) {
                             _currentToken++;
                             if (FunctionDefineArg()) {
                                 continue;
@@ -762,6 +764,7 @@ bool Parser::FunctionDefine() {
                                 return false;
                             }
                         }
+                        else break;
                     }
                 }
                 if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
@@ -802,6 +805,9 @@ bool Parser::FunctionDefineArg() {
             if (Type()){
                 return true;
             }
+            if (ArrayType()){
+                return true;
+            }
         }
     }
 
@@ -824,4 +830,29 @@ bool Parser::FunctionReturn() {
 
     _currentToken = saveToken;
     return false;
+}
+
+bool Parser::BlockExit() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == BREAK || (*_currentToken)->GetType() == RETURN){
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON){
+            return true;
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+Parser::~Parser() {
+    for (auto token : _tokens) {
+        delete token;
+    }
+    
+    _tokens.clear();
 }

@@ -70,12 +70,16 @@ private:
     // Объявление переменных
     bool VarInit();
 
+    // Выход из блока
+    bool BlockExit();
+
     // Блок - внутри всё что угодно
     bool Block();
     bool BlockChecker();
 
 public:
     explicit Parser(const std::vector<Token *> &tokens);
+    ~Parser();
     bool Analyze();
 
 };

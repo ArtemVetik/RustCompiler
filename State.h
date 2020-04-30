@@ -11,6 +11,7 @@ class State {
 public:
     virtual bool Contains(char sym) = 0;
     virtual bool CanTransitTo(char sym) = 0;
+    virtual bool CanTransitTo(State* const &to) const { return true; }
     virtual Token* GetToken(const std::string &value) = 0;
     virtual ~State() = 0;
 };

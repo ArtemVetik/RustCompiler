@@ -23,6 +23,7 @@ enum TokenType {
     WHILE,      // while
     ELSE,       // else
     BREAK,      // break
+    RETURN,     // return
     AS,         // as
 
     // Разделители

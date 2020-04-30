@@ -17,7 +17,7 @@ public:
     Transition();
     ~Transition();
 
-    State* GetState(const State* const &currentState, char symbol);
+    State* GetState(State* const &currentState, char symbol);
 };
 
 #endif //RUSTCOMPILER_TRANSITION_H

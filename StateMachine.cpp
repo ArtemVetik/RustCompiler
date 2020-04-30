@@ -10,7 +10,6 @@ void StateMachine::TakeSymbol(char symbol) {
         _buffer += symbol;
         return;
     }
-    
     if (_currentState) {
         End();
     }
