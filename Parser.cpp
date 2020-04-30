@@ -283,6 +283,18 @@ bool Parser::Expr() {
 }
 
 bool Parser::Type() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    if ((*_currentToken)->GetType() == BAND){
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT){
+            _currentToken++;
+        }
+    }
+    
+    if (_currentToken >= _tokens.end())
+        return false;
     if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
         _currentToken++;
         return true;
@@ -727,5 +739,17 @@ bool Parser::InternalFunctionInvoke() {
     }
 
     _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::FunctionDefine() {
+    return false;
+}
+
+bool Parser::FunctionDefineArg() {
+    return false;
+}
+
+bool Parser::FunctionReturn() {
     return false;
 }

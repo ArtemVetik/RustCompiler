@@ -62,6 +62,11 @@ private:
     bool ArrayFuncArgument();
     bool InternalFunctionInvoke();
 
+    // Определение функций
+    bool FunctionDefine();
+    bool FunctionDefineArg();
+    bool FunctionReturn();
+
     // Объявление переменных
     bool VarInit();
 

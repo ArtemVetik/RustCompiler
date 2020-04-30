@@ -38,6 +38,7 @@ enum TokenType {
     LAND,       // &&
     BAND,       // &
     LOR,        // ||
+    ARROW,      // ->
 
 
     // Операции отношения
@@ -113,6 +114,7 @@ public:
             case LOR:return std::string("LOR");
             case PRINT: return std::string("PRINT");
             case BAND: return std::string("BAND");
+            case ARROW: return std::string("ARROW");
         }
         return std::string("");
     }

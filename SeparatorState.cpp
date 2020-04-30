@@ -33,6 +33,7 @@ void SeparatorState::Init() {
     _tokenPair.emplace_back(std::make_pair("&&", LAND));
     _tokenPair.emplace_back(std::make_pair("||", LOR));
     _tokenPair.emplace_back(std::make_pair("&", BAND));
+    _tokenPair.emplace_back(std::make_pair("->", ARROW));
 }
 
 Token* SeparatorState::GetToken(const std::string &value) {
