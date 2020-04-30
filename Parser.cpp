@@ -292,7 +292,7 @@ bool Parser::Type() {
             _currentToken++;
         }
     }
-    
+
     if (_currentToken >= _tokens.end())
         return false;
     if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
@@ -747,9 +747,44 @@ bool Parser::FunctionDefine() {
 }
 
 bool Parser::FunctionDefineArg() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == BAND){
+        _currentToken++;
+    }
+    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT){
+        _currentToken++;
+    }
+
+    if (IsID()){
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COLON){
+            _currentToken++;
+            if (Type()){
+                return true;
+            }
+        }
+    }
+
+    _currentToken = saveToken;
     return false;
 }
 
 bool Parser::FunctionReturn() {
+    if (_currentToken >= _tokens.end())
+        return false;
+
+    auto saveToken = _currentToken;
+
+    if ((*_currentToken)->GetType() == ARROW){
+        _currentToken++;
+        if (Type()){
+            return true;
+        }
+    }
+    
+    _currentToken = saveToken;
     return false;
 }
