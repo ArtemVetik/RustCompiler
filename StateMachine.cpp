@@ -21,7 +21,7 @@ void StateMachine::TakeSymbol(char symbol) {
     _currentState = _transition.GetState(_currentState, symbol);
 }
 
-void StateMachine::End(){
+void StateMachine::End() {
     Token* token = _currentState->GetToken(_buffer);
     if (!token)
     {
