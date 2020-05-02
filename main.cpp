@@ -2,6 +2,7 @@
 #include <fstream>
 #include "Lexer.h"
 #include "Parser.h"
+#include "AST_Tree.h"
 
 int main() {
     system("chcp 1251");
