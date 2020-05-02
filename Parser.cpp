@@ -70,7 +70,7 @@ bool Parser::MinTerminal() {
         return MinTerminal();
     }
 
-    //_currentToken = saveToken;
+    _currentToken = saveToken;
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
         if (BoolExpr()){
@@ -98,7 +98,7 @@ bool Parser::IsLiteral() {
         return true;
     }
 
-    return IsString() || IsChar() || IsBool() || IsNum();
+    return IsString() || IsBool() || IsNum();
 }
 
 bool Parser::IsString() {
@@ -116,10 +116,6 @@ bool Parser::IsNum() {
         return true;
     }
 
-    return false;
-}
-
-bool Parser::IsChar() {
     return false;
 }
 
@@ -847,12 +843,4 @@ bool Parser::BlockExit() {
 
     _currentToken = saveToken;
     return false;
-}
-
-Parser::~Parser() {
-    for (auto token : _tokens) {
-        delete token;
-    }
-    
-    _tokens.clear();
 }

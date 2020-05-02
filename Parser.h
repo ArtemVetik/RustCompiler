@@ -35,7 +35,6 @@ private:
     // Терминалы
     bool IsString();
     bool IsNum();
-    bool IsChar();
     bool IsBool();
     bool IsID();
 
@@ -79,9 +78,7 @@ private:
 
 public:
     explicit Parser(const std::vector<Token *> &tokens);
-    ~Parser();
     bool Analyze();
-
 };
 
 #endif //RUSTCOMPILER_PARSER_H
