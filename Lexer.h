@@ -10,6 +10,7 @@ class Lexer {
 private:
      StateMachine _stateMachine;
      std::string _fileName;
+
 public:
     explicit Lexer(std::string fileName);
     void Analyze();

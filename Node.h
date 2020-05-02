@@ -20,6 +20,9 @@ private:
 
 public:
     explicit Node(NodeData* const &data);
+    explicit Node();
+    void AddData(NodeData* const &data);
+    NodeData* GetData() const;
     void AddChild(Node *const &node);
     void Traversal();
 };

@@ -54,13 +54,13 @@ void StateMachine::PrintTokens() {
     }
 }
 
+const std::vector<Token*>& StateMachine::GetTokens() const {
+    return _tokens;
+}
+
 StateMachine::~StateMachine() {
     for (auto token : _tokens)
         delete token;
 
     _tokens.clear();
-}
-
-const std::vector<Token*>& StateMachine::GetTokens() const {
-    return _tokens;
 }

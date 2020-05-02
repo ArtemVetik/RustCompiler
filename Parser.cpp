@@ -5,30 +5,31 @@ Parser::Parser(const std::vector<Token *> &tokens) {
     _currentToken = _tokens.begin();
 }
 
-bool Parser::BoolExpr() {
-    if (Add())
+bool Parser::BoolExpr(Node *&root) {
+
+    if (Add(root))
     {
-        while (IsCompOperation())
+        root->AddChild(root);
+        while (IsCompOperation(root))
         {
-            if (!Add())
+            if (!Add(root))
                 return false;
         }
-
         return true;
     }
     return false;
 }
 
-bool Parser::Add() {
+bool Parser::Add(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (Mult()) {
+    if (Mult(root)) {
         while((_currentToken < _tokens.end()) &&
               ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
         {
             _currentToken++;
-            if (!Mult())
+            if (!Mult(root))
                 return false;
         }
         return true;
@@ -37,16 +38,17 @@ bool Parser::Add() {
     return false;
 }
 
-bool Parser::Mult() {
+bool Parser::Mult(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (MinTerminal()){
+    if (MinTerminal(root)){
+        root->AddChild(root);
         while((_currentToken < _tokens.end()) &&
               ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
         {
             _currentToken++;
-            if (!MinTerminal())
+            if (!MinTerminal(root))
                 return false;
         }
         return true;
@@ -55,25 +57,25 @@ bool Parser::Mult() {
     return false;
 }
 
-bool Parser::MinTerminal() {
+bool Parser::MinTerminal(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
     auto saveToken = _currentToken;
 
-    if (IsLiteral()) {
+    if (IsLiteral(root)) {
         return true;
     }
 
     if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
         (*_currentToken)->GetType() == EXCL) {
         _currentToken++;
-        return MinTerminal();
+        return MinTerminal(root);
     }
 
     _currentToken = saveToken;
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        if (BoolExpr()){
+        if (BoolExpr(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                 _currentToken++;
                 return true;
@@ -84,24 +86,24 @@ bool Parser::MinTerminal() {
     return false;
 }
 
-bool Parser::IsLiteral() {
+bool Parser::IsLiteral(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (FunctionInvoke() || InternalFunctionInvoke())
+    if (FunctionInvoke(root) || InternalFunctionInvoke(root)) // TODO node
         return true;
 
-    if (IsID()){
+    if (IsID(root)){
         auto saveToken = _currentToken;
-        if (!ArrayExpr())
+        if (!ArrayExpr(root)) // TODO node
             _currentToken = saveToken;
         return true;
     }
 
-    return IsString() || IsBool() || IsNum();
+    return IsString(root) || IsBool(root) || IsNum(root);
 }
 
-bool Parser::IsString() {
+bool Parser::IsString(Node *&root) {
     if ((*_currentToken)->GetType() == STRING) {
         _currentToken++;
         return true;
@@ -110,7 +112,7 @@ bool Parser::IsString() {
     return false;
 }
 
-bool Parser::IsNum() {
+bool Parser::IsNum(Node *&root) {
     if  ((*_currentToken)->GetType() == INTNUM || (*_currentToken)->GetType() == RNUM) {
         _currentToken++;
         return true;
@@ -119,7 +121,7 @@ bool Parser::IsNum() {
     return false;
 }
 
-bool Parser::IsBool() {
+bool Parser::IsBool(Node *&root) {
     if ((*_currentToken)->GetValue() == "true" || (*_currentToken)->GetValue() == "false") {
         _currentToken++;
         return true;
@@ -129,7 +131,10 @@ bool Parser::IsBool() {
 
 }
 
-bool Parser::IsID() {
+bool Parser::IsID(Node *&root) {
+    if (_currentToken >= _tokens.end())
+        return false;
+
     if ((*_currentToken)->GetType() == ID) {
         _currentToken++;
         return true;
@@ -138,7 +143,7 @@ bool Parser::IsID() {
     return false;
 }
 
-bool Parser::IsCompOperation() {
+bool Parser::IsCompOperation(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -154,21 +159,24 @@ bool Parser::IsCompOperation() {
 
 
 bool Parser::Analyze() {
-    while (FunctionDefine());
+
+    if (!BoolExpr(root))
+        return false;
+
 
     return _currentToken == _tokens.end();
 }
 
-bool Parser::LetDecl() {
+bool Parser::LetDecl(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
 
     if ((*_currentToken)->GetType() == LET) {
         _currentToken++;
-        if (Pat()){
+        if (Pat(root)){
             auto saveToken = _currentToken;
-            if (!Init()){
+            if (!Init(root)){
                 _currentToken = saveToken;
             }
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON){
@@ -181,7 +189,7 @@ bool Parser::LetDecl() {
     return false;
 }
 
-bool Parser::Pat() {
+bool Parser::Pat(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -190,25 +198,25 @@ bool Parser::Pat() {
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
 
-    if (IsID()) {
+    if (IsID(root)) {
         if ((*_currentToken)->GetType() == COLON) {
             _currentToken++;
-            return Type();
+            return Type(root);
         }
         return true;
     }
 
     //_currentToken = saveToken;
-    return GroupLet();
+    return GroupLet(root);
 }
 
-bool Parser::GroupLet() {
+bool Parser::GroupLet(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        if (VarList()){
+        if (VarList(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                 _currentToken++;
                 return true;
@@ -219,14 +227,14 @@ bool Parser::GroupLet() {
     return false;
 }
 
-bool Parser::VarList() {
+bool Parser::VarList(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == MUT)
         _currentToken++;
 
-    if (IsID()){
+    if (IsID(root)){
         while(_currentToken < _tokens.end()){
             if ((*_currentToken)->GetType() == COM)
                 _currentToken++;
@@ -245,30 +253,30 @@ bool Parser::VarList() {
     return false;
 }
 
-bool Parser::Init() {
+bool Parser::Init(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == ASSIG) {
         _currentToken++;
         auto saveToken = _currentToken;
-        if (Expr())
+        if (Expr(root))
             return true;
         _currentToken = saveToken;
-        if (GroupInit())
+        if (GroupInit(root))
             return true;
         _currentToken = saveToken;
     }
     return false;
 }
 
-bool Parser::Expr() {
+bool Parser::Expr(Node *&root) {
     auto saveToken = _currentToken;
 
-    IsID();
-    if (!ArrayExpr()){
+    IsID(root);
+    if (!ArrayExpr(root)){
         _currentToken = saveToken;
-        if (!BoolExpr()){
+        if (!BoolExpr(root)){
             _currentToken = saveToken;
             return false;
         }
@@ -277,7 +285,7 @@ bool Parser::Expr() {
     return true;
 }
 
-bool Parser::Type() {
+bool Parser::Type(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -287,7 +295,7 @@ bool Parser::Type() {
             _currentToken++;
         }
     }
-    
+
     if (_currentToken >= _tokens.end())
         return false;
     if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
@@ -298,28 +306,27 @@ bool Parser::Type() {
     return false;
 }
 
-bool Parser::GroupInit() {
+bool Parser::GroupInit(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == LFBR) {
         _currentToken++;
-        if (LitList()){
+        if (LitList(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                 _currentToken++;
                 return true;
             }
         }
     }
-
     return false;
 }
 
-bool Parser::LitList() {
+bool Parser::LitList(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (Expr()) {
+    if (Expr(root)) {
         while(_currentToken < _tokens.end()) {
             if ((*_currentToken)->GetType() == COM) {
                 _currentToken++;
@@ -327,7 +334,7 @@ bool Parser::LitList() {
             else
                 break;
 
-            if (_currentToken < _tokens.end() && Expr())
+            if (_currentToken < _tokens.end() && Expr(root))
                 continue;
             else
                 return false;
@@ -338,16 +345,16 @@ bool Parser::LitList() {
     return false;
 }
 
-bool Parser::ElseTail() {
+bool Parser::ElseTail(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == ELSE) {
         _currentToken++;
-        if (IfExpr()) return true;
+        if (IfExpr(root)) return true;
         else if ((*_currentToken)->GetType() == LBLBR) {
             _currentToken++;
-            if (Block()) {
+            if (Block(root)) {
                 if ((*_currentToken)->GetType() == RBLBR) {
                     _currentToken++;
                     return true;
@@ -359,20 +366,20 @@ bool Parser::ElseTail() {
     return false;
 }
 
-bool Parser::IfExpr() {
+bool Parser::IfExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == IF) {
         _currentToken++;
-        if (BoolExpr()) {
+        if (BoolExpr(root)) {
             if ((*_currentToken)->GetType() == LBLBR) {
                 _currentToken++;
-                if (Block()) {
+                if (Block(root)) {
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                         _currentToken++;
                         auto saveToken = _currentToken;
-                        if (!ElseTail()) {
+                        if (!ElseTail(root)) {
                             _currentToken = saveToken;
                         }
                         return true;
@@ -385,40 +392,40 @@ bool Parser::IfExpr() {
     return false;
 }
 
-bool Parser::Block() {
-    if (!BlockChecker())
+bool Parser::Block(Node *&root) {
+    if (!BlockChecker(root))
         return false;
 
     auto saveToken = _currentToken;
-    if (!Block())
+    if (!Block(root))
         _currentToken = saveToken;
 
     return true;
 }
 
-bool Parser::BlockChecker() {
+bool Parser::BlockChecker(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
 
-    if (!LetDecl()){
+    if (!LetDecl(root)){
         _currentToken = saveToken;
-        if (!VarInit()) {
+        if (!VarInit(root)) {
             _currentToken = saveToken;
-            if (!IfExpr()) {
+            if (!IfExpr(root)) {
                 _currentToken = saveToken;
-                if (!WhileExpr()) {
+                if (!WhileExpr(root)) {
                     _currentToken = saveToken;
-                    if (!LoopExpr()) {
+                    if (!LoopExpr(root)) {
                         _currentToken = saveToken;
-                        if (!Println()) {
+                        if (!Println(root)) {
                             _currentToken = saveToken;
-                            if (!LetArrayDecl()) {
+                            if (!LetArrayDecl(root)) {
                                 _currentToken = saveToken;
-                                if (!BlockExit()) {
+                                if (!BlockExit(root)) {
                                     _currentToken = saveToken;
-                                    if (!Expr() || _currentToken >= _tokens.end() ||
+                                    if (!Expr(root) || _currentToken >= _tokens.end() ||
                                         (*_currentToken++)->GetType() != SEMICOLON) {
                                         _currentToken = saveToken;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
@@ -438,7 +445,7 @@ bool Parser::BlockChecker() {
     return  true;
 }
 
-bool Parser::Println() {
+bool Parser::Println(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -448,9 +455,9 @@ bool Parser::Println() {
             _currentToken++;
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LFBR) {
                 _currentToken++;
-                if (IsString()) {
+                if (IsString(root)) {
                     auto saveToken = _currentToken;
-                    if (!ExprList()) {
+                    if (!ExprList(root)) {
                         _currentToken = saveToken;
                     }
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
@@ -468,12 +475,12 @@ bool Parser::Println() {
     return false;
 }
 
-bool Parser::ExprList() {
+bool Parser::ExprList(Node *&root) {
     while (_currentToken < _tokens.end()){
         auto saveToken = _currentToken;
         if ((*_currentToken)->GetType() == COM){
             _currentToken++;
-            if (!Expr()){
+            if (!Expr(root)){
                 _currentToken = saveToken;
                 return false;
             }
@@ -485,7 +492,7 @@ bool Parser::ExprList() {
     return false;
 }
 
-bool Parser::LetArrayDecl() {
+bool Parser::LetArrayDecl(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -493,12 +500,12 @@ bool Parser::LetArrayDecl() {
         _currentToken++;
         if ((*_currentToken)->GetType() == MUT)
             _currentToken++;
-        if (IsID()) {
+        if (IsID(root)) {
             if ((*_currentToken)->GetType() == COLON) {
                 _currentToken++;
-                if (ArrayType()) {
+                if (ArrayType(root)) {
                     auto saveToken = _currentToken;
-                    if (!Init())
+                    if (!Init(root))
                         _currentToken = saveToken;
                     if ((*_currentToken)->GetType() == SEMICOLON) {
                         _currentToken++;
@@ -512,17 +519,17 @@ bool Parser::LetArrayDecl() {
     return false;
 }
 
-bool Parser::ArrayType() {
+bool Parser::ArrayType(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
     if ((*_currentToken)->GetType() == SLBR) {
         _currentToken++;
-        if (Type()) {
+        if (Type(root)) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                _currentToken++;
-               if (!Expr()) {
+               if (!Expr(root)) {
                    _currentToken = saveToken;
                    return false;
                }
@@ -538,14 +545,14 @@ bool Parser::ArrayType() {
     return false;
 }
 
-bool Parser::ArrayExpr() {
+bool Parser::ArrayExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
     if ((*_currentToken)->GetType() == SLBR){
         _currentToken++;
-        if (ArrayElems()){
+        if (ArrayElems(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
                 _currentToken++;
                 return true;
@@ -557,17 +564,17 @@ bool Parser::ArrayExpr() {
     return false;
 }
 
-bool Parser::ArrayElems() {
+bool Parser::ArrayElems(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
-    if (Expr()){
+    if (Expr(root)){
         while (_currentToken < _tokens.end()){
             auto saveToken2 = _currentToken;
             if ((*_currentToken)->GetType() == COM){
                 _currentToken++;
-                if (!Expr()) {
+                if (!Expr(root)) {
                     _currentToken = saveToken2;
                     return false;
                 }
@@ -582,16 +589,16 @@ bool Parser::ArrayElems() {
     return false;
 }
 
-bool Parser::VarInit() {
+bool Parser::VarInit(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
-    if (IsID()){
+    if (IsID(root)){
         auto saveToken2 = _currentToken;
-        if (!ArrayExpr())
+        if (!ArrayExpr(root))
             _currentToken = saveToken2;
-        if (Init()){
+        if (Init(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                 _currentToken++;
                 return true;
@@ -603,17 +610,17 @@ bool Parser::VarInit() {
     return false;
 }
 
-bool Parser::WhileExpr() {
+bool Parser::WhileExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
     if ((*_currentToken)->GetType() == WHILE){
         _currentToken++;
-        if (BoolExpr()){
+        if (BoolExpr(root)){
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR){
                 _currentToken++;
-                if (Block()){
+                if (Block(root)){
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR){
                         _currentToken++;
                         return true;
@@ -627,7 +634,7 @@ bool Parser::WhileExpr() {
     return false;
 }
 
-bool Parser::LoopExpr() {
+bool Parser::LoopExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -637,7 +644,7 @@ bool Parser::LoopExpr() {
         _currentToken++;
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
             _currentToken++;
-            if (Block()) {
+            if (Block(root)) {
                 if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                     _currentToken++;
                     return true;
@@ -650,21 +657,21 @@ bool Parser::LoopExpr() {
     return false;
 }
 
-bool Parser::FunctionInvoke() {
+bool Parser::FunctionInvoke(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken1 = _currentToken;
 
-    if (IsID()) {
+    if (IsID(root)) {
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LFBR) {
             _currentToken++;
-            if (FuncArgument()) {
+            if (FuncArgument(root)) {
                 while (_currentToken < _tokens.end()) {
                     auto saveToken2 = _currentToken;
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COM) {
                         _currentToken++;
-                        if (FuncArgument()) {
+                        if (FuncArgument(root)) {
                             continue;
                         }
                         else {
@@ -686,15 +693,15 @@ bool Parser::FunctionInvoke() {
     return false;
 }
 
-bool Parser::FuncArgument() {
+bool Parser::FuncArgument(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
 
-    if (!Expr()) {
+    if (!Expr(root)) {
         _currentToken = saveToken;
-        if (!ArrayFuncArgument()) {
+        if (!ArrayFuncArgument(root)) {
             _currentToken = saveToken;
             return false;
         }
@@ -703,7 +710,7 @@ bool Parser::FuncArgument() {
     return true;
 }
 
-bool Parser::ArrayFuncArgument() {
+bool Parser::ArrayFuncArgument(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -713,7 +720,7 @@ bool Parser::ArrayFuncArgument() {
         _currentToken++;
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT)
             _currentToken++;
-        if (IsID()) {
+        if (IsID(root)) {
             return true;
         }
     }
@@ -722,16 +729,16 @@ bool Parser::ArrayFuncArgument() {
     return false;
 }
 
-bool Parser::InternalFunctionInvoke() {
+bool Parser::InternalFunctionInvoke(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     auto saveToken = _currentToken;
 
-    if (IsID()) {
+    if (IsID(root)) {
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == DOT) {
             _currentToken++;
-            if (FunctionInvoke())
+            if (FunctionInvoke(root))
                 return true;
         }
     }
@@ -740,20 +747,20 @@ bool Parser::InternalFunctionInvoke() {
     return false;
 }
 
-bool Parser::FunctionDefine() {
+bool Parser::FunctionDefine(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
     if ((*_currentToken)->GetType() == FUNCTION) {
         _currentToken++;
-        if (IsID()) {
+        if (IsID(root)) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LFBR) {
                 _currentToken++;
-                if (FunctionDefineArg()) {
+                if (FunctionDefineArg(root)) {
                     while (_currentToken < _tokens.end()) {
                         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COM) {
                             _currentToken++;
-                            if (FunctionDefineArg()) {
+                            if (FunctionDefineArg(root)) {
                                 continue;
                             }
                             else {
@@ -765,10 +772,10 @@ bool Parser::FunctionDefine() {
                 }
                 if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RGBR) {
                     _currentToken++;
-                    FunctionReturn();
+                    FunctionReturn(root);
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
                         _currentToken++;
-                        Block();
+                        Block(root);
                         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                             _currentToken++;
                             return true;
@@ -782,7 +789,7 @@ bool Parser::FunctionDefine() {
     return false;
 }
 
-bool Parser::FunctionDefineArg() {
+bool Parser::FunctionDefineArg(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -795,13 +802,13 @@ bool Parser::FunctionDefineArg() {
         _currentToken++;
     }
 
-    if (IsID()){
+    if (IsID(root)){
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COLON){
             _currentToken++;
-            if (Type()){
+            if (Type(root)){
                 return true;
             }
-            if (ArrayType()){
+            if (ArrayType(root)){
                 return true;
             }
         }
@@ -811,7 +818,7 @@ bool Parser::FunctionDefineArg() {
     return false;
 }
 
-bool Parser::FunctionReturn() {
+bool Parser::FunctionReturn(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -819,7 +826,7 @@ bool Parser::FunctionReturn() {
 
     if ((*_currentToken)->GetType() == ARROW){
         _currentToken++;
-        if (Type()){
+        if (Type(root)){
             return true;
         }
     }
@@ -828,7 +835,7 @@ bool Parser::FunctionReturn() {
     return false;
 }
 
-bool Parser::BlockExit() {
+bool Parser::BlockExit(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 

@@ -15,3 +15,15 @@ void Node::Traversal() {
         child->Traversal();
     }
 }
+
+Node::Node() {
+
+}
+
+void Node::AddData(NodeData *const &data) {
+    _data = data;
+}
+
+NodeData *Node::GetData() const{
+    return _data;
+}
