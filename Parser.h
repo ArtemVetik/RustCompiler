@@ -4,13 +4,13 @@
 #include <string>
 #include <vector>
 #include "Token.h"
-
-#define print std::cout << "->" <<(*_currentToken)->GetValue() << "<-" << std::endl;
+#include "ParserError.h"
 
 class Parser {
 private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
+    std::string _errorString;
 
     // Объявление переменных
     bool LetDecl();

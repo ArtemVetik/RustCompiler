@@ -48,7 +48,7 @@ Token* SeparatorState::GetToken(const std::string &value) {
 
 std::vector<Token*> SeparatorState::SplitTokens(const std::string &value){
     std::vector<Token*> tokens;
-    for (char i : value){
+    for (char i : value) {
         tokens.emplace_back(GetToken(std::string(1, i)));
     }
 

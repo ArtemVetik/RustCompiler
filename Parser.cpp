@@ -3,6 +3,7 @@
 Parser::Parser(const std::vector<Token *> &tokens) {
     _tokens = tokens;
     _currentToken = _tokens.begin();
+    _errorString = "";
 }
 
 bool Parser::BoolExpr() {
@@ -10,8 +11,10 @@ bool Parser::BoolExpr() {
     {
         while (IsCompOperation())
         {
-            if (!Add())
+            if (!Add()) {
+                _errorString = "Не найден второй операнд";
                 return false;
+            }
         }
 
         return true;
@@ -43,7 +46,8 @@ bool Parser::Mult() {
 
     if (MinTerminal()){
         while((_currentToken < _tokens.end()) &&
-              ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
+              ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MOD || (*_currentToken)->GetType() == MULT
+              || (*_currentToken)->GetType() == LAND))
         {
             _currentToken++;
             if (!MinTerminal())
@@ -156,7 +160,12 @@ bool Parser::IsCompOperation() {
 bool Parser::Analyze() {
     while (FunctionDefine());
 
-    return _currentToken == _tokens.end();
+    if (_currentToken != _tokens.end()) {
+        std::string errorString = "Синтаксический анализ не пройден: " + _errorString;
+        throw ParserError(errorString);
+    }
+
+    return true;
 }
 
 bool Parser::LetDecl() {
@@ -377,9 +386,15 @@ bool Parser::IfExpr() {
                         }
                         return true;
                     }
+                    _errorString = "не найдена фигурная скобка";
+                    return false;
                 }
             }
+            _errorString = "не найдена фигурная скобка";
+            return false;
         }
+        _errorString = "не найдено условие";
+        return false;
     }
 
     return false;
@@ -388,6 +403,9 @@ bool Parser::IfExpr() {
 bool Parser::Block() {
     if (!BlockChecker())
         return false;
+
+    if (_currentToken < _tokens.end() && ((*_currentToken)->GetType() == RBLBR))
+        return true;
 
     auto saveToken = _currentToken;
     if (!Block())
@@ -423,7 +441,10 @@ bool Parser::BlockChecker() {
                                         _currentToken = saveToken;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
-                                            return false;
+                                            if ((*_currentToken)->GetType() != RBLBR) {
+                                                _currentToken = saveToken;
+                                                return false;
+                                            }
                                         }
                                     }
                                 }
