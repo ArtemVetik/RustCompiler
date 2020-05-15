@@ -5,22 +5,31 @@ Parser::Parser(const std::vector<Token *> &tokens) {
     _currentToken = _tokens.begin();
 }
 
-bool Parser::BoolExpr(Node *&root) {
+bool Parser::BoolExpr(Node * &root) {
 
-    if (Add(root))
+    Node* tmpRoot = nullptr;
+    Node* leftChild, *rightChild;
+
+    if (Add(leftChild))
     {
-        root->AddChild(root);
-        while (IsCompOperation(root))
+        while (IsCompOperation(tmpRoot))
         {
-            if (!Add(root))
+            if (!Add(rightChild))
                 return false;
+
+            tmpRoot->AddChild(leftChild);
+            tmpRoot->AddChild(rightChild);
         }
+        if (root == nullptr)
+            root = leftChild;
         return true;
     }
     return false;
 }
 
 bool Parser::Add(Node *&root) {
+	
+	
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -150,6 +159,7 @@ bool Parser::IsCompOperation(Node *&root) {
     if ((*_currentToken)->GetType() == MORE || (*_currentToken)->GetType() == LESS || (*_currentToken)->GetType() == ASMR || (*_currentToken)->GetType() == ASLS ||
         (*_currentToken)->GetType() == NASSIG || (*_currentToken)->GetType() == EQUAL)
     {
+        root = new Node(new NodeData((*_currentToken)->GetValue()));
         _currentToken++;
         return true;
     }
@@ -159,10 +169,11 @@ bool Parser::IsCompOperation(Node *&root) {
 
 
 bool Parser::Analyze() {
+    Node* root = new Node(new NodeData("AST_Root"));
+    AST_Tree tree(root);
 
     if (!BoolExpr(root))
         return false;
-
 
     return _currentToken == _tokens.end();
 }

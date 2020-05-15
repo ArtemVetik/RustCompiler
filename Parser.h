@@ -78,8 +78,6 @@ private:
     bool Block(Node *&root);
     bool BlockChecker(Node *&root);
 
-    Node* root; // TODO delete
-
 public:
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();
