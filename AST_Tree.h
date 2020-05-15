@@ -12,6 +12,7 @@ public:
     ~AST_Tree() = default;
     Node* const& GetRoot() const;
     void Traversal() const;
+    void DeleteNode(Node* &node);
 };
 
 #endif //RUSTCOMPILER_AST_TREE_H

@@ -78,6 +78,7 @@ private:
     bool Block(Node *&root);
     bool BlockChecker(Node *&root);
 
+    AST_Tree tree;
 public:
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();

@@ -24,19 +24,15 @@ private:
     Node* _parent;
 
 public:
-
-    void Debug(){
-        std::cout << _data->value << " " << _parent->GetData()->value << " " << _childs[0]->GetData()->value << " " << _childs[1]->GetData()->value << std::endl;
-    }
-
     explicit Node(NodeData* const &data);
     explicit Node(const Node &node);
     explicit Node();
-    void SetParent(Node* &parent);
+    ~Node();
+    void SetParent(Node* const &parent);
     void AddData(NodeData* const &data);
     Node* &GetParent();
     NodeData* GetData() const;
-    void AddChild(Node *const &node);
+    void AddChild(Node *const &child);
     void Traversal();
 };
 

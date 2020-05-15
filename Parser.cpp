@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-Parser::Parser(const std::vector<Token *> &tokens) {
+Parser::Parser(const std::vector<Token *> &tokens) : tree(new Node(new NodeData("AST_Root"))) {
     _tokens = tokens;
     _currentToken = _tokens.begin();
 }
@@ -8,42 +8,69 @@ Parser::Parser(const std::vector<Token *> &tokens) {
 bool Parser::BoolExpr(Node * &root) {
 
     Node* tmpRoot = nullptr;
-    Node* leftChild, *rightChild;
+    Node* leftChild = nullptr, *rightChild = nullptr;
 
     if (Add(leftChild))
     {
         while (IsCompOperation(tmpRoot))
         {
-            if (!Add(rightChild))
+            if (!Add(rightChild)){
+                tree.DeleteNode(rightChild);
+                tree.DeleteNode(tmpRoot);
                 return false;
+            }
 
-            tmpRoot->AddChild(leftChild);
+            if (root == nullptr)
+                tmpRoot->AddChild(leftChild);
+            else
+                tmpRoot->AddChild(root);
+
             tmpRoot->AddChild(rightChild);
+            root = new Node(*tmpRoot);
+            tree.DeleteNode(rightChild);
+            tree.DeleteNode(tmpRoot);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
+
+    tree.DeleteNode(leftChild);
     return false;
 }
 
 bool Parser::Add(Node *&root) {
-	
-	
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (Mult(root)) {
+    Node* tmpRoot = nullptr;
+    Node* leftChild = nullptr, *rightChild = nullptr;
+
+    if (Mult(leftChild)) {
         while((_currentToken < _tokens.end()) &&
               ((*_currentToken)->GetType() == PLUS  || (*_currentToken)->GetType() == MINUS || (*_currentToken)->GetType() == LOR))
         {
+            tmpRoot = new Node(new NodeData((*_currentToken)->GetValue()));
             _currentToken++;
-            if (!Mult(root))
+            if (!Mult(rightChild)) {
+                tree.DeleteNode(tmpRoot);
+                tree.DeleteNode(rightChild);
                 return false;
+            }
+
+            if (root == nullptr)
+                tmpRoot->AddChild(leftChild);
+            else
+                tmpRoot->AddChild(root);
+            tmpRoot->AddChild(rightChild);
+            root = new Node(*tmpRoot);
+            tree.DeleteNode(rightChild);
+            tree.DeleteNode(tmpRoot);
         }
         return true;
     }
 
+    tree.DeleteNode(leftChild);
     return false;
 }
 
@@ -51,22 +78,41 @@ bool Parser::Mult(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (MinTerminal(root)){
-        root->AddChild(root);
+    Node* tmpRoot = nullptr;
+    Node* leftChild = nullptr, *rightChild = nullptr;
+
+    if (MinTerminal(leftChild)){
         while((_currentToken < _tokens.end()) &&
               ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == LAND))
         {
+            tmpRoot = new Node(new NodeData((*_currentToken)->GetValue()));
             _currentToken++;
-            if (!MinTerminal(root))
+            if (!MinTerminal(rightChild)){
+                tree.DeleteNode(rightChild);
+                tree.DeleteNode(tmpRoot);
                 return false;
+            }
+
+            if (root == nullptr)
+                tmpRoot->AddChild(leftChild);
+            else
+                tmpRoot->AddChild(root);
+            tmpRoot->AddChild(rightChild);
+            root = new Node(*tmpRoot);
+            tree.DeleteNode(tmpRoot);
+            tree.DeleteNode(rightChild);
         }
+        if (root == nullptr)
+            root = leftChild;
         return true;
     }
 
+    tree.DeleteNode(leftChild);
     return false;
 }
 
 bool Parser::MinTerminal(Node *&root) {
+
     if (_currentToken >= _tokens.end())
         return false;
     auto saveToken = _currentToken;
@@ -77,8 +123,17 @@ bool Parser::MinTerminal(Node *&root) {
 
     if ((*_currentToken)->GetType() == PLUS || (*_currentToken)->GetType() == MINUS ||
         (*_currentToken)->GetType() == EXCL) {
+        root = new Node(new NodeData((*_currentToken)->GetValue()));
         _currentToken++;
-        return MinTerminal(root);
+
+        Node* next = nullptr;
+        if (MinTerminal(next)){
+            root->AddChild(next);
+            return true;
+        }
+        tree.DeleteNode(next);
+        tree.DeleteNode(root);
+        return false;
     }
 
     _currentToken = saveToken;
@@ -92,6 +147,7 @@ bool Parser::MinTerminal(Node *&root) {
         }
     }
 
+    tree.DeleteNode(root);
     return false;
 }
 
@@ -114,6 +170,7 @@ bool Parser::IsLiteral(Node *&root) {
 
 bool Parser::IsString(Node *&root) {
     if ((*_currentToken)->GetType() == STRING) {
+        root = new Node(new NodeData((*_currentToken)->GetValue()));
         _currentToken++;
         return true;
     }
@@ -123,6 +180,7 @@ bool Parser::IsString(Node *&root) {
 
 bool Parser::IsNum(Node *&root) {
     if  ((*_currentToken)->GetType() == INTNUM || (*_currentToken)->GetType() == RNUM) {
+        root = new Node(new NodeData((*_currentToken)->GetValue()));
         _currentToken++;
         return true;
     }
@@ -132,6 +190,7 @@ bool Parser::IsNum(Node *&root) {
 
 bool Parser::IsBool(Node *&root) {
     if ((*_currentToken)->GetValue() == "true" || (*_currentToken)->GetValue() == "false") {
+        root = new Node(new NodeData((*_currentToken)->GetValue()));
         _currentToken++;
         return true;
     }
@@ -167,13 +226,13 @@ bool Parser::IsCompOperation(Node *&root) {
     return false;
 }
 
-
 bool Parser::Analyze() {
-    Node* root = new Node(new NodeData("AST_Root"));
-    AST_Tree tree(root);
-
-    if (!BoolExpr(root))
+    Node* tmp = nullptr;
+    if (!BoolExpr(tmp))
         return false;
+
+    tmp->Traversal();
+    std::cout << std::endl;
 
     return _currentToken == _tokens.end();
 }

@@ -44,32 +44,14 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    Node* node1, *node2, *node3, *node4, *node5;
-    node1 = new Node(new NodeData("1"));
-    node2 = new Node(new NodeData("2"));
-    node3 = new Node(new NodeData("3"));
-    node4 = new Node(new NodeData("4"));
-    node5 = new Node(new NodeData("5"));
+    //std::string fileName = Menu();
 
-    node1->AddChild(node2);
-    node1->AddChild(node3);
-    node1->SetParent(node4);
+    //if (fileName.empty()) {
+    //    system("pause");
+    //    return 0;
+    //}
 
-    //Node* tmp = new Node(*node1);
-    //delete(node1);
-    //node1 = nullptr;
-
-    //tmp->Debug();
-    return 1;
-
-    std::string fileName = Menu();
-
-    if (fileName.empty()) {
-        system("pause");
-        return 0;
-    }
-
-    Lexer lexer(fileName);
+    Lexer lexer("test.txt");
 
     try {
         lexer.Analyze();

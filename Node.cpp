@@ -1,11 +1,12 @@
 #include "Node.h"
 
 Node::Node(NodeData *const &data) {
-    _data = data;
+    _data = new NodeData(*data);
+    _parent = nullptr;
 }
 
-void Node::AddChild(Node *const &node) {
-    _childs.emplace_back(node);
+void Node::AddChild(Node *const &child) {
+    _childs.emplace_back(new Node(*child));
 }
 
 void Node::Traversal() {
@@ -22,15 +23,15 @@ Node::Node() {
 }
 
 void Node::AddData(NodeData *const &data) {
-    _data = data;
+    _data = new NodeData(*data);
 }
 
 NodeData *Node::GetData() const{
     return _data;
 }
 
-void Node::SetParent(Node * &parent) {
-    _parent = new Node(*parent->GetParent());
+void Node::SetParent(Node * const &parent) {
+    _parent = new Node(*parent);
 }
 
 Node* &Node::GetParent() {
@@ -38,11 +39,30 @@ Node* &Node::GetParent() {
 }
 
 Node::Node(const Node &node) {
+    _parent = nullptr;
+    _data = nullptr;
+
     if (node._data)
-        _data = new NodeData(*node._data);
+        _data = new NodeData(*(node._data));
     if (node._parent)
-        _parent = new Node(*_parent);
+        _parent = new Node(*(node._parent));
     for (auto child : node._childs){
         _childs.emplace_back(new Node(*child));
     }
+}
+
+Node::~Node() {
+    if (_data) {
+        delete _data;
+        _data = nullptr;
+    }
+    if (_parent) {
+        delete _parent;
+        _parent = nullptr;
+    }
+    for (Node* child : _childs){
+        delete child;
+        child = nullptr;
+    }
+    _childs.clear();
 }
