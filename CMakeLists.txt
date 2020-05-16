@@ -4,4 +4,4 @@ project(RustCompiler)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-static")
 
-add_executable(RustCompiler main.cpp StateMachine.cpp StateMachine.h State.cpp State.h Transition.cpp Transition.h IDState.cpp IDState.h NumState.cpp NumState.h StringState.cpp StringState.h IgnoreState.cpp IgnoreState.h SeparatorState.cpp SeparatorState.h TokenType.h Token.cpp Token.h LexError.h Lexer.cpp Lexer.h Parser.cpp Parser.h AST_Tree.cpp AST_Tree.h Node.cpp Node.h ParserError.h)
+add_executable(RustCompiler main.cpp StateMachine.cpp StateMachine.h State.cpp State.h Transition.cpp Transition.h IDState.cpp IDState.h NumState.cpp NumState.h StringState.cpp StringState.h IgnoreState.cpp IgnoreState.h SeparatorState.cpp SeparatorState.h TokenType.h Token.cpp Token.h LexError.h Lexer.cpp Lexer.h Parser.cpp Parser.h AST_Tree.cpp AST_Tree.h Node.cpp Node.h ParserError.h RuleType.h)

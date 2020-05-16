@@ -13,6 +13,7 @@ class Parser {
 private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
+    AST_Tree tree;
 
     // Объявление переменных
     bool LetDecl(Node *&root);
@@ -23,12 +24,14 @@ private:
     bool Expr(Node *&root);
     bool GroupInit(Node *&root);
     bool LitList(Node *&root);
-    bool Type(Node *&root);
 
+    bool Type(Node *&root);
     // Ветвления
     bool IfExpr(Node *&root);
     bool ElseTail(Node *&root);
     bool BoolExpr(Node *&root);
+    bool BoolExprOr(Node *&root);
+    bool BoolExprComp(Node *&root);
     bool Add(Node *&root);
     bool Mult(Node *&root);
     bool MinTerminal(Node *&root);
@@ -77,8 +80,7 @@ private:
     // Блок - внутри всё что угодно
     bool Block(Node *&root);
     bool BlockChecker(Node *&root);
-
-    AST_Tree tree;
+    
 public:
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();

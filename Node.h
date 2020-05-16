@@ -1,19 +1,28 @@
+#include <utility>
+
 #ifndef RUSTCOMPILER_NODE_H
 #define RUSTCOMPILER_NODE_H
 
 #include <string>
 #include <iostream>
 #include <vector>
+#include "Token.h"
+#include "RuleType.h"
 
 struct NodeData {
-    std::string value;
+    Token token;
+    RuleType type;
 
-    explicit NodeData(const std::string &string) {
-        value = string;
+    explicit NodeData() : token(), type() { }
+
+    explicit NodeData(const Token &token, const RuleType &type) {
+        this->token = token;
+        this->type = type;
     }
 
-    explicit NodeData(const NodeData &data) {
-        value = data.value;
+    NodeData(const NodeData &data) {
+        this->token = data.token;
+        this->type = data.type;
     }
 };
 
@@ -25,7 +34,8 @@ private:
 
 public:
     explicit Node(NodeData* const &data);
-    explicit Node(const Node &node);
+
+    Node(const Node &node);
     explicit Node();
     ~Node();
     void SetParent(Node* const &parent);

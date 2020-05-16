@@ -6,14 +6,18 @@ Node::Node(NodeData *const &data) {
 }
 
 void Node::AddChild(Node *const &child) {
-    _childs.emplace_back(new Node(*child));
+    if (child)
+        _childs.emplace_back(new Node(*child));
+    else
+        _childs.emplace_back(nullptr);
 }
 
 void Node::Traversal() {
-    std::cout << "DATA: " << _data->value << std::endl;
+    std::cout << "DATA: " << _data->token.GetValue() << std::endl;
 
     for (auto const& child : _childs) {
-        child->Traversal();
+        if (child)
+            child->Traversal();
     }
 }
 
@@ -47,7 +51,7 @@ Node::Node(const Node &node) {
     if (node._parent)
         _parent = new Node(*(node._parent));
     for (auto child : node._childs){
-        _childs.emplace_back(new Node(*child));
+        AddChild(child);
     }
 }
 

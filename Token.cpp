@@ -16,3 +16,16 @@ void Token::PrintToken() const {
               "[ID] " << _id << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 }
+
+Token::Token(const std::string &value) {
+    _type = TokenType::IGNORE;
+    _value = value;
+    _id = 0;
+}
+/*
+Token &Token::operator=(const Token &token) {
+    _type = token._type;
+    _value = token._value;
+    _id = token._id;
+    return *this;
+}*/
