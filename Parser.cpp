@@ -159,7 +159,7 @@ bool Parser::Mult(Node *&root) {
 
     if (MinTerminal(leftChild)){
         while((_currentToken < _tokens.end()) &&
-              ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT ))
+              ((*_currentToken)->GetType() == DIV || (*_currentToken)->GetType() == MULT || (*_currentToken)->GetType() == MOD))
         {
             tmpRoot = new Node(new NodeData(**_currentToken, BinaryExpression));
             _currentToken++;
@@ -236,7 +236,7 @@ bool Parser::IsLiteral(Node *&root) {
 
     if (IsID(root)){
         auto saveToken = _currentToken;
-        if (!ArrayExpr(root)) // TODO node
+        if (!ArrayExpr(root))
             _currentToken = saveToken;
         return true;
     }
@@ -305,14 +305,17 @@ bool Parser::IsCompOperation(Node *&root) {
 
 bool Parser::Analyze() {
     Node* tmp = nullptr;
-    if (!Block(tmp)){
-        return false;
-    }
+    while (FunctionDefine(tmp));
+        //throw ParserError("Error");
+    //if (!Block(tmp))
+        //throw ParserError("Error");
 
     tmp->Traversal();
     std::cout << std::endl;
 
-    return _currentToken == _tokens.end();
+    if (_currentToken == _tokens.end())
+        return true;
+    else throw ParserError((*_currentToken)->GetValue());
 }
 
 bool Parser::LetDecl(Node *&root) {
@@ -468,16 +471,28 @@ bool Parser::Init(Node *&root) {
 bool Parser::Expr(Node *&root) {
     auto saveToken = _currentToken;
 
-    IsID(root);
-    if (!ArrayExpr(root)){
-        _currentToken = saveToken;
-        if (!BoolExpr(root)){
-            _currentToken = saveToken;
-            return false;
-        }
+    Node *idNode = nullptr, *arrayExprNode = nullptr;
+
+    if (IsID(idNode) && ArrayExpr(arrayExprNode)) {
+        root = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
+        root->AddChild(idNode);
+        root->AddChild(arrayExprNode);
+        tree.DeleteNode(idNode);
+        tree.DeleteNode(arrayExprNode);
+        return true;
     }
 
-    return true;
+    _currentToken = saveToken;
+    if (ArrayExpr(root))
+        return true;
+
+    _currentToken = saveToken;
+    if (BoolExpr(root))
+        return true;
+
+    tree.DeleteNode(idNode);
+    tree.DeleteNode(arrayExprNode);
+    return false;
 }
 
 bool Parser::Type(Node *&root) {
@@ -573,18 +588,27 @@ bool Parser::IfExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+        Node *boolExprNode = nullptr, *blockNode = nullptr, *elseTailNode = nullptr;
+
     if ((*_currentToken)->GetType() == IF) {
+        root = new Node(new NodeData(**_currentToken, RuleType::IfExpr));
         _currentToken++;
-        if (BoolExpr(root)) {
+        if (BoolExpr(boolExprNode)) {
             if ((*_currentToken)->GetType() == LBLBR) {
                 _currentToken++;
-                if (Block(root)) {
+                if (Block(blockNode)) {
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                         _currentToken++;
                         auto saveToken = _currentToken;
-                        if (!ElseTail(root)) {
+                        if (!ElseTail(elseTailNode)) {
                             _currentToken = saveToken;
                         }
+                        root->AddChild(boolExprNode);
+                        root->AddChild(blockNode);
+                        root->AddChild(elseTailNode);
+                        tree.DeleteNode(boolExprNode);
+                        tree.DeleteNode(blockNode);
+                        tree.DeleteNode(elseTailNode);
                         return true;
                     }
                 }
@@ -592,18 +616,23 @@ bool Parser::IfExpr(Node *&root) {
         }
     }
 
+    tree.DeleteNode(root);
+    tree.DeleteNode(boolExprNode);
+    tree.DeleteNode(blockNode);
+    tree.DeleteNode(elseTailNode);
     return false;
 }
 
 bool Parser::Block(Node *&root) {
-
     Node* rule = nullptr;
     if (!BlockChecker(rule)) {
         tree.DeleteNode(rule);
         return false;
     }
+
     if (root == nullptr)
-        root = new Node(new NodeData(Token("Root"),RuleType::Block));
+        root = new Node(new NodeData(Token("BlockRoot"), RuleType::Block));
+
     root->AddChild(rule);
     tree.DeleteNode(rule);
 
@@ -622,7 +651,7 @@ bool Parser::BlockChecker(Node *&root) {
 
     if (!LetDecl(root)){
         _currentToken = saveToken;
-        if (!VarInit(root)) {
+        if (!Assignment(root)) {
             _currentToken = saveToken;
             if (!IfExpr(root)) {
                 _currentToken = saveToken;
@@ -641,6 +670,7 @@ bool Parser::BlockChecker(Node *&root) {
                                         _currentToken = saveToken;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
+                                            tree.DeleteNode(root);
                                             return false;
                                         }
                                     }
@@ -703,23 +733,40 @@ bool Parser::ExprList(Node *&root) {
     return false;
 }
 
+
 bool Parser::LetArrayDecl(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    Node *arrPatNode = nullptr, *mutArrNode = nullptr, *idArrNode = nullptr, *arrTypeNode = nullptr, *arrInitNode = nullptr;
+
     if ((*_currentToken)->GetType() == LET) {
+        root = new Node(new NodeData(Token("ArrDecl"), RuleType::ArrayDeclaration));
         _currentToken++;
-        if ((*_currentToken)->GetType() == MUT)
+        if ((*_currentToken)->GetType() == MUT) {
+            mutArrNode = new Node(new NodeData(**_currentToken, RuleType::None));
             _currentToken++;
-        if (IsID(root)) {
+        }
+        if (IsID(idArrNode)) {
             if ((*_currentToken)->GetType() == COLON) {
                 _currentToken++;
-                if (ArrayType(root)) {
+                if (ArrayType(arrTypeNode)) {
                     auto saveToken = _currentToken;
-                    if (!Init(root))
+                    if (!Init(arrInitNode))
                         _currentToken = saveToken;
                     if ((*_currentToken)->GetType() == SEMICOLON) {
                         _currentToken++;
+                        arrPatNode = new Node(new NodeData(Token("ArrPat"), RuleType::None));
+                        arrPatNode->AddChild(mutArrNode);
+                        arrPatNode->AddChild(idArrNode);
+                        arrPatNode->AddChild(arrTypeNode);
+                        root->AddChild(arrPatNode);
+                        root->AddChild(arrInitNode);
+                        tree.DeleteNode(mutArrNode);
+                        tree.DeleteNode(idArrNode);
+                        tree.DeleteNode(arrTypeNode);
+                        tree.DeleteNode(arrInitNode);
+                        tree.DeleteNode(arrPatNode);
                         return true;
                     }
                 }
@@ -727,6 +774,12 @@ bool Parser::LetArrayDecl(Node *&root) {
         }
     }
 
+    tree.DeleteNode(mutArrNode);
+    tree.DeleteNode(idArrNode);
+    tree.DeleteNode(arrTypeNode);
+    tree.DeleteNode(arrInitNode);
+    tree.DeleteNode(arrPatNode);
+    tree.DeleteNode(root);
     return false;
 }
 
@@ -734,25 +787,37 @@ bool Parser::ArrayType(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    Node *typeNode = nullptr, *countNode = nullptr;
+    root = new Node(new NodeData(Token("ArrType"), RuleType::None));
+
     auto saveToken = _currentToken;
     if ((*_currentToken)->GetType() == SLBR) {
         _currentToken++;
-        if (Type(root)) {
+        if (Type(typeNode)) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                _currentToken++;
-               if (!Expr(root)) {
+               if (!Expr(countNode)) {
                    _currentToken = saveToken;
+                   tree.DeleteNode(typeNode);
+                   tree.DeleteNode(countNode);
                    return false;
                }
             }
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
                 _currentToken++;
+                root->AddChild(typeNode);
+                root->AddChild(countNode);
+                tree.DeleteNode(typeNode);
+                tree.DeleteNode(countNode);
                 return true;
             }
         }
     }
 
     _currentToken = saveToken;
+    tree.DeleteNode(typeNode);
+    tree.DeleteNode(countNode);
+    tree.DeleteNode(root);
     return false;
 }
 
@@ -760,11 +825,12 @@ bool Parser::ArrayExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+
     auto saveToken = _currentToken;
-    if ((*_currentToken)->GetType() == SLBR){
+    if ((*_currentToken)->GetType() == SLBR) {
         _currentToken++;
         if (ArrayElems(root)){
-            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR) {
                 _currentToken++;
                 return true;
             }
@@ -779,45 +845,81 @@ bool Parser::ArrayElems(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    root = new Node(new NodeData(Token("ArrayElem"), RuleType::ArrayElemes));
+    Node *exprNode = nullptr;
+
     auto saveToken = _currentToken;
-    if (Expr(root)){
-        while (_currentToken < _tokens.end()){
+    if (Expr(exprNode)) {
+        while (_currentToken < _tokens.end()) {
+            root->AddChild(exprNode);
+            tree.DeleteNode(exprNode);
             auto saveToken2 = _currentToken;
-            if ((*_currentToken)->GetType() == COM){
+            if ((*_currentToken)->GetType() == COM || (*_currentToken)->GetType() == SEMICOLON) {
                 _currentToken++;
-                if (!Expr(root)) {
+                if (!Expr(exprNode)) {
                     _currentToken = saveToken2;
+                    tree.DeleteNode(exprNode);
+                    tree.DeleteNode(root);
                     return false;
                 }
             }
             else
                 break;
         }
+        tree.DeleteNode(exprNode);
         return true;
     }
 
     _currentToken = saveToken;
+    tree.DeleteNode(exprNode);
+    tree.DeleteNode(root);
     return false;
 }
 
-bool Parser::VarInit(Node *&root) {
+bool Parser::Assignment(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    root = new Node(new NodeData(Token("AssignmentExpr"), RuleType::AssignmentExpression));
+    Node *idNode = nullptr, *memberExprNode = nullptr, *arrayExprNode = nullptr, *initNode = nullptr;
+
     auto saveToken = _currentToken;
-    if (IsID(root)){
-        auto saveToken2 = _currentToken;
-        if (!ArrayExpr(root))
-            _currentToken = saveToken2;
-        if (Init(root)){
+    if (IsID(idNode) && ArrayExpr(arrayExprNode)) {
+        memberExprNode = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
+        memberExprNode->AddChild(idNode);
+        memberExprNode->AddChild(arrayExprNode);
+        if (Init(initNode)) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
                 _currentToken++;
+                root->AddChild(memberExprNode);
+                root->AddChild(initNode);
+                tree.DeleteNode(idNode);
+                tree.DeleteNode(arrayExprNode);
+                tree.DeleteNode(memberExprNode);
+                tree.DeleteNode(initNode);
                 return true;
             }
         }
     }
 
     _currentToken = saveToken;
+    if (IsID(idNode) && Init(initNode)) {
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+            _currentToken++;
+            root->AddChild(idNode);
+            root->AddChild(initNode);
+            tree.DeleteNode(idNode);
+            tree.DeleteNode(initNode);
+            return true;
+        }
+    }
+
+    _currentToken = saveToken;
+    tree.DeleteNode(idNode);
+    tree.DeleteNode(arrayExprNode);
+    tree.DeleteNode(memberExprNode);
+    tree.DeleteNode(initNode);
+    tree.DeleteNode(root);
     return false;
 }
 
@@ -825,15 +927,22 @@ bool Parser::WhileExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    Node *boolExprNode = nullptr, *blockNode = nullptr;
+
     auto saveToken = _currentToken;
-    if ((*_currentToken)->GetType() == WHILE){
+    if ((*_currentToken)->GetType() == WHILE) {
+        root = new Node(new NodeData(**_currentToken, RuleType::WhileExpr));
         _currentToken++;
-        if (BoolExpr(root)){
-            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR){
+        if (BoolExpr(boolExprNode)){
+            if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
                 _currentToken++;
-                if (Block(root)){
-                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR){
+                if (Block(blockNode)) {
+                    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                         _currentToken++;
+                        root->AddChild(boolExprNode);
+                        root->AddChild(blockNode);
+                        tree.DeleteNode(boolExprNode);
+                        tree.DeleteNode(blockNode);
                         return true;
                     }
                 }
@@ -842,6 +951,9 @@ bool Parser::WhileExpr(Node *&root) {
     }
 
     _currentToken = saveToken;
+    tree.DeleteNode(boolExprNode);
+    tree.DeleteNode(blockNode);
+    tree.DeleteNode(root);
     return false;
 }
 
@@ -851,13 +963,18 @@ bool Parser::LoopExpr(Node *&root) {
 
     auto saveToken = _currentToken;
 
+    Node *blockNode = nullptr;
+
     if ((*_currentToken)->GetType() == LOOP) {
+        root = new Node(new NodeData(**_currentToken, RuleType::LoopExpr));
         _currentToken++;
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
             _currentToken++;
-            if (Block(root)) {
+            if (Block(blockNode)) {
                 if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                     _currentToken++;
+                    root->AddChild(blockNode);
+                    tree.DeleteNode(blockNode);
                     return true;
                 }
             }
@@ -865,6 +982,8 @@ bool Parser::LoopExpr(Node *&root) {
     }
 
     _currentToken = saveToken;
+    tree.DeleteNode(root);
+    tree.DeleteNode(blockNode);
     return false;
 }
 
@@ -1006,15 +1125,15 @@ bool Parser::FunctionDefineArg(Node *&root) {
 
     auto saveToken = _currentToken;
 
-    if ((*_currentToken)->GetType() == BAND){
+    if ((*_currentToken)->GetType() == BAND) {
         _currentToken++;
     }
-    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT){
+    if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT) {
         _currentToken++;
     }
 
     if (IsID(root)){
-        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COLON){
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == COLON) {
             _currentToken++;
             if (Type(root)){
                 return true;
@@ -1035,7 +1154,7 @@ bool Parser::FunctionReturn(Node *&root) {
 
     auto saveToken = _currentToken;
 
-    if ((*_currentToken)->GetType() == ARROW){
+    if ((*_currentToken)->GetType() == ARROW) {
         _currentToken++;
         if (Type(root)){
             return true;
@@ -1052,9 +1171,9 @@ bool Parser::BlockExit(Node *&root) {
 
     auto saveToken = _currentToken;
 
-    if ((*_currentToken)->GetType() == BREAK || (*_currentToken)->GetType() == RETURN){
+    if ((*_currentToken)->GetType() == BREAK || (*_currentToken)->GetType() == RETURN) {
         _currentToken++;
-        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON){
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
             return true;
         }
     }

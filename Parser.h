@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "ParserError.h"
 #include "Token.h"
 #include "AST_Tree.h"
 #include "Node.h"
@@ -24,8 +25,8 @@ private:
     bool Expr(Node *&root);
     bool GroupInit(Node *&root);
     bool LitList(Node *&root);
-
     bool Type(Node *&root);
+
     // Ветвления
     bool IfExpr(Node *&root);
     bool ElseTail(Node *&root);
@@ -71,8 +72,8 @@ private:
     bool FunctionDefineArg(Node *&root);
     bool FunctionReturn(Node *&root);
 
-    // Объявление переменных
-    bool VarInit(Node *&root);
+    // Присваивание
+    bool Assignment(Node *&root);
 
     // Выход из блока
     bool BlockExit(Node *&root);

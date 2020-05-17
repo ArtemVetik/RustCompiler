@@ -51,7 +51,7 @@ int main() {
     //    return 0;
     //}
 
-    Lexer lexer("test.txt");
+    Lexer lexer("test3.txt");
 
     try {
         lexer.Analyze();

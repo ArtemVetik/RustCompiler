@@ -8,6 +8,15 @@ enum RuleType {
     LogicalExpression,
     UnaryExpession,
 
+    ArrayDeclaration,
+    MemberExpression,
+    ArrayElemes,
+
+    IfExpr,
+
+    WhileExpr,
+    LoopExpr,
+
     Literal,
     Identifier,
 
