@@ -2,7 +2,6 @@
 #include <fstream>
 #include "Lexer.h"
 #include "Parser.h"
-#include "AST_Tree.h"
 
  /************************************************************************************
  * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
@@ -44,14 +43,14 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    //std::string fileName = Menu();
+    std::string fileName = Menu();
 
-    //if (fileName.empty()) {
-    //    system("pause");
-    //    return 0;
-    //}
+    if (fileName.empty()) {
+        system("pause");
+        return 0;
+    }
 
-    Lexer lexer("test3.txt");
+    Lexer lexer(fileName);
 
     try {
         lexer.Analyze();

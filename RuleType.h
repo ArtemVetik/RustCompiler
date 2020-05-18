@@ -12,6 +12,12 @@ enum RuleType {
     MemberExpression,
     ArrayElemes,
 
+    FuncDeclaration,
+    FuncInvoke,
+    InternalFuncInvoke,
+
+    Print,
+
     IfExpr,
 
     WhileExpr,
