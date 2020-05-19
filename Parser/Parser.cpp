@@ -231,7 +231,7 @@ bool Parser::IsLiteral(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    if (FunctionInvoke(root) || InternalFunctionInvoke(root)) // TODO node
+    if (FunctionInvoke(root) || InternalFunctionInvoke(root))
         return true;
 
     if (IsID(root)){
@@ -408,7 +408,7 @@ bool Parser::VarList(Node *&root) {
     Node* mutNode = nullptr;
     Node* idNode = nullptr;
     Node* patNode = nullptr;
-    root = new Node(new NodeData(Token("GroupLet"), None));
+    root = new Node(new NodeData(Token("GroupVarDeclaration"), GroupVarDeclaration));
 
     if ((*_currentToken)->GetType() == MUT) {
         mutNode = new Node(new NodeData(**_currentToken, None));
@@ -521,7 +521,7 @@ bool Parser::Type(Node *&root) {
     if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
         typeNode = new Node(new NodeData(**_currentToken, RuleType::None));
         _currentToken++;
-        root = new Node(new NodeData(Token("Type"), RuleType::None));
+        root = new Node(new NodeData(Token("TypeData"), RuleType::None));
         root->AddChild(bandNode);
         root->AddChild(mutNode);
         root->AddChild(typeNode);
@@ -559,7 +559,7 @@ bool Parser::LitList(Node *&root) {
         return false;
 
     Node* expr = nullptr;
-    root = new Node(new NodeData(Token("GroupInit"), None));
+    root = new Node(new NodeData(Token("GroupInit"), RuleType::GroupInit));
 
     if (Expr(expr)) {
         while(_currentToken < _tokens.end()) {
@@ -914,7 +914,7 @@ bool Parser::ArrayElems(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    root = new Node(new NodeData(Token("ArrayElem"), RuleType::ArrayElemes));
+    root = new Node(new NodeData(Token("ArrayElem"), RuleType::ArrayElems));
     Node *exprNode = nullptr;
 
     auto saveToken = _currentToken;

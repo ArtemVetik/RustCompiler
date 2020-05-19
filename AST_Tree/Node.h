@@ -11,18 +11,18 @@
 
 struct NodeData {
     Token token;
-    RuleType type;
+    RuleType ruleType;
 
-    explicit NodeData() : token(), type() { }
+    explicit NodeData() : token(), ruleType() { }
 
     explicit NodeData(const Token &token, const RuleType &type) {
         this->token = token;
-        this->type = type;
+        this->ruleType = type;
     }
 
     NodeData(const NodeData &data) {
         this->token = data.token;
-        this->type = data.type;
+        this->ruleType = data.ruleType;
     }
 };
 
@@ -40,9 +40,11 @@ public:
     ~Node();
     void SetParent(Node* const &parent);
     void AddData(NodeData* const &data);
-    Node* &GetParent();
-    NodeData* GetData() const;
     void AddChild(Node *const &child);
+    Node* &GetParent();
+    const std::vector<Node*> &GetChilds() const;
+    Node* const &GetChild(unsigned int const &ind) const;
+    NodeData* GetData() const;
     void Traversal();
 };
 

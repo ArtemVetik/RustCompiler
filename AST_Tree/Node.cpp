@@ -70,3 +70,11 @@ Node::~Node() {
     }
     _childs.clear();
 }
+
+const std::vector<Node *> &Node::GetChilds() const {
+    return _childs;
+}
+
+Node* const& Node::GetChild(unsigned int const &ind) const {
+    return _childs.at(ind);
+}

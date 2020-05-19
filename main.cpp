@@ -2,13 +2,15 @@
 #include <fstream>
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
+#include "Semantics/Table.h"
+#include "Semantics/TableData.h"
 
- /************************************************************************************
- * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
- * @Военмех - лучше всех                                                             *
- * 03.05.2020                                                                        *
- *************************************************************************************
- */
+/************************************************************************************
+* Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
+* @Военмех - лучше всех                                                             *
+* 03.05.2020                                                                        *
+*************************************************************************************
+*/
 
 std::string Menu() {
     char menu;
@@ -50,24 +52,17 @@ int main() {
     //    return 0;
     //}
 
-    Lexer lexer("test.txt");
-
     try {
+        Lexer lexer("test.txt");
         lexer.Analyze();
         std::cout << "Лексический анализ прошёл успешно..." << std::endl;
+        Parser parser(lexer.GetTokens());
+        parser.Analyze();
+        std::cout << "Синтаксический анализ прошёл успешно..." << std::endl;
     }
     catch (std::exception& error){
         std::cout << error.what() << std::endl;
         return 0;
-    }
-
-    Parser parser(lexer.GetTokens());
-    try {
-        parser.Analyze();
-        std::cout << "Синтаксический анализ прошёл успешно..." << std::endl;
-    }
-    catch (std::exception& error) {
-        std::cout << error.what() << std::endl;
     }
 
     std::cout << "\n";

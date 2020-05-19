@@ -2,15 +2,18 @@
 #define RUSTCOMPILER_RULETYPE_H
 
 enum RuleType {
-    VariableDeclaration,
     AssignmentExpression,
     BinaryExpression,
     LogicalExpression,
     UnaryExpession,
 
+
+    VariableDeclaration,
+    GroupInit,
+    GroupVarDeclaration,
     ArrayDeclaration,
     MemberExpression,
-    ArrayElemes,
+    ArrayElems,
 
     FuncDeclaration,
     FuncInvoke,
