@@ -306,7 +306,7 @@ bool Parser::IsCompOperation(Node *&root) {
 bool Parser::Analyze() {
     Node* tmp = nullptr;
     while (FunctionDefine(tmp));
-   // if (!Block(tmp))
+    //if (!Block(tmp))
         //throw ParserError((*_currentToken)->GetValue());
 
     if (_currentToken == _tokens.end()) {

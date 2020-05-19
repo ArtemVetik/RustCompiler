@@ -1,7 +1,7 @@
 #include <string>
 #include <fstream>
-#include "Lexer.h"
-#include "Parser.h"
+#include "Lexer/Lexer.h"
+#include "Parser/Parser.h"
 
  /************************************************************************************
  * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
@@ -43,14 +43,14 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    std::string fileName = Menu();
+    //std::string fileName = Menu();
 
-    if (fileName.empty()) {
-        system("pause");
-        return 0;
-    }
+    //if (fileName.empty()) {
+    //    system("pause");
+    //    return 0;
+    //}
 
-    Lexer lexer(fileName);
+    Lexer lexer("test.txt");
 
     try {
         lexer.Analyze();

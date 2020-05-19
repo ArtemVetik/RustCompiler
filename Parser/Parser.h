@@ -3,10 +3,10 @@
 
 #include <string>
 #include <vector>
-#include "ParserError.h"
-#include "Token.h"
-#include "AST_Tree.h"
-#include "Node.h"
+#include "../Exceptions/ParserError.h"
+#include "../Lexer/Token.h"
+#include "../AST_Tree/AST_Tree.h"
+#include "../AST_Tree/Node.h"
 
 #define print std::cout << "->" <<(*_currentToken)->GetValue() << "<-" << std::endl;
 

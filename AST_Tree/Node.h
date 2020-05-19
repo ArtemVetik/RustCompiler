@@ -6,8 +6,8 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include "Token.h"
-#include "RuleType.h"
+#include "../Lexer/Token.h"
+#include "../Semantics/RuleType.h"
 
 struct NodeData {
     Token token;

@@ -3,7 +3,7 @@
 
 #include "State.h"
 #include "Transition.h"
-#include "LexError.h"
+#include "../Exceptions/LexError.h"
 #include <string>
 #include <cstdlib>
 
