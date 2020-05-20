@@ -8,24 +8,28 @@
 
 class SemanticAnalyzer {
 private:
+    Node* _root;
     Table<ID_Data> _idTable;
     Table<Array_Data> _arrayTable;
+    Table<Function_Data> _functionTable;
 
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
 
     void VariableDeclaration(Node* const &node);
-    Type Pat(Node* const &node);
+    TypeData Pat(Node* const &node);
     void GroupLetVarDeclaration(Node *const &node);
     void GroupInit(Node* const &node);
-    const std::vector<Type>& Expr(Node* const &node);
-    Type BoolExpr(Node* const &node);
-    const std::vector<Type>& ArrayExpr(Node* const &node);
-    Type MemberExpr(Node* const &node);
-    void ArrayElems(Node* const &node);
+    std::vector<TypeData> Expr(Node* const &node);
+    TypeData BoolExpr(Node* const &node);
+    TypeData MinTerminal(Node* const &node);
+    TypeData FunctionInvoke(Node* const &node);
+    TypeData MemberExpr(Node* const &node);
+    std::vector<TypeData> ArrayElems(Node* const &node);
 
 public:
-    void Analyze(Node* const &root);
+    explicit SemanticAnalyzer(Node* const &root);
+    void Analyze();
 };
 
 

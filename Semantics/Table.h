@@ -15,14 +15,11 @@ private:
 public:
     void AddToTable(const T &data);
     bool Has(const std::string &value) const;
-    const T& GetData(const std::string &id) const;
+    T& GetData(const std::string &id);
 };
 
 template <typename T>
 void Table<T>::AddToTable(const T &data) {
-    if (std::find(_table.cbegin(), _table.cend(), data) != _table.cend())
-        throw 2;
-
     _table.emplace_back(data);
 }
 
@@ -32,10 +29,11 @@ bool Table<T>::Has(const std::string &value) const {
 }
 
 template<typename T>
-const T &Table<T>::GetData(const std::string &id) const {
+T &Table<T>::GetData(const std::string &id) {
     auto data = std::find(_table.cbegin(), _table.cend(), id);
     if (data == _table.cend())
         throw "Table error:\n\tUnable to get data";
+    return _table[std::distance(_table.cbegin(), data)];
 }
 
 #endif //RUSTCOMPILER_TABLE_H

@@ -81,8 +81,10 @@ private:
     // Блок - внутри всё что угодно
     bool Block(Node *&root);
     bool BlockChecker(Node *&root);
-    
+
 public:
+    Node* const &GetTreeRoot() const;
+
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();
 };

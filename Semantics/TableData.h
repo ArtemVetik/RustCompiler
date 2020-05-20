@@ -6,35 +6,43 @@
 #include <algorithm>
 #include "TypeData.h"
 
-struct ID_Data {
-    bool isMutable;
+struct Data {
     std::string id;
     TypeData type;
 
-    ID_Data() : isMutable(false), id(), type() { }
+    explicit Data() : id() { }
 
-    ID_Data(const bool &isMutable, const std::string &id, const TypeData &type){
+    bool operator == (const std::string &id) const {
+        return this->id == id;
+    }
+
+    bool operator == (const Data &data) const {
+        return this->id == data.id;
+    }
+};
+
+struct ID_Data : public Data {
+    bool isInitialized;
+    bool isMutable;
+
+    ID_Data() : isMutable(false), isInitialized(false) { }
+
+    ID_Data(const bool &isInitialized, const bool &isMutable, const std::string &id, const TypeData &type){
+        this->isInitialized = isInitialized;
         this->isMutable = isMutable;
         this->id = id;
         this->type = type;
     }
-
-    bool operator == (const ID_Data &data) const {
-        return this->id == data.id;
-    }
-
-    bool operator == (const std::string &id) const {
-        return this->id == id;
-    }
 };
 
-struct Array_Data{
-    std::string id;
-    TypeData type;
+struct Array_Data : public Data {
 
-    bool operator == (const std::string &id) const {
-        return this->id == id;
-    }
+};
+
+struct Function_Data : public Data {
+    std::vector<Data*> parameters;
+
+    Function_Data() : parameters() { }
 };
 
 #endif //RUSTCOMPILER_IDTABLE_H

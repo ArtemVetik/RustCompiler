@@ -47,7 +47,8 @@ void IDState::InitKeyWords() {
     _keyWords.emplace_back(std::make_pair("print", PRINT));
     _keyWords.emplace_back(std::make_pair("break", BREAK));
     _keyWords.emplace_back(std::make_pair("return", RETURN));
-    _keyWords.emplace_back(std::make_pair("as", AS));
+    _keyWords.emplace_back(std::make_pair("true", BOOL));
+    _keyWords.emplace_back(std::make_pair("false", BOOL));
 }
 
 bool IDState::CanTransitTo(State *const &to) const {

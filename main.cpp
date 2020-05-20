@@ -4,10 +4,12 @@
 #include "Parser/Parser.h"
 #include "Semantics/Table.h"
 #include "Semantics/TableData.h"
+#include "Semantics/SemanticAnalyzer.h"
 
 /************************************************************************************
 * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
 * @Военмех - лучше всех                                                             *
+* RUST: 1.42.0                                                                      *
 * 03.05.2020                                                                        *
 *************************************************************************************
 */
@@ -56,9 +58,14 @@ int main() {
         Lexer lexer("test.txt");
         lexer.Analyze();
         std::cout << "Лексический анализ прошёл успешно..." << std::endl;
+
         Parser parser(lexer.GetTokens());
         parser.Analyze();
         std::cout << "Синтаксический анализ прошёл успешно..." << std::endl;
+
+        SemanticAnalyzer semanticAnalyzer(parser.GetTreeRoot());
+        semanticAnalyzer.Analyze();
+        std::cout << "Семантический анализ прошёл успешно..." << std::endl;
     }
     catch (std::exception& error){
         std::cout << error.what() << std::endl;

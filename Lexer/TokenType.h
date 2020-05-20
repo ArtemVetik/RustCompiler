@@ -9,6 +9,7 @@ enum TokenType {
     PRINTLN,  // Println
     PRINT,    // Print
     STRING,   // Строка
+    BOOL,     // Логический тип
 
     // Ключевые слова
     FUNCTION,   // fn
@@ -24,7 +25,6 @@ enum TokenType {
     ELSE,       // else
     BREAK,      // break
     RETURN,     // return
-    AS,         // as
 
     // Разделители
     PLUS,       // +
@@ -75,7 +75,6 @@ public:
             case INTEGER:return std::string("INTEGER");
             case REAL:return std::string("REAL");
             case BREAK:return std::string("BREAK");
-            case AS:return std::string("AS");
             case LET:return std::string("LET");
             case MUT:return std::string("MUT");
             case FOR:return std::string("FOR");
@@ -116,8 +115,9 @@ public:
             case PRINT: return std::string("PRINT");
             case BAND: return std::string("BAND");
             case ARROW: return std::string("ARROW");
+            case BOOL: return std::string("BOOL");
+            default: return "";
         }
-        return std::string("");
     }
 };
 

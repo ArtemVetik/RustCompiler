@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-Parser::Parser(const std::vector<Token *> &tokens) : tree(new Node(new NodeData())) {
+Parser::Parser(const std::vector<Token *> &tokens) : tree(new Node(new NodeData(Token("AST_Root"), RuleType::None))) {
     _tokens = tokens;
     _currentToken = _tokens.begin();
 }
@@ -19,8 +19,8 @@ bool Parser::BoolExpr(Node *&root) {
             _currentToken++;
 
             if (!BoolExprOr(rightChild)) {
-                tree.DeleteNode(tmpRoot);
-                tree.DeleteNode(rightChild);
+                AST_Tree::DeleteNode(tmpRoot);
+                AST_Tree::DeleteNode(rightChild);
                 return false;
             }
 
@@ -30,14 +30,14 @@ bool Parser::BoolExpr(Node *&root) {
                 tmpRoot->AddChild(root);
             tmpRoot->AddChild(rightChild);
             root = new Node(*tmpRoot);
-            tree.DeleteNode(rightChild);
-            tree.DeleteNode(tmpRoot);
+            AST_Tree::DeleteNode(rightChild);
+            AST_Tree::DeleteNode(tmpRoot);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
-    tree.DeleteNode(leftChild);
+    AST_Tree::DeleteNode(leftChild);
     return false;
 }
 
@@ -55,8 +55,8 @@ bool Parser::BoolExprOr(Node *&root) {
             _currentToken++;
 
             if (!BoolExprComp(rightChild)) {
-                tree.DeleteNode(tmpRoot);
-                tree.DeleteNode(rightChild);
+                AST_Tree::DeleteNode(tmpRoot);
+                AST_Tree::DeleteNode(rightChild);
                 return false;
             }
 
@@ -66,14 +66,14 @@ bool Parser::BoolExprOr(Node *&root) {
                 tmpRoot->AddChild(root);
             tmpRoot->AddChild(rightChild);
             root = new Node(*tmpRoot);
-            tree.DeleteNode(rightChild);
-            tree.DeleteNode(tmpRoot);
+            AST_Tree::DeleteNode(rightChild);
+            AST_Tree::DeleteNode(tmpRoot);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
-    tree.DeleteNode(leftChild);
+    AST_Tree::DeleteNode(leftChild);
     return false;
 }
 
@@ -89,8 +89,8 @@ bool Parser::BoolExprComp(Node *&root) {
         while (IsCompOperation(tmpRoot))
         {
             if (!Add(rightChild)){
-                tree.DeleteNode(rightChild);
-                tree.DeleteNode(tmpRoot);
+                AST_Tree::DeleteNode(rightChild);
+                AST_Tree::DeleteNode(tmpRoot);
                 return false;
             }
 
@@ -101,15 +101,15 @@ bool Parser::BoolExprComp(Node *&root) {
 
             tmpRoot->AddChild(rightChild);
             root = new Node(*tmpRoot);
-            tree.DeleteNode(rightChild);
-            tree.DeleteNode(tmpRoot);
+            AST_Tree::DeleteNode(rightChild);
+            AST_Tree::DeleteNode(tmpRoot);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
 
-    tree.DeleteNode(leftChild);
+    AST_Tree::DeleteNode(leftChild);
     return false;
 }
 
@@ -127,8 +127,8 @@ bool Parser::Add(Node *&root) {
             tmpRoot = new Node(new NodeData(**_currentToken, BinaryExpression));
             _currentToken++;
             if (!Mult(rightChild)) {
-                tree.DeleteNode(tmpRoot);
-                tree.DeleteNode(rightChild);
+                AST_Tree::DeleteNode(tmpRoot);
+                AST_Tree::DeleteNode(rightChild);
                 return false;
             }
 
@@ -138,15 +138,15 @@ bool Parser::Add(Node *&root) {
                 tmpRoot->AddChild(root);
             tmpRoot->AddChild(rightChild);
             root = new Node(*tmpRoot);
-            tree.DeleteNode(rightChild);
-            tree.DeleteNode(tmpRoot);
+            AST_Tree::DeleteNode(rightChild);
+            AST_Tree::DeleteNode(tmpRoot);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
 
-    tree.DeleteNode(leftChild);
+    AST_Tree::DeleteNode(leftChild);
     return false;
 }
 
@@ -164,8 +164,8 @@ bool Parser::Mult(Node *&root) {
             tmpRoot = new Node(new NodeData(**_currentToken, BinaryExpression));
             _currentToken++;
             if (!MinTerminal(rightChild)){
-                tree.DeleteNode(rightChild);
-                tree.DeleteNode(tmpRoot);
+                AST_Tree::DeleteNode(rightChild);
+                AST_Tree::DeleteNode(tmpRoot);
                 return false;
             }
 
@@ -175,15 +175,15 @@ bool Parser::Mult(Node *&root) {
                 tmpRoot->AddChild(root);
             tmpRoot->AddChild(rightChild);
             root = new Node(*tmpRoot);
-            tree.DeleteNode(tmpRoot);
-            tree.DeleteNode(rightChild);
+            AST_Tree::DeleteNode(tmpRoot);
+            AST_Tree::DeleteNode(rightChild);
         }
         if (root == nullptr)
             root = leftChild;
         return true;
     }
 
-    tree.DeleteNode(leftChild);
+    AST_Tree::DeleteNode(leftChild);
     return false;
 }
 
@@ -207,8 +207,8 @@ bool Parser::MinTerminal(Node *&root) {
             root->AddChild(next);
             return true;
         }
-        tree.DeleteNode(next);
-        tree.DeleteNode(root);
+        AST_Tree::DeleteNode(next);
+        AST_Tree::DeleteNode(root);
         return false;
     }
 
@@ -223,7 +223,7 @@ bool Parser::MinTerminal(Node *&root) {
         }
     }
 
-    tree.DeleteNode(root);
+    AST_Tree::DeleteNode(root);
     return false;
 }
 
@@ -265,8 +265,8 @@ bool Parser::IsNum(Node *&root) {
 }
 
 bool Parser::IsBool(Node *&root) {
-    if ((*_currentToken)->GetValue() == "true" || (*_currentToken)->GetValue() == "false") {
-        root = new Node(new NodeData(**_currentToken, Literal));
+    if (_currentToken < _tokens.cend() && (*_currentToken)->GetType() == TokenType::BOOL) {
+        root = new Node(new NodeData(**_currentToken, RuleType::Literal));
         _currentToken++;
         return true;
     }
@@ -305,13 +305,14 @@ bool Parser::IsCompOperation(Node *&root) {
 
 bool Parser::Analyze() {
     Node* tmp = nullptr;
-    while (FunctionDefine(tmp));
-    //if (!Block(tmp))
-        //throw ParserError((*_currentToken)->GetValue());
+    //while (FunctionDefine(tmp));
+    if (!Block(tmp))
+        throw ParserError((*_currentToken)->GetValue());
 
     if (_currentToken == _tokens.end()) {
-        tmp->Traversal();
-        std::cout << std::endl;
+        tree.GetRoot()->AddChild(tmp);
+        tree.Traversal();
+        AST_Tree::DeleteNode(tmp);
         return true;
     }
     else throw ParserError((*_currentToken)->GetValue());
@@ -336,14 +337,14 @@ bool Parser::LetDecl(Node *&root) {
                 root = new Node(new NodeData(Token("VerDecl"), VariableDeclaration));
                 root->AddChild(leftChild);
                 root->AddChild(rightChild);
-                tree.DeleteNode(leftChild);
-                tree.DeleteNode(rightChild);
+                AST_Tree::DeleteNode(leftChild);
+                AST_Tree::DeleteNode(rightChild);
                 return true;
             }
         }
     }
-    tree.DeleteNode(leftChild);
-    tree.DeleteNode(rightChild);
+    AST_Tree::DeleteNode(leftChild);
+    AST_Tree::DeleteNode(rightChild);
     return false;
 }
 
@@ -364,8 +365,8 @@ bool Parser::Pat(Node *&root) {
         if ((*_currentToken)->GetType() == COLON) {
             _currentToken++;
             if (!Type(typeNode)){
-                tree.DeleteNode(mutNode);
-                tree.DeleteNode(idNode);
+                AST_Tree::DeleteNode(mutNode);
+                AST_Tree::DeleteNode(idNode);
                 return false;
             }
         }
@@ -373,13 +374,13 @@ bool Parser::Pat(Node *&root) {
         root->AddChild(mutNode);
         root->AddChild(idNode);
         root->AddChild(typeNode);
-        tree.DeleteNode(mutNode);
-        tree.DeleteNode(idNode);
-        tree.DeleteNode(typeNode);
+        AST_Tree::DeleteNode(mutNode);
+        AST_Tree::DeleteNode(idNode);
+        AST_Tree::DeleteNode(typeNode);
         return true;
     }
-    tree.DeleteNode(mutNode);
-    tree.DeleteNode(idNode);
+    AST_Tree::DeleteNode(mutNode);
+    AST_Tree::DeleteNode(idNode);
 
     return GroupLet(root);
 }
@@ -422,9 +423,9 @@ bool Parser::VarList(Node *&root) {
             patNode->AddChild(idNode);
             root->AddChild(patNode);
 
-            tree.DeleteNode(mutNode);
-            tree.DeleteNode(idNode);
-            tree.DeleteNode(patNode);
+            AST_Tree::DeleteNode(mutNode);
+            AST_Tree::DeleteNode(idNode);
+            AST_Tree::DeleteNode(patNode);
 
             if ((*_currentToken)->GetType() == COM)
                 _currentToken++;
@@ -436,17 +437,17 @@ bool Parser::VarList(Node *&root) {
                 _currentToken++;
             }
             if (!IsID(idNode)){
-                tree.DeleteNode(mutNode);
-                tree.DeleteNode(idNode);
-                tree.DeleteNode(patNode);
+                AST_Tree::DeleteNode(mutNode);
+                AST_Tree::DeleteNode(idNode);
+                AST_Tree::DeleteNode(patNode);
                 return false;
             }
         }
         return true;
     }
-    tree.DeleteNode(mutNode);
-    tree.DeleteNode(idNode);
-    tree.DeleteNode(patNode);
+    AST_Tree::DeleteNode(mutNode);
+    AST_Tree::DeleteNode(idNode);
+    AST_Tree::DeleteNode(patNode);
     return false;
 }
 
@@ -476,8 +477,8 @@ bool Parser::Expr(Node *&root) {
         root = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
         root->AddChild(idNode);
         root->AddChild(arrayExprNode);
-        tree.DeleteNode(idNode);
-        tree.DeleteNode(arrayExprNode);
+        AST_Tree::DeleteNode(idNode);
+        AST_Tree::DeleteNode(arrayExprNode);
         return true;
     }
 
@@ -489,8 +490,8 @@ bool Parser::Expr(Node *&root) {
     if (BoolExpr(root))
         return true;
 
-    tree.DeleteNode(idNode);
-    tree.DeleteNode(arrayExprNode);
+    AST_Tree::DeleteNode(idNode);
+    AST_Tree::DeleteNode(arrayExprNode);
     return false;
 }
 
@@ -512,8 +513,8 @@ bool Parser::Type(Node *&root) {
     }
 
     if (_currentToken >= _tokens.end()) {
-        tree.DeleteNode(bandNode);
-        tree.DeleteNode(mutNode);
+        AST_Tree::DeleteNode(bandNode);
+        AST_Tree::DeleteNode(mutNode);
         _currentToken = saveToken;
         return false;
     }
@@ -525,16 +526,16 @@ bool Parser::Type(Node *&root) {
         root->AddChild(bandNode);
         root->AddChild(mutNode);
         root->AddChild(typeNode);
-        tree.DeleteNode(bandNode);
-        tree.DeleteNode(mutNode);
-        tree.DeleteNode(typeNode);
+        AST_Tree::DeleteNode(bandNode);
+        AST_Tree::DeleteNode(mutNode);
+        AST_Tree::DeleteNode(typeNode);
         return true;
     }
 
     _currentToken = saveToken;
-    tree.DeleteNode(bandNode);
-    tree.DeleteNode(mutNode);
-    tree.DeleteNode(typeNode);
+    AST_Tree::DeleteNode(bandNode);
+    AST_Tree::DeleteNode(mutNode);
+    AST_Tree::DeleteNode(typeNode);
     return false;
 }
 
@@ -564,7 +565,7 @@ bool Parser::LitList(Node *&root) {
     if (Expr(expr)) {
         while(_currentToken < _tokens.end()) {
             root->AddChild(expr);
-            tree.DeleteNode(expr);
+            AST_Tree::DeleteNode(expr);
 
             if ((*_currentToken)->GetType() == COM) {
                 _currentToken++;
@@ -580,7 +581,7 @@ bool Parser::LitList(Node *&root) {
         return true;
     }
 
-    tree.DeleteNode(expr);
+    AST_Tree::DeleteNode(expr);
     return false;
 }
 
@@ -627,9 +628,9 @@ bool Parser::IfExpr(Node *&root) {
                         root->AddChild(boolExprNode);
                         root->AddChild(blockNode);
                         root->AddChild(elseTailNode);
-                        tree.DeleteNode(boolExprNode);
-                        tree.DeleteNode(blockNode);
-                        tree.DeleteNode(elseTailNode);
+                        AST_Tree::DeleteNode(boolExprNode);
+                        AST_Tree::DeleteNode(blockNode);
+                        AST_Tree::DeleteNode(elseTailNode);
                         return true;
                     }
                 }
@@ -637,17 +638,17 @@ bool Parser::IfExpr(Node *&root) {
         }
     }
 
-    tree.DeleteNode(root);
-    tree.DeleteNode(boolExprNode);
-    tree.DeleteNode(blockNode);
-    tree.DeleteNode(elseTailNode);
+    AST_Tree::DeleteNode(root);
+    AST_Tree::DeleteNode(boolExprNode);
+    AST_Tree::DeleteNode(blockNode);
+    AST_Tree::DeleteNode(elseTailNode);
     return false;
 }
 
 bool Parser::Block(Node *&root) {
     Node* rule = nullptr;
     if (!BlockChecker(rule)) {
-        tree.DeleteNode(rule);
+        AST_Tree::DeleteNode(rule);
         return false;
     }
 
@@ -655,7 +656,7 @@ bool Parser::Block(Node *&root) {
         root = new Node(new NodeData(Token("BlockRoot"), RuleType::Block));
 
     root->AddChild(rule);
-    tree.DeleteNode(rule);
+    AST_Tree::DeleteNode(rule);
 
     auto saveToken = _currentToken;
     if (!Block(root))
@@ -691,7 +692,7 @@ bool Parser::BlockChecker(Node *&root) {
                                         _currentToken = saveToken;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
-                                            tree.DeleteNode(root);
+                                            AST_Tree::DeleteNode(root);
                                             return false;
                                         }
                                     }
@@ -733,8 +734,8 @@ bool Parser::Println(Node *&root) {
                             root = new Node(new NodeData(Token("Print"), RuleType::Print));
                             root->AddChild(stringNode);
                             root->AddChild(exprListNode);
-                            tree.DeleteNode(stringNode);
-                            tree.DeleteNode(exprListNode);
+                            AST_Tree::DeleteNode(stringNode);
+                            AST_Tree::DeleteNode(exprListNode);
                             return true;
                         }
                     }
@@ -744,8 +745,8 @@ bool Parser::Println(Node *&root) {
     }
 
     _currentToken = saveToken;
-    tree.DeleteNode(stringNode);
-    tree.DeleteNode(exprListNode);
+    AST_Tree::DeleteNode(stringNode);
+    AST_Tree::DeleteNode(exprListNode);
     return false;
 }
 
@@ -760,21 +761,21 @@ bool Parser::ExprList(Node *&root) {
             _currentToken++;
             if (!Expr(exprNode)) {
                 _currentToken = saveToken;
-                tree.DeleteNode(exprNode);
-                tree.DeleteNode(root);
+                AST_Tree::DeleteNode(exprNode);
+                AST_Tree::DeleteNode(root);
                 return false;
             }
             root->AddChild(exprNode);
-            tree.DeleteNode(exprNode);
+            AST_Tree::DeleteNode(exprNode);
         }
         else {
-            tree.DeleteNode(exprNode);
+            AST_Tree::DeleteNode(exprNode);
             return true;
         }
     }
 
-    tree.DeleteNode(exprNode);
-    tree.DeleteNode(root);
+    AST_Tree::DeleteNode(exprNode);
+    AST_Tree::DeleteNode(root);
     return false;
 }
 
@@ -807,11 +808,11 @@ bool Parser::LetArrayDecl(Node *&root) {
                         arrPatNode->AddChild(arrTypeNode);
                         root->AddChild(arrPatNode);
                         root->AddChild(arrInitNode);
-                        tree.DeleteNode(mutArrNode);
-                        tree.DeleteNode(idArrNode);
-                        tree.DeleteNode(arrTypeNode);
-                        tree.DeleteNode(arrInitNode);
-                        tree.DeleteNode(arrPatNode);
+                        AST_Tree::DeleteNode(mutArrNode);
+                        AST_Tree::DeleteNode(idArrNode);
+                        AST_Tree::DeleteNode(arrTypeNode);
+                        AST_Tree::DeleteNode(arrInitNode);
+                        AST_Tree::DeleteNode(arrPatNode);
                         return true;
                     }
                 }
@@ -819,12 +820,12 @@ bool Parser::LetArrayDecl(Node *&root) {
         }
     }
 
-    tree.DeleteNode(mutArrNode);
-    tree.DeleteNode(idArrNode);
-    tree.DeleteNode(arrTypeNode);
-    tree.DeleteNode(arrInitNode);
-    tree.DeleteNode(arrPatNode);
-    tree.DeleteNode(root);
+    AST_Tree::DeleteNode(mutArrNode);
+    AST_Tree::DeleteNode(idArrNode);
+    AST_Tree::DeleteNode(arrTypeNode);
+    AST_Tree::DeleteNode(arrInitNode);
+    AST_Tree::DeleteNode(arrPatNode);
+    AST_Tree::DeleteNode(root);
     return false;
 }
 
@@ -846,7 +847,7 @@ bool Parser::ArrayType(Node *&root) {
     }
 
     if (_currentToken >= _tokens.end()) {
-        tree.DeleteNode(bandNode);
+        AST_Tree::DeleteNode(bandNode);
         tree.DeleteNode(mutNode);
         _currentToken = saveToken;
         return false;
@@ -1142,7 +1143,7 @@ bool Parser::ArrayFuncArgument(Node *&root) {
             _currentToken++;
         }
         if (IsID(idNode)) {
-            root = new Node(new NodeData(Token("ArrayArg"), RuleType::None));
+            root = new Node(new NodeData(Token("ArrayArg"), RuleType::ArrayArg));
             root->AddChild(bandNode);
             root->AddChild(mutNode);
             root->AddChild(idNode);
@@ -1328,4 +1329,8 @@ bool Parser::BlockExit(Node *&root) {
 
     _currentToken = saveToken;
     return false;
+}
+
+Node *const &Parser::GetTreeRoot() const {
+    return tree.GetRoot();
 }

@@ -6,7 +6,7 @@ enum RuleType {
     BinaryExpression,
     LogicalExpression,
     UnaryExpession,
-
+    MinTerminal,
 
     VariableDeclaration,
     GroupInit,
@@ -14,6 +14,7 @@ enum RuleType {
     ArrayDeclaration,
     MemberExpression,
     ArrayElems,
+    ArrayArg,
 
     FuncDeclaration,
     FuncInvoke,
