@@ -13,12 +13,16 @@ void Node::AddChild(Node *const &child) {
 }
 
 void Node::Traversal() {
-    std::cout << "DATA: " << _data->token.GetValue() << std::endl;
+    static unsigned int deep = 0;
+    std::cout << std::string(deep, '-') << _data->token.GetValue() << std::endl;
 
+    deep += 4;
     for (auto const& child : _childs) {
         if (child)
             child->Traversal();
     }
+
+    deep -= 4;
 }
 
 Node::Node() {
@@ -26,20 +30,8 @@ Node::Node() {
     _parent = nullptr;
 }
 
-void Node::AddData(NodeData *const &data) {
-    _data = new NodeData(*data);
-}
-
 NodeData *Node::GetData() const{
     return _data;
-}
-
-void Node::SetParent(Node * const &parent) {
-    _parent = new Node(*parent);
-}
-
-Node* &Node::GetParent() {
-    return _parent;
 }
 
 Node::Node(const Node &node) {

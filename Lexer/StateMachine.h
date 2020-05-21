@@ -12,7 +12,7 @@ private:
     State* _currentState;
     Transition _transition;
     std::string _buffer;
-
+    TokenLinePosition _startPos, _endPos;
     std::vector<Token*> _tokens;
 
     bool SplitSeparators(const std::string& buffer);

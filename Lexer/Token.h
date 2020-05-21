@@ -5,9 +5,11 @@
 #include <string>
 #include <utility>
 #include "TokenType.h"
+#include "../Exceptions/TokenLinePosition.h"
 
 class Token {
 private:
+    TokenLocation _location;
     TokenType _type;
     std::string _value;
     int _id;
@@ -15,10 +17,11 @@ private:
 public:
     explicit Token(const std::string &value = "");
     Token(const TokenType &type, std::string value, int id);
+    void SetLocation(const TokenLocation &location);
+    const TokenLocation& GetLocation() const;
     std::string GetValue() const;
     TokenType GetType() const;
     void PrintToken() const;
-    //Token& operator = (const Token& token);
 };
 
 #endif //RUSTCOMPILER_TOKEN_H

@@ -7,6 +7,8 @@
 #include "IgnoreState.h"
 #include "StringState.h"
 #include "SeparatorState.h"
+#include "../Exceptions/LexError.h"
+#include <string>
 #include <vector>
 
 class Transition {

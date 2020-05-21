@@ -4,6 +4,7 @@
 enum RuleType {
     AssignmentExpression,
     BinaryExpression,
+    BinaryCompExpression,
     LogicalExpression,
     UnaryExpession,
     MinTerminal,

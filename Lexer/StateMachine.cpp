@@ -1,6 +1,6 @@
 #include "StateMachine.h"
 
-StateMachine::StateMachine() {
+StateMachine::StateMachine() : _startPos(), _endPos() {
     _buffer = "";
     _currentState = nullptr;
 }
@@ -8,27 +8,37 @@ StateMachine::StateMachine() {
 void StateMachine::TakeSymbol(char symbol) {
     if (_currentState && _currentState->Contains(symbol)) {
         _buffer += symbol;
+        _endPos.AddSymbol(symbol);
         return;
     }
     if (_currentState) {
         End();
+        _endPos.AddSymbol(symbol);
+        _startPos.AddSymbol(symbol);
     }
 
     _buffer = "";
     _buffer += symbol;
 
     _currentState = _transition.GetState(_currentState, symbol);
+    if (_currentState == nullptr)
+        throw LexError(std::string("Can't find symbol " + std::string(1,symbol)), TokenLocation(_startPos, _endPos));
 }
 
 void StateMachine::End() {
     Token* token = _currentState->GetToken(_buffer);
     if (!token)
     {
-        if (!SplitSeparators(_buffer))
-            throw LexError(_buffer);
+        if (!SplitSeparators(_buffer)) // TODO tokens location
+            throw LexError(_buffer, TokenLocation(_startPos, _endPos)); // TODO исправить tokenLocation
     }
-    else if (token->GetType() != IGNORE)
-        _tokens.emplace_back(token);
+    else {
+        token->SetLocation(TokenLocation(_startPos, _endPos));
+        _startPos = _endPos;
+        if (token->GetType() != IGNORE)
+            _tokens.emplace_back(token);
+
+    }
 }
 
 bool StateMachine::SplitSeparators(const std::string& buffer){

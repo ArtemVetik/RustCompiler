@@ -36,10 +36,7 @@ public:
     Node(const Node &node);
     explicit Node();
     ~Node();
-    void SetParent(Node* const &parent);
-    void AddData(NodeData* const &data);
     void AddChild(Node *const &child);
-    Node* &GetParent();
     const std::vector<Node*> &GetChilds() const;
     Node* const &GetChild(unsigned int const &ind) const;
     NodeData* GetData() const;
