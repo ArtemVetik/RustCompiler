@@ -7,7 +7,6 @@ enum RuleType {
     BinaryCompExpression,
     LogicalExpression,
     UnaryExpession,
-    MinTerminal,
 
     VariableDeclaration,
     GroupInit,

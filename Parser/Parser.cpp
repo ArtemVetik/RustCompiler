@@ -320,12 +320,14 @@ bool Parser::IsCompOperation(Node *&root) {
 
 bool Parser::Analyze() {
     Node* tmp = nullptr;
-    while (FunctionDefine(tmp));
+    while (FunctionDefine(tmp)) {
+        tree.GetRoot()->AddChild(tmp);
+        AST_Tree::DeleteNode(tmp);
+    }
     //if (!Block(tmp))
         //throw ParserError((*_currentToken)->GetValue());
 
     if (_currentToken == _tokens.end()) {
-        tree.GetRoot()->AddChild(tmp);
         tree.Traversal();
         AST_Tree::DeleteNode(tmp);
         return true;
