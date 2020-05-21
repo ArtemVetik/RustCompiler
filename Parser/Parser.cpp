@@ -707,7 +707,6 @@ bool Parser::BlockChecker(Node *&root) {
                                     if (!Expr(root) || _currentToken >= _tokens.end() ||
                                         (*_currentToken++)->GetType() != SEMICOLON) {
                                         _currentToken = saveToken;
-                                        std::cout << "!!!" << std::endl;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
                                             AST_Tree::DeleteNode(root);
@@ -1337,14 +1336,32 @@ bool Parser::BlockExit(Node *&root) {
 
     auto saveToken = _currentToken;
 
-    if ((*_currentToken)->GetType() == BREAK || (*_currentToken)->GetType() == RETURN) {
+    Node *exprNode = nullptr;
+
+    if ((*_currentToken)->GetType() == RETURN) {
         _currentToken++;
+        auto saveToken2 = _currentToken;
+        if (!Expr(exprNode)) _currentToken = saveToken2;
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+            _currentToken++;
+            root = new Node(new NodeData(Token("Return"), RuleType::Return));
+            root->AddChild(exprNode);
+            AST_Tree::DeleteNode(exprNode);
             return true;
         }
     }
 
+    if ((*_currentToken)->GetType() == BREAK) {
+        _currentToken++;
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
+            _currentToken++;
+            root = new Node(new NodeData(Token("Break"), RuleType::Break));
+            return true;
+        }
+    }
     _currentToken = saveToken;
+
+    AST_Tree::DeleteNode(exprNode);
     return false;
 }
 

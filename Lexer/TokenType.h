@@ -109,6 +109,7 @@ public:
             case DOT:return std::string("DOT");
             case EXCL:return std::string("EXLC");
             case PRINTLN:return std::string("PRINTLN");
+            case RETURN:return std::string("RETURN");
             case IGNORE:return std::string("IGNORE");
             case LAND:return std::string("LAND");
             case LOR:return std::string("LOR");

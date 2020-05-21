@@ -22,6 +22,9 @@ enum RuleType {
 
     Print,
 
+    Return,
+    Break,
+
     IfExpr,
 
     WhileExpr,
