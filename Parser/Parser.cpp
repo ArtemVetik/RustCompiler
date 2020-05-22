@@ -320,12 +320,13 @@ bool Parser::IsCompOperation(Node *&root) {
 
 bool Parser::Analyze() {
     Node* tmp = nullptr;
-    while (FunctionDefine(tmp)) {
-        tree.GetRoot()->AddChild(tmp);
-        AST_Tree::DeleteNode(tmp);
-    }
-    //if (!Block(tmp))
-        //throw ParserError((*_currentToken)->GetValue());
+    //while (FunctionDefine(tmp)) {
+    //    tree.GetRoot()->AddChild(tmp);
+    //    AST_Tree::DeleteNode(tmp);
+    //}
+    if (!Block(tmp))
+        throw ParserError((*_currentToken)->GetValue());
+    tree.GetRoot()->AddChild(tmp);
 
     if (_currentToken == _tokens.end()) {
         tree.Traversal();
@@ -849,25 +850,9 @@ bool Parser::ArrayType(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    Node *bandNode = nullptr, *mutNode = nullptr, *typeNode = nullptr, *countNode = nullptr;
+    Node *typeNode = nullptr, *countNode = nullptr;
 
     auto saveToken = _currentToken;
-
-    if ((*_currentToken)->GetType() == BAND) {
-        bandNode = new Node(new NodeData(**_currentToken, RuleType::None));
-        _currentToken++;
-        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == MUT) {
-            mutNode = new Node(new NodeData(**_currentToken, RuleType::None));
-            _currentToken++;
-        }
-    }
-
-    if (_currentToken >= _tokens.end()) {
-        AST_Tree::DeleteNode(bandNode);
-        AST_Tree::DeleteNode(mutNode);
-        _currentToken = saveToken;
-        return false;
-    }
 
     if ((*_currentToken)->GetType() == SLBR) {
         _currentToken++;
@@ -876,8 +861,6 @@ bool Parser::ArrayType(Node *&root) {
                _currentToken++;
                if (!Expr(countNode)) {
                    _currentToken = saveToken;
-                   AST_Tree::DeleteNode(bandNode);
-                   AST_Tree::DeleteNode(mutNode);
                    AST_Tree::DeleteNode(typeNode);
                    AST_Tree::DeleteNode(countNode);
                    return false;
@@ -886,12 +869,8 @@ bool Parser::ArrayType(Node *&root) {
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR) {
                 _currentToken++;
                 root = new Node(new NodeData(Token("ArrType"), RuleType::None));
-                root->AddChild(bandNode);
-                root->AddChild(mutNode);
                 root->AddChild(typeNode);
                 root->AddChild(countNode);
-                AST_Tree::DeleteNode(bandNode);
-                AST_Tree::DeleteNode(mutNode);
                 AST_Tree::DeleteNode(typeNode);
                 AST_Tree::DeleteNode(countNode);
                 return true;
@@ -900,8 +879,6 @@ bool Parser::ArrayType(Node *&root) {
     }
 
     _currentToken = saveToken;
-    AST_Tree::DeleteNode(bandNode);
-    AST_Tree::DeleteNode(mutNode);
     AST_Tree::DeleteNode(typeNode);
     AST_Tree::DeleteNode(countNode);
     return false;
@@ -1318,7 +1295,7 @@ bool Parser::FunctionReturn(Node *&root) {
         return false;
 
     auto saveToken = _currentToken;
-
+    
     if ((*_currentToken)->GetType() == ARROW) {
         _currentToken++;
         if (Type(root)) {

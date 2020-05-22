@@ -10,7 +10,7 @@ struct Data {
     std::string id;
     TypeData type;
 
-    explicit Data() : id() { }
+    explicit Data() : id(), type(Type::None) { }
 
     bool operator == (const std::string &id) const {
         return this->id == id;
@@ -36,7 +36,11 @@ struct ID_Data : public Data {
 };
 
 struct Array_Data : public Data {
+    bool isMutable;
+    bool isInitialized;
+    unsigned int elementCount;
 
+    Array_Data() : isMutable(false), isInitialized(false), elementCount(0) { }
 };
 
 struct Function_Data : public Data {

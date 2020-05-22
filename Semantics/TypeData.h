@@ -29,13 +29,13 @@ struct TypeData {
         this->type = type;
     }
 
-    bool operator == (const TypeData &right) {
+    bool operator == (const TypeData &right) const {
         return isReference == right.isReference &&
                 isMutable == right.isMutable &&
                 type == right.type;
     }
 
-    bool operator != (const TypeData &right) {
+    bool operator != (const TypeData &right) const {
         return !(*this == right);
     }
 
@@ -58,6 +58,14 @@ struct TypeData {
         }
     }
 
+    std::string ToString() {
+        std::string res;
+        if (isReference) res += "& ";
+        if (isMutable) res += "mut ";
+        res += TypeData::ToString(type);
+        return res;
+    }
+
     static std::string ToString(const Type &type) {
         switch (type){
             case Type::None:
@@ -70,6 +78,8 @@ struct TypeData {
                 return "Integer";
             case Type::Unsigned:
                 return "Unsigned";
+            case Type::String:
+                return "String";
             default:
                 return "";
         }

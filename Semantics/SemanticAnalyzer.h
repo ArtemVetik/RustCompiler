@@ -18,14 +18,16 @@ private:
 
     void VariableDeclaration(Node* const &node);
     TypeData Pat(Node* const &node);
-    void GroupLetVarDeclaration(Node *const &node);
-    void GroupInit(Node* const &node);
+    std::vector<std::string> GroupLetVarDeclaration(Node *const &node);
+    std::vector<TypeData> GroupInit(Node* const &node);
+    void ArrayDeclaration(Node* const &node);
     std::vector<TypeData> Expr(Node* const &node);
     TypeData BoolExpr(Node* const &node);
     TypeData MinTerminal(Node* const &node);
     TypeData FunctionInvoke(Node* const &node);
     TypeData MemberExpr(Node* const &node);
     std::vector<TypeData> ArrayElems(Node* const &node);
+    void Assignment(Node* const &node);
 
 public:
     explicit SemanticAnalyzer(Node* const &root);
