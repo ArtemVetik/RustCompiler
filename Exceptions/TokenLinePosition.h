@@ -28,6 +28,7 @@ struct TokenLocation {
 
     TokenLocation() : start(), end() { }
     TokenLocation(const TokenLinePosition &start, const TokenLinePosition &end) : start(start), end(end) { }
+    TokenLocation(const TokenLocation &tokeLocation) { start = tokeLocation.start; end = tokeLocation.end; }
 
     friend std::ostream& operator<< (std::ostream &out, const TokenLocation &location) {
         out << "Start: " << location.start.line << " " << location.start.column

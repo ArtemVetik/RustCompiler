@@ -30,7 +30,7 @@ Node::Node() {
     _parent = nullptr;
 }
 
-NodeData *Node::GetData() const{
+NodeData *Node::GetData() const {
     return _data;
 }
 
