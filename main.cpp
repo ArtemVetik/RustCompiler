@@ -17,6 +17,7 @@
 std::string Menu() {
     char menu;
 
+
     do {
         system("cls");
         std::cout << "Âûבונטעו פאיכ םא Rust'ו:" << std::endl;

@@ -17,17 +17,24 @@ private:
     void CheckRule(Node* const &node);
 
     void VariableDeclaration(Node* const &node);
-    TypeData Pat(Node* const &node);
-    std::vector<std::string> GroupLetVarDeclaration(Node *const &node);
-    std::vector<TypeData> GroupInit(Node* const &node);
+    ID_Data Pat(Node* const &node);
+    std::vector<ID_Data> GroupLetVarDeclaration(Node *const &node);
+    std::vector<TypeData> GroupInit(std::vector<ID_Data> variables, Node* const &node);
     void ArrayDeclaration(Node* const &node);
-    std::vector<TypeData> Expr(Node* const &node);
+    TypeData Expr(Node* const &node);
     TypeData BoolExpr(Node* const &node);
     TypeData MinTerminal(Node* const &node);
     TypeData FunctionInvoke(Node* const &node);
+    std::vector<TypeData> FunctionParams(std::string funcId, Node* const &node);
     TypeData MemberExpr(Node* const &node);
     std::vector<TypeData> ArrayElems(Node* const &node);
     void Assignment(Node* const &node);
+
+    void VariableAssignment(std::string id, Node *const &exprNode);
+    void ArrayAssignment(std::string id, Node *const &exprNode);
+    void MemberAssignment(std::string id, Node *const &exprNode);
+    TypeData CanAccessIdentifier(Node* const &idNode);
+    TypeData CanAccessArray(Node* const &idNode);
 
 public:
     explicit SemanticAnalyzer(Node* const &root);
