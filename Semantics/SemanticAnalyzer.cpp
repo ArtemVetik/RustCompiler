@@ -2,6 +2,14 @@
 
 SemanticAnalyzer::SemanticAnalyzer(Node *const &root) {
     this->_root = root;
+    _currentBlock = new ProgramBlock();
+}
+
+SemanticAnalyzer::~SemanticAnalyzer() {
+    if (_currentBlock) {
+        delete _currentBlock;
+        _currentBlock = nullptr;
+    }
 }
 
 void SemanticAnalyzer::Analyze() {
@@ -29,8 +37,10 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
         case RuleType::AssignmentExpression:
             Assignment(node);
             break;
-        case Block:
+        case RuleType::Block:
+            _currentBlock = &_currentBlock->AddBlock();
             Traversal(node);
+            _currentBlock = _currentBlock->upperBlock;
             break;
     }
 }
@@ -56,12 +66,12 @@ std::vector<ID_Data> SemanticAnalyzer::GroupLetVarDeclaration(Node *const &node)
     std::vector<Node*> pats = node->GetChilds();
     for (const auto &pat : pats) {
         std::string id = pat->GetChild(1)->GetData()->token.GetValue();
-        if (_idTable.Has(id) || _arrayTable.Has(id))
+        if (_currentBlock->idTable.Has(id) || _currentBlock->arrayTable.Has(id))
             throw Err::VariableExistingError(id, pat->GetChild(1));
         ID_Data data;
         data.isMutable = pat->GetChild(0) != nullptr;
         data.id = id;
-        _idTable.AddToTable(data);
+        _currentBlock->idTable.AddToTable(data);
         idList.emplace_back(data);
     }
 
@@ -79,11 +89,11 @@ std::vector<TypeData> SemanticAnalyzer::GroupInit(std::vector<ID_Data> variables
     }
 
     if (variables.size() != types.size())
-        throw 2;
+        throw Err::GroupVariableCountError(std::to_string(variables.size()), node);
 
     for (int i = 0; i < types.size(); i++) {
-        _idTable.GetData(variables[i].id).type = types[i];
-        _idTable.GetData(variables[i].id).isInitialized = true;
+        _currentBlock->idTable.GetData(variables[i].id).type = types[i];
+        _currentBlock->idTable.GetData(variables[i].id).isInitialized = true;
     }
 
     return types;
@@ -115,19 +125,19 @@ ID_Data SemanticAnalyzer::Pat(Node *const &node) {
     data.isMutable = node->GetChild(0) != nullptr;
     data.id = node->GetChild(1)->GetData()->token.GetValue();
 
-    if (_idTable.Has(data.id) || _arrayTable.Has(data.id))
+    if (_currentBlock->idTable.Has(data.id) || _currentBlock->arrayTable.Has(data.id))
         throw Err::VariableExistingError(data.id, node->GetChild(1));
 
     Node* type = node->GetChild(2);
     if (type == nullptr) {
-        _idTable.AddToTable(data);
+        _currentBlock->idTable.AddToTable(data);
         return data;
     }
 
     data.type.isReference = type->GetChild(0) != nullptr;
     data.type.isMutable = type->GetChild(1) != nullptr;
     data.type.type = TypeData::ToType(type->GetChild(2)->GetData()->token.GetType());
-    _idTable.AddToTable(data);
+    _currentBlock->idTable.AddToTable(data);
 
     return data;
 }
@@ -167,9 +177,9 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
         throw Err::CriticalError("Expected member expression", node);
 
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
-    if (!_arrayTable.Has(id))
+    if (!HasArrInUpper(id, node->GetChild(0)))
         throw Err::VariableNotExistingError(id, node->GetChild(0));
-    if (!_arrayTable.GetData(id).isInitialized)
+    if (!GetArr(id, node->GetChild(0)).isInitialized)
         throw Err::MemberExpressionInitializationError(id, node->GetChild(0));
 
     auto elemsTypes = ArrayElems(node->GetChild(1));
@@ -180,7 +190,7 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
     if (elemsTypes[0].type != Type::Integer || index[0] == '-')
         throw Err::CriticalError("Expected unsigned type index", node->GetChild(1)->GetChild(0));
 
-    return _arrayTable.GetData(id).type;
+    return GetArr(id,node->GetChild(0)).type;
 }
 
 std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
@@ -211,18 +221,18 @@ TypeData SemanticAnalyzer::MinTerminal(Node *const &node) {
 
     if (node->GetData()->ruleType == RuleType::InternalFuncInvoke) {
         std::string id = node->GetChild(0)->GetData()->token.GetValue();
-        if (!_idTable.Has(id))
+        if (!HasIDInUpper(id, node->GetChild(0)))
             throw Err::VariableNotExistingError(id, node->GetChild(0));
         return FunctionInvoke(node->GetChild(1));
     }
 
     if (node->GetData()->ruleType == RuleType::Identifier) {
         std::string id = node->GetData()->token.GetValue();
-        if (!_idTable.Has(id))
-            throw Err::VariableNotExistingError(id, node);
-        if (!_idTable.GetData(id).isInitialized)
+        if (HasArrInUpper(id, node))
+            throw Err::CriticalError("It is impossible to assign an array to an ordinary variable", node);
+        if (!GetID(id, node).isInitialized)
             throw Err::VariableInitializationError(id, node);
-        return _idTable.GetData(id).type;
+        return GetID(id, node).type;
     }
 
     if (node->GetData()->ruleType == RuleType::Literal) {
@@ -251,7 +261,7 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
 
     Node* arrPat = node->GetChild(0);
     std::string id = arrPat->GetChild(1)->GetData()->token.GetValue();
-    if (_arrayTable.Has(id) || _idTable.Has(id))
+    if (_currentBlock->arrayTable.Has(id) || _currentBlock->idTable.Has(id))
         throw Err::VariableExistingError(id, arrPat->GetChild(1));
 
     Array_Data data;
@@ -263,7 +273,7 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
     data.type.isMutable = typeNode->GetChild(1) != nullptr;
     data.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
     data.elementCount = std::stoul(arrPat->GetChild(2)->GetChild(1)->GetData()->token.GetValue());
-    _arrayTable.AddToTable(data);
+    _currentBlock->arrayTable.AddToTable(data);
 
     if (node->GetChild(1) != nullptr)
         ArrayAssignment(arrPat->GetChild(1), node->GetChild(1));
@@ -280,9 +290,9 @@ void SemanticAnalyzer::Assignment(Node *const &node) {
     }
     else if (node->GetChild(0)->GetData()->ruleType == RuleType::Identifier) {
         std::string id = node->GetChild(0)->GetData()->token.GetValue();
-        if (_idTable.Has(id))
+        if (HasIDInUpper(id, node->GetChild(0)))
             VariableAssignment(node->GetChild(0), node->GetChild(1));
-        else if (_arrayTable.Has(id))
+        else if (HasArrInUpper(id, node->GetChild(0)))
             ArrayAssignment(node->GetChild(0), node->GetChild(1));
         else
             throw Err::VariableNotExistingError(id, node->GetChild(0));
@@ -294,46 +304,46 @@ void SemanticAnalyzer::Assignment(Node *const &node) {
 void SemanticAnalyzer::VariableAssignment(Node* const& idNode, Node *const &exprNode) {
     std::string id = idNode->GetData()->token.GetValue();
 
-    if (!_idTable.Has(id))
+    if (!HasIDInUpper(id, idNode))
         throw Err::VariableNotExistingError(id, idNode);
 
-    ID_Data idData = _idTable.GetData(id);
+    ID_Data &idData = GetID(id, idNode);
     if (!idData.isMutable && idData.isInitialized)
         throw Err::VariableImmutableError(id, idNode);
 
     TypeData exprType = Expr(exprNode);
 
     if (idData.type.type == Type::None)
-        _idTable.GetData(id).type = exprType;
+        idData.type = exprType;
     else if (idData.type != exprType)
         throw Err::TypeError(idData.type.ToString(), exprType.ToString(), exprNode);
 
-    _idTable.GetData(id).isInitialized = true;
+    idData.isInitialized = true;
 }
 
 void SemanticAnalyzer::ArrayAssignment(Node* const& idNode, Node *const &exprNode) {
     std::string id = idNode->GetData()->token.GetValue();
-    if (!_arrayTable.Has(id))
+    if (!HasArrInUpper(id, idNode))
         throw Err::VariableNotExistingError(id, idNode);
-    Array_Data arrData = _arrayTable.GetData(id);
+    Array_Data &arrData = GetArr(id, idNode);
 
     if (!arrData.isMutable && arrData.isInitialized)
         throw Err::VariableImmutableError(id, idNode);
 
     std::vector<TypeData> exprTypes = ArrayElems(exprNode);
     if (exprTypes.size() != arrData.elementCount)
-        throw Err::ArrayCountElementsError(std::to_string(arrData.elementCount), std::to_string(exprTypes.size()), exprNode);
+        throw Err::ArrayCountElementsError(std::to_string(arrData.elementCount), std::to_string(exprTypes.size()), exprNode->GetChild(exprTypes.size()-1));
     if (arrData.type != exprTypes[0])
         throw Err::TypeError(arrData.type.ToString(), exprTypes[0].ToString(), exprNode);
 
-    _arrayTable.GetData(id).isInitialized = true;
+    arrData.isInitialized = true;
 }
 
 void SemanticAnalyzer::MemberAssignment(Node* const& idNode, Node *const &exprNode) {
     std::string id = idNode->GetData()->token.GetValue();
-    if (!_arrayTable.Has(id))
+    if (!HasArrInUpper(id, idNode))
         throw Err::VariableNotExistingError(id, idNode);
-    Array_Data arrData = _arrayTable.GetData(id);
+    Array_Data &arrData = GetArr(id, idNode);
 
     if (!arrData.isMutable && arrData.isInitialized)
         throw Err::VariableImmutableError(id, idNode);
@@ -343,26 +353,30 @@ void SemanticAnalyzer::MemberAssignment(Node* const& idNode, Node *const &exprNo
         throw Err::TypeError(arrData.type.ToString(), exprType.ToString(), exprNode);
 }
 
-std::vector<TypeData> SemanticAnalyzer::FunctionParams(std::string funcId, Node *const &node) {
+std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionParams(const std::string &funcId, Node *const &node) {
     std::vector<Node*> paramsNode = node->GetChilds();
-    std::vector<TypeData> paramTypes;
+    std::vector<std::pair<TypeData, bool>> paramTypes;
 
     for (const auto &param : paramsNode) {
         if (param->GetData()->ruleType == RuleType::ArrayArg)
-            paramTypes.emplace_back(CanAccessArray(param->GetChild(2)));
+            paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
         else if (param->GetData()->ruleType == RuleType::Identifier)
-            paramTypes.emplace_back(CanAccessIdentifier(param));
+            paramTypes.emplace_back(std::make_pair(CanAccessIdentifier(param), false));
         else
-            paramTypes.emplace_back(Expr(param));
+            paramTypes.emplace_back(std::make_pair(Expr(param), false));
     }
 
     std::vector<Data*> funcDefineParams = _functionTable.GetData(funcId).parameters;
     if (funcDefineParams.size() != paramTypes.size())
         throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode[paramsNode.size()-1]);
 
-    for (int i = 0; i < funcDefineParams.size(); ++i) {
-        if (funcDefineParams[i]->type != paramTypes[i])
+    for (unsigned int i = 0; i < funcDefineParams.size(); ++i) {
+        if (funcDefineParams[i]->type != paramTypes[i].first)
             throw Err::FunctionInvokeParametersTypeError(funcDefineParams[i]->type.ToString(), paramsNode[i]);
+        if (paramTypes[i].second && reinterpret_cast<Array_Data*>(funcDefineParams[i]) == nullptr)
+            throw Err::CriticalError("It is impossible to pass an array instead of a regular variable", node->GetChild(i));
+        if (!paramTypes[i].second && reinterpret_cast<ID_Data*>(funcDefineParams[i]) == nullptr)
+            throw Err::CriticalError("", node->GetChild(i));
     }
 
     return paramTypes;
@@ -370,20 +384,72 @@ std::vector<TypeData> SemanticAnalyzer::FunctionParams(std::string funcId, Node 
 
 TypeData SemanticAnalyzer::CanAccessIdentifier(Node *const &idNode) {
     std::string id = idNode->GetData()->token.GetValue();
-    if (!_idTable.Has(id))
+    if (!HasIDInUpper(id, idNode))
         throw Err::VariableNotExistingError(id, idNode);
-    if (!_idTable.GetData(id).isInitialized)
+
+    ID_Data &idData = GetID(id, idNode);
+    if (!idData.isInitialized)
         throw Err::VariableInitializationError(id, idNode);;
 
-    return _idTable.GetData(id).type;
+    return idData.type;
 }
 
 TypeData SemanticAnalyzer::CanAccessArray(Node *const &idNode) {
     std::string id = idNode->GetData()->token.GetValue();
-    if (!_arrayTable.Has(id))
+    if (!HasArrInUpper(id, idNode))
         throw Err::VariableNotExistingError(id, idNode);
-    if (!_arrayTable.GetData(id).isInitialized)
+
+    Array_Data &arrayData = GetArr(id, idNode);
+    if (!arrayData.isInitialized)
         throw Err::ArrayInitializationError(id, idNode);
 
-    return _arrayTable.GetData(id).type;
+    return arrayData.type;
+}
+
+bool SemanticAnalyzer::HasIDInUpper(const std::string &id, Node *const &root) {
+    ProgramBlock *tmp = _currentBlock;
+
+    do {
+        if (tmp->idTable.Has(id))
+            return true;
+        tmp = tmp->upperBlock;
+    } while (tmp->upperBlock);
+
+    return false;
+}
+
+bool SemanticAnalyzer::HasArrInUpper(const std::string &id, Node *const &root) {
+    ProgramBlock *tmp = _currentBlock;
+
+    do {
+        if (tmp->arrayTable.Has(id))
+            return true;
+        tmp = tmp->upperBlock;
+    } while (tmp->upperBlock);
+
+    return false;
+}
+
+ID_Data& SemanticAnalyzer::GetID(const std::string &id, Node* const &root) {
+    ProgramBlock *tmp = _currentBlock;
+
+    do {
+        if (tmp->idTable.Has(id))
+            return tmp->idTable.GetData(id);
+        tmp = tmp->upperBlock;
+    } while (tmp->upperBlock);
+
+    throw Err::VariableNotExistingError(id, root);
+}
+
+Array_Data& SemanticAnalyzer::GetArr(const std::string &id, Node* const &root) {
+    ProgramBlock *tmp = _currentBlock;
+
+    do {
+        if (tmp->idTable.Has(id))
+            return tmp->arrayTable.GetData(id);
+        tmp = tmp->upperBlock;
+    } while (tmp->upperBlock);
+
+    throw Err::VariableNotExistingError(id, root);
 }

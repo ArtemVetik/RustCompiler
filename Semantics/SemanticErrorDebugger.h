@@ -17,6 +17,7 @@ public:
     SemanticErrorDebugger() = delete;
     static SemanticError CriticalError(const std::string &message, Node *const &root);
     static SemanticError TypeError(const std::string &expectedType, const std::string &foundType, Node *const &root);
+    static SemanticError GroupVariableCountError(const std::string &identifier, Node *const &root);
     static SemanticError VariableExistingError(const std::string &identifier, Node *const &root);
     static SemanticError VariableNotExistingError(const std::string &identifier, Node *const &root);
     static SemanticError VariableInitializationError(const std::string &identifier, Node *const &root);

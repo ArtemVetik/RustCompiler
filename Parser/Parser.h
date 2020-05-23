@@ -80,6 +80,7 @@ private:
 
     // Блок - внутри всё что угодно
     bool Block(Node *&root);
+    bool NestedBlock(Node *& root);
     bool BlockChecker(Node *&root);
 
 public:

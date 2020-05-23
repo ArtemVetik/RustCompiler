@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include "TypeData.h"
+#include "Table.h"
 
 struct Data {
     std::string id;
@@ -45,6 +46,8 @@ struct Array_Data : public Data {
 
 struct Function_Data : public Data {
     std::vector<Data*> parameters;
+    Table<ID_Data> idTable;
+    Table<Array_Data> arrayTable;
 
     Function_Data() : parameters() { }
 };

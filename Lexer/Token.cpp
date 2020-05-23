@@ -53,4 +53,6 @@ Token &Token::operator=(const Token &right) {
     _type = right._type;
     _value = right._value;
     _id = right._id;
+
+    return *this;
 }

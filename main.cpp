@@ -54,6 +54,21 @@ int main() {
     //    return 0;
     //}
 
+    {
+        int a = 3;
+        {
+            int a = 2;
+            {
+                int a = 1;
+                {
+                    a = 0;
+                }
+            }
+        }
+    }
+
+
+    
     try {
         Lexer lexer("test.txt");
         lexer.Analyze();

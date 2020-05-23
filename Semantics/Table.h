@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <exception>
-#include "../Exceptions/SemanticError.h"
 
 template <typename T>
 class Table {

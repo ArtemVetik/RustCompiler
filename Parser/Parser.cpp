@@ -710,8 +710,11 @@ bool Parser::BlockChecker(Node *&root) {
                                         _currentToken = saveToken;
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
-                                            AST_Tree::DeleteNode(root);
-                                            return false;
+                                            if (!NestedBlock(root)) {
+                                                _currentToken = saveToken;
+                                                AST_Tree::DeleteNode(root);
+                                                return false;
+                                            }
                                         }
                                     }
                                 }
@@ -726,11 +729,27 @@ bool Parser::BlockChecker(Node *&root) {
     return  true;
 }
 
-bool Parser::Println(Node *&root) {
+bool Parser::NestedBlock(Node *& root) {
     if (_currentToken >= _tokens.end())
         return false;
 
-    _currentToken;
+    auto saveToken = _currentToken;
+    if ((*_currentToken)->GetType() == LBLBR) {
+        _currentToken++;
+        Block(root);
+        if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
+            _currentToken++;
+            return true;
+        }
+    }
+
+    _currentToken = saveToken;
+    return false;
+}
+
+bool Parser::Println(Node *&root) {
+    if (_currentToken >= _tokens.end())
+        return false;
 
     Node *stringNode = nullptr, *exprListNode = nullptr;
 

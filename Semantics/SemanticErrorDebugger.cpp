@@ -4,9 +4,13 @@ SemanticError SemanticErrorDebugger::CriticalError(const std::string &message, N
     return SemanticError(message, GetLocation(root));
 }
 
-SemanticError SemanticErrorDebugger::TypeError(const std::string &expectedType, const std::string &foundType,
-                                               Node *const &root) {
+SemanticError SemanticErrorDebugger::TypeError(const std::string &expectedType, const std::string &foundType, Node *const &root) {
     std::string message = "Type mismatch. Expected " + expectedType + ", found " + foundType;
+    return SemanticError(message, GetLocation(root));
+}
+
+SemanticError SemanticErrorDebugger::GroupVariableCountError(const std::string &expectedCount, Node *const &root) {
+    std::string message = "Mismatch count of group elements. Expected " + expectedCount;
     return SemanticError(message, GetLocation(root));
 }
 
@@ -61,12 +65,12 @@ SemanticError SemanticErrorDebugger::FunctionInvokeParametersCountError(const st
     return SemanticError(message, GetLocation(root));
 }
 
+
+
 SemanticError SemanticErrorDebugger::FunctionInvokeParametersTypeError(const std::string &expectedType, Node *const &root) {
     std::string message = "Function parameters type mismatch. Expected " + expectedType;
     return SemanticError(message, GetLocation(root));
 }
-
-
 
 TokenLocation* SemanticErrorDebugger::TryGetNonNullNode(Node *const &node) {
     if (node->GetData()->token.GetLocation() == nullptr) {

@@ -4,17 +4,15 @@
 
 #include "../AST_Tree/AST_Tree.h"
 #include "SemanticErrorDebugger.h"
-#include "TableData.h"
-#include "Table.h"
+#include "ProgramBlock.h"
 
 #define Err SemanticErrorDebugger
 
 class SemanticAnalyzer {
 private:
     Node* _root;
-    Table<ID_Data> _idTable;
-    Table<Array_Data> _arrayTable;
     Table<Function_Data> _functionTable;
+    ProgramBlock *_currentBlock;
 
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
@@ -28,7 +26,7 @@ private:
     TypeData BoolExpr(Node* const &node);
     TypeData MinTerminal(Node* const &node);
     TypeData FunctionInvoke(Node* const &node);
-    std::vector<TypeData> FunctionParams(std::string funcId, Node* const &node);
+    std::vector<std::pair<TypeData, bool>> FunctionParams(const std::string &funcId, Node* const &node);
     TypeData MemberExpr(Node* const &node);
     std::vector<TypeData> ArrayElems(Node* const &node);
     void Assignment(Node* const &node);
@@ -39,8 +37,13 @@ private:
     TypeData CanAccessIdentifier(Node* const &idNode);
     TypeData CanAccessArray(Node* const &idNode);
 
+    bool HasIDInUpper(const std::string &id, Node *const &root);
+    bool HasArrInUpper(const std::string &id, Node *const &root);
+    ID_Data& GetID(const std::string &id, Node* const &root);
+    Array_Data& GetArr(const std::string &id, Node* const &root);
 public:
     explicit SemanticAnalyzer(Node* const &root);
+    ~SemanticAnalyzer();
     void Analyze();
 };
 
