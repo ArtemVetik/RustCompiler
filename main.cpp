@@ -1,5 +1,4 @@
 #include <string>
-#include <fstream>
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
 #include "Semantics/Table.h"

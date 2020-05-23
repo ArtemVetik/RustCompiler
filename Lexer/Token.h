@@ -9,7 +9,7 @@
 
 class Token {
 private:
-    TokenLocation _location;
+    TokenLocation* _location;
     TokenType _type;
     std::string _value;
     int _id;
@@ -17,8 +17,9 @@ private:
 public:
     explicit Token(const std::string &value = "");
     Token(const TokenType &type, std::string value, int id);
+    ~Token();
     void SetLocation(const TokenLocation &location);
-    const TokenLocation& GetLocation() const;
+    TokenLocation* const & GetLocation() const;
     std::string GetValue() const;
     TokenType GetType() const;
     void PrintToken() const;

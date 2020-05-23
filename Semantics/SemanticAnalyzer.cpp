@@ -175,7 +175,7 @@ TypeData SemanticAnalyzer::BoolExpr(Node *const &node) {
     TypeData left = BoolExpr(node->GetChild(0));
     TypeData right = BoolExpr(node->GetChild(1));
     TypeData wrongType;
-    unsigned int wrongChild = 0;
+    unsigned int wrongChild;
 
     switch (node->GetData()->ruleType){
         case LogicalExpression:
@@ -288,6 +288,12 @@ TypeData SemanticAnalyzer::FunctionInvoke(Node *const &node) {
             if (!_arrayTable.Has(arrayId))
                 throw SemanticError(std::string("Variable " + arrayId + " has not been declared"), param->GetChild(2)->GetData()->token.GetLocation());
             paramTypes.emplace_back(_arrayTable.GetData(arrayId).type);
+        }
+        else if (param->GetData()->ruleType == RuleType::Identifier) {
+            std::string id = param->GetChild(0)->GetData()->token.GetValue();
+            if (!_idTable.Has(id))
+                throw SemanticError(std::string("Variable " + id + " has not been declared"), param->GetChild(2)->GetData()->token.GetLocation());
+            paramTypes.emplace_back(_idTable.GetData(id).type);
         }
         else {
             std::vector<TypeData> exprParam = Expr(param);
