@@ -1,10 +1,13 @@
 #ifndef RUSTCOMPILER_SEMANTICANALYZER_H
 #define RUSTCOMPILER_SEMANTICANALYZER_H
 
+
 #include "../AST_Tree/AST_Tree.h"
-#include "../Exceptions/SemanticError.h"
+#include "SemanticErrorDebugger.h"
 #include "TableData.h"
 #include "Table.h"
+
+#define Err SemanticErrorDebugger
 
 class SemanticAnalyzer {
 private:
@@ -30,9 +33,9 @@ private:
     std::vector<TypeData> ArrayElems(Node* const &node);
     void Assignment(Node* const &node);
 
-    void VariableAssignment(std::string id, Node *const &exprNode);
-    void ArrayAssignment(std::string id, Node *const &exprNode);
-    void MemberAssignment(std::string id, Node *const &exprNode);
+    void VariableAssignment(Node* const& idNode, Node *const &exprNode);
+    void ArrayAssignment(Node* const& idNode, Node *const &exprNode);
+    void MemberAssignment(Node* const& idNode, Node *const &exprNode);
     TypeData CanAccessIdentifier(Node* const &idNode);
     TypeData CanAccessArray(Node* const &idNode);
 

@@ -23,6 +23,8 @@ public:
     std::string GetValue() const;
     TokenType GetType() const;
     void PrintToken() const;
+
+    Token& operator = (const Token &right);
 };
 
 #endif //RUSTCOMPILER_TOKEN_H

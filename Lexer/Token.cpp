@@ -12,7 +12,7 @@ TokenType Token::GetType() const {
 
 void Token::PrintToken() const {
     std::cout << "[TypeData] " << TokenTypePrinter::PrintTokenType(_type) << "\n" << "[Value] " << _value << "\n" <<
-              "[ID] " << _id << "\nLocation: " << _location << std::endl;
+              "[ID] " << _id << "\nLocation: " << (_location ? _location->ToString() : "none") << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 }
 
@@ -40,4 +40,17 @@ Token::~Token() {
         delete _location;
         _location = nullptr;
     }
+}
+
+Token &Token::operator=(const Token &right) {
+    if (_location) {
+        delete _location;
+        _location = nullptr;
+    }
+    if (right._location)
+        _location = new TokenLocation(right._location->start, right._location->end);
+
+    _type = right._type;
+    _value = right._value;
+    _id = right._id;
 }
