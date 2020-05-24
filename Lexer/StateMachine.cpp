@@ -52,6 +52,7 @@ bool StateMachine::SplitSeparators(const std::string& buffer){
         if (token == nullptr)
             return false;
 
+        token->SetLocation(TokenLocation(_startPos, _endPos));
         _tokens.emplace_back(token);
     }
 

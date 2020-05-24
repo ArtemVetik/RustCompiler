@@ -14,7 +14,8 @@ class Parser {
 private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
-    AST_Tree tree;
+    AST_Tree _tree;
+    ParserError _error;
 
     // Объявление переменных
     bool LetDecl(Node *&root);
@@ -23,6 +24,7 @@ private:
     bool VarList(Node *&root);
     bool Init(Node *&root);
     bool Expr(Node *&root);
+    bool SimpleExpr(Node *&root);
     bool GroupInit(Node *&root);
     bool LitList(Node *&root);
     bool Type(Node *&root);

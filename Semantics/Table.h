@@ -31,7 +31,7 @@ template<typename T>
 T &Table<T>::GetData(const std::string &id) {
     auto data = std::find(_table.cbegin(), _table.cend(), id);
     if (data == _table.cend())
-        throw "Table error:\n\tUnable to get data";
+        throw "Table _error:\n\tUnable to get data";
     return _table[std::distance(_table.cbegin(), data)];
 }
 

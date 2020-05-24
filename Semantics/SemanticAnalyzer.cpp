@@ -298,7 +298,7 @@ void SemanticAnalyzer::Assignment(Node *const &node) {
             throw Err::VariableNotExistingError(id, node->GetChild(0));
     }
     else
-        throw Err::CriticalError("Critical error: can not assigment", node);
+        throw Err::CriticalError("Critical _error: can not assigment", node);
 }
 
 void SemanticAnalyzer::VariableAssignment(Node* const& idNode, Node *const &exprNode) {
@@ -389,7 +389,7 @@ TypeData SemanticAnalyzer::CanAccessIdentifier(Node *const &idNode) {
 
     ID_Data &idData = GetID(id, idNode);
     if (!idData.isInitialized)
-        throw Err::VariableInitializationError(id, idNode);;
+        throw Err::VariableInitializationError(id, idNode);
 
     return idData.type;
 }
@@ -446,7 +446,7 @@ Array_Data& SemanticAnalyzer::GetArr(const std::string &id, Node* const &root) {
     ProgramBlock *tmp = _currentBlock;
 
     do {
-        if (tmp->idTable.Has(id))
+        if (tmp->arrayTable.Has(id))
             return tmp->arrayTable.GetData(id);
         tmp = tmp->upperBlock;
     } while (tmp->upperBlock);
