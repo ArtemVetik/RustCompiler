@@ -320,8 +320,8 @@ bool Parser::Analyze() {
         AST_Tree::DeleteNode(tmp);
     }
     //if (!Block(tmp))
-    //    throw _error;
-    //_tree.GetRoot()->AddChild(tmp);
+        //throw _error;
+   // _tree.GetRoot()->AddChild(tmp);
 
     if (_currentToken == _tokens.end()) {
         _tree.Traversal();
@@ -557,7 +557,7 @@ bool Parser::Type(Node *&root) {
     if ((*_currentToken)->GetType() == INTEGER || (*_currentToken)->GetType() == REAL || (*_currentToken)->GetType() == UINT) {
         typeNode = new Node(new NodeData(**_currentToken, RuleType::None));
         _currentToken++;
-        root = new Node(new NodeData(Token("TypeData"), RuleType::None));
+        root = new Node(new NodeData(Token("TypeData"), RuleType::IdType));
         root->AddChild(bandNode);
         root->AddChild(mutNode);
         root->AddChild(typeNode);
@@ -917,7 +917,7 @@ bool Parser::ArrayType(Node *&root) {
             }
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SRBR) {
                 _currentToken++;
-                root = new Node(new NodeData(Token("ArrType"), RuleType::None));
+                root = new Node(new NodeData(Token("ArrType"), RuleType::ArrayType));
                 root->AddChild(typeNode);
                 root->AddChild(countNode);
                 AST_Tree::DeleteNode(typeNode);

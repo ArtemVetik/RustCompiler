@@ -5,7 +5,7 @@ SemanticError SemanticErrorDebugger::CriticalError(const std::string &message, N
 }
 
 SemanticError SemanticErrorDebugger::TypeError(const std::string &expectedType, const std::string &foundType, Node *const &root) {
-    std::string message = "Type mismatch. Expected " + expectedType + ", found " + foundType;
+    std::string message = "IdType mismatch. Expected " + expectedType + ", found " + foundType;
     return SemanticError(message, GetLocation(root));
 }
 
@@ -64,8 +64,6 @@ SemanticError SemanticErrorDebugger::FunctionInvokeParametersCountError(const st
     std::string message = "Parameters count mismatch. Expected " + expectedCount;
     return SemanticError(message, GetLocation(root));
 }
-
-
 
 SemanticError SemanticErrorDebugger::FunctionInvokeParametersTypeError(const std::string &expectedType, Node *const &root) {
     std::string message = "Function parameters type mismatch. Expected " + expectedType;

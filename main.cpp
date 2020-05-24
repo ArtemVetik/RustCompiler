@@ -16,7 +16,6 @@
 std::string Menu() {
     char menu;
 
-
     do {
         system("cls");
         std::cout << "Âûבונטעו פאיכ םא Rust'ו:" << std::endl;
@@ -54,7 +53,6 @@ int main() {
     //    return 0;
     //}
 
-    
     try {
         Lexer lexer("test.txt");
         lexer.Analyze();

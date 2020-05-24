@@ -22,14 +22,17 @@ private:
     std::vector<ID_Data> GroupLetVarDeclaration(Node *const &node);
     std::vector<TypeData> GroupInit(std::vector<ID_Data> variables, Node* const &node);
     void ArrayDeclaration(Node* const &node);
-    TypeData Expr(Node* const &node);
-    TypeData BoolExpr(Node* const &node);
-    TypeData MinTerminal(Node* const &node);
+    std::pair<TypeData, bool> Expr(Node* const &node);
+    std::pair<TypeData, bool> BoolExpr(Node* const &node);
+    std::pair<TypeData, bool> MinTerminal(Node* const &node);
     TypeData FunctionInvoke(Node* const &node);
-    std::vector<std::pair<TypeData, bool>> FunctionParams(const std::string &funcId, Node* const &node);
+    std::vector<std::pair<TypeData, bool>> FunctionInvokeParams(const std::string &funcId, Node* const &node);
     TypeData MemberExpr(Node* const &node);
     std::vector<TypeData> ArrayElems(Node* const &node);
     void Assignment(Node* const &node);
+    void Condition(Node* const &node);
+
+    void FunctionDeclaration(Node* const &node);
 
     void VariableAssignment(Node* const& idNode, Node *const &exprNode);
     void ArrayAssignment(Node* const& idNode, Node *const &exprNode);

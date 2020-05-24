@@ -16,6 +16,9 @@ enum RuleType {
     ArrayElems,
     ArrayArg,
 
+    ArrayType,
+    IdType,
+
     FuncDeclaration,
     FuncInvoke,
     InternalFuncInvoke,

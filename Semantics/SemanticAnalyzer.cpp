@@ -37,6 +37,13 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
         case RuleType::AssignmentExpression:
             Assignment(node);
             break;
+        case RuleType::IfExpr:
+        case RuleType::WhileExpr:
+            Condition(node->GetChild(0));
+            break;
+        case RuleType::FuncDeclaration:
+            FunctionDeclaration(node);
+            break;
         case RuleType::Block:
             _currentBlock = &_currentBlock->AddBlock();
             Traversal(node);
@@ -53,7 +60,7 @@ void SemanticAnalyzer::VariableDeclaration(Node *const &node) {
     }
     else {
         ID_Data idData = Pat(node->GetChild(0));
-        if (node->GetChild(1) != nullptr) // если есть инициализация
+        if (node->GetChild(1) != nullptr)
             VariableAssignment(node->GetChild(0)->GetChild(1), node->GetChild(1));
     }
 }
@@ -82,8 +89,10 @@ std::vector<TypeData> SemanticAnalyzer::GroupInit(std::vector<ID_Data> variables
     if (node->GetData()->ruleType != RuleType::GroupInit)
         throw Err::CriticalError("Expected group initialize", node);
 
-    std::vector<TypeData> types;
+    std::vector<std::pair<TypeData, bool>> types;
+    std::vector<TypeData> resTypes;
     std::vector<Node*> childs = node->GetChilds();
+    types.reserve(childs.size());
     for (const auto &child : childs) {
         types.emplace_back(Expr(child));
     }
@@ -92,15 +101,18 @@ std::vector<TypeData> SemanticAnalyzer::GroupInit(std::vector<ID_Data> variables
         throw Err::GroupVariableCountError(std::to_string(variables.size()), node);
 
     for (int i = 0; i < types.size(); i++) {
-        _currentBlock->idTable.GetData(variables[i].id).type = types[i];
+        if (types[i].second)
+            throw Err::CriticalError("It is impossible to assign array to ordinary variable", node->GetChild(i));
+        _currentBlock->idTable.GetData(variables[i].id).type = types[i].first;
         _currentBlock->idTable.GetData(variables[i].id).isInitialized = true;
+        resTypes.emplace_back(types[i].first);
     }
 
-    return types;
+    return resTypes;
 }
 
-TypeData SemanticAnalyzer::Expr(Node *const &node) {
-    TypeData type;
+std::pair<TypeData, bool> SemanticAnalyzer::Expr(Node *const &node) {
+    std::pair<TypeData, bool> type;
 
     switch (node->GetData()->ruleType) {
         case RuleType::LogicalExpression:
@@ -110,7 +122,7 @@ TypeData SemanticAnalyzer::Expr(Node *const &node) {
             type = BoolExpr(node);
             break;
         case RuleType::MemberExpression:
-            type = MemberExpr(node);
+            type = std::make_pair(MemberExpr(node), false);
             break;
         default:
             type = MinTerminal(node);
@@ -142,31 +154,42 @@ ID_Data SemanticAnalyzer::Pat(Node *const &node) {
     return data;
 }
 
-TypeData SemanticAnalyzer::BoolExpr(Node *const &node) {
+std::pair<TypeData, bool> SemanticAnalyzer::BoolExpr(Node *const &node) {
 
     if (node->GetData()->ruleType != LogicalExpression && node->GetData()->ruleType != BinaryExpression
         && node->GetData()->ruleType != BinaryCompExpression)
         return MinTerminal(node);
 
-    TypeData left = BoolExpr(node->GetChild(0));
-    TypeData right = BoolExpr(node->GetChild(1));
-    TypeData wrongType;
-    unsigned int wrongChild = 0;
+    std::pair<TypeData, bool> left = BoolExpr(node->GetChild(0));
+    std::pair<TypeData, bool> right = BoolExpr(node->GetChild(1));
+    std::pair<TypeData, bool> wrongType;
+    unsigned int wrongChild;
 
     switch (node->GetData()->ruleType){
         case LogicalExpression:
-            if (left.type == Type::Bool && right.type == Type::Bool)
-                return TypeData(Type::Bool);
-            wrongType = (left.type != Type::Bool) ? (wrongChild = 0, left) : (wrongChild = 1, right);
-            throw Err::TypeError("Bool", wrongType.ToString(), node->GetChild(wrongChild));
-        case BinaryCompExpression:
-            if (left.type == right.type)
-                return TypeData(Type::Bool);
-            throw Err::TypeError(left.ToString(), right.ToString(), node->GetChild(1));
-        case BinaryExpression:
-            if (left.type == right.type)
+            if (left.first.type == Type::Bool && right.first.type == Type::Bool)
                 return left;
-            throw Err::TypeError(left.ToString(), right.ToString(), node->GetChild(1));
+            wrongType = (left.first.type != Type::Bool) ? (wrongChild = 0, left) : (wrongChild = 1, right);
+            throw Err::TypeError("Bool", wrongType.first.ToString(), node->GetChild(wrongChild));
+        case BinaryCompExpression:
+            if (left.first == right.first) {
+                if (left.second)
+                    throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(0));
+                if (right.second)
+                    throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(1));
+                return std::make_pair(TypeData(Type::Bool), false);
+            }
+
+            throw Err::TypeError(left.first.ToString(), right.first.ToString(), node->GetChild(1));
+        case BinaryExpression:
+            if (left.first == right.first) {
+                if (left.second)
+                    throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(0));
+                if (right.second)
+                    throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(1));
+                return left;
+            }
+            throw Err::TypeError(left.first.ToString(), right.first.ToString(), node->GetChild(1));
         default:
             throw Err::CriticalError("Expected bool expression", node);
     }
@@ -187,7 +210,7 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
         throw Err::CriticalError("Expected single index in member expression", node->GetChild(1));
 
     std::string index = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
-    if (elemsTypes[0].type != Type::Integer || index[0] == '-')
+    if ((elemsTypes[0].type != Type::Integer && elemsTypes[0].type != Type::Unsigned) || index[0] == '-')
         throw Err::CriticalError("Expected unsigned type index", node->GetChild(1)->GetChild(0));
 
     return GetArr(id,node->GetChild(0)).type;
@@ -199,9 +222,11 @@ std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
 
     std::vector<TypeData> elemsTypes;
     std::vector<Node*> childs = node->GetChilds();
-    for (const auto &child: childs) {
-        TypeData type = Expr(child);
-        elemsTypes.emplace_back(type);
+    for (const auto &child : childs) {
+        std::pair<TypeData, bool> type = Expr(child);
+        if (type.second)
+            throw Err::CriticalError("It is impossible to using array in array elements", child);
+        elemsTypes.emplace_back(type.first);
     }
 
     for (unsigned int i = 1; i < elemsTypes.size(); i++) {
@@ -212,31 +237,39 @@ std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
     return elemsTypes;
 }
 
-TypeData SemanticAnalyzer::MinTerminal(Node *const &node) {
+std::pair<TypeData, bool> SemanticAnalyzer::MinTerminal(Node *const &node) {
     if (node->GetData()->ruleType == RuleType::UnaryExpession)
         return MinTerminal(node->GetChild(0));
 
     if (node->GetData()->ruleType == RuleType::FuncInvoke)
-        return FunctionInvoke(node);
+        return std::make_pair(FunctionInvoke(node), false);
 
     if (node->GetData()->ruleType == RuleType::InternalFuncInvoke) {
         std::string id = node->GetChild(0)->GetData()->token.GetValue();
         if (!HasIDInUpper(id, node->GetChild(0)))
             throw Err::VariableNotExistingError(id, node->GetChild(0));
-        return FunctionInvoke(node->GetChild(1));
+        return std::make_pair(FunctionInvoke(node->GetChild(1)), false);
+    }
+
+    if (node->GetData()->ruleType == RuleType::MemberExpression) {
+        return std::make_pair(MemberExpr(node), false);
     }
 
     if (node->GetData()->ruleType == RuleType::Identifier) {
         std::string id = node->GetData()->token.GetValue();
-        if (HasArrInUpper(id, node))
-            throw Err::CriticalError("It is impossible to assign an array to an ordinary variable", node);
+        if (HasArrInUpper(id, node)) {
+            Array_Data array = GetArr(id, node);
+            if (!array.isInitialized)
+                throw Err::ArrayInitializationError(id, node);
+            return std::make_pair(array.type, true);
+        }
         if (!GetID(id, node).isInitialized)
             throw Err::VariableInitializationError(id, node);
-        return GetID(id, node).type;
+        return std::make_pair(GetID(id, node).type, false);
     }
 
     if (node->GetData()->ruleType == RuleType::Literal) {
-        return TypeData(TypeData::ToType(node->GetData()->token.GetType()));
+        return std::make_pair(TypeData(TypeData::ToType(node->GetData()->token.GetType())), false);
     }
 
     throw Err::CriticalError("Expected minimal terminal", node);
@@ -250,7 +283,7 @@ TypeData SemanticAnalyzer::FunctionInvoke(Node *const &node) {
     if (!_functionTable.Has(functionId))
         throw Err::FunctionNotExistingError(functionId, node);
 
-    FunctionParams(functionId, node->GetChild(1));
+    FunctionInvokeParams(functionId, node->GetChild(1));
 
     return _functionTable.GetData(functionId).type;
 }
@@ -311,12 +344,14 @@ void SemanticAnalyzer::VariableAssignment(Node* const& idNode, Node *const &expr
     if (!idData.isMutable && idData.isInitialized)
         throw Err::VariableImmutableError(id, idNode);
 
-    TypeData exprType = Expr(exprNode);
+    std::pair<TypeData, bool> exprType = Expr(exprNode);
+    if (exprType.second)
+        throw Err::CriticalError("It is impossible to assign array to ordinary variable", exprNode);
 
     if (idData.type.type == Type::None)
-        idData.type = exprType;
-    else if (idData.type != exprType)
-        throw Err::TypeError(idData.type.ToString(), exprType.ToString(), exprNode);
+        idData.type = exprType.first;
+    else if (idData.type != exprType.first)
+        throw Err::TypeError(idData.type.ToString(), exprType.first.ToString(), exprNode);
 
     idData.isInitialized = true;
 }
@@ -348,12 +383,15 @@ void SemanticAnalyzer::MemberAssignment(Node* const& idNode, Node *const &exprNo
     if (!arrData.isMutable && arrData.isInitialized)
         throw Err::VariableImmutableError(id, idNode);
 
-    TypeData exprType = Expr(exprNode);
-    if (arrData.type != exprType)
-        throw Err::TypeError(arrData.type.ToString(), exprType.ToString(), exprNode);
+    std::pair<TypeData, bool> exprType = Expr(exprNode);
+    if (exprType.second)
+        throw Err::CriticalError("It is impossible to assign array to ordinary variable", exprNode);
+
+    if (arrData.type != exprType.first)
+        throw Err::TypeError(arrData.type.ToString(), exprType.first.ToString(), exprNode);
 }
 
-std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionParams(const std::string &funcId, Node *const &node) {
+std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(const std::string &funcId, Node *const &node) {
     std::vector<Node*> paramsNode = node->GetChilds();
     std::vector<std::pair<TypeData, bool>> paramTypes;
 
@@ -363,7 +401,7 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionParams(const st
         else if (param->GetData()->ruleType == RuleType::Identifier)
             paramTypes.emplace_back(std::make_pair(CanAccessIdentifier(param), false));
         else
-            paramTypes.emplace_back(std::make_pair(Expr(param), false));
+            paramTypes.emplace_back(Expr(param));
     }
 
     std::vector<Data*> funcDefineParams = _functionTable.GetData(funcId).parameters;
@@ -452,4 +490,59 @@ Array_Data& SemanticAnalyzer::GetArr(const std::string &id, Node* const &root) {
     } while (tmp->upperBlock);
 
     throw Err::VariableNotExistingError(id, root);
+}
+
+void SemanticAnalyzer::Condition(Node *const &node) {
+    std::pair<TypeData, bool> conditionType = BoolExpr(node);
+    if (conditionType.first.type != Type::Bool)
+        throw Err::TypeError("Bool", conditionType.first.ToString(), node);
+}
+
+void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
+    std::string id = node->GetChild(0)->GetData()->token.GetValue();
+    if (_functionTable.Has(id))
+        throw Err::FunctionExistingError(id, node->GetChild(0));
+
+    std::vector<Node*> arguments = node->GetChild(1)->GetChilds();
+
+    Function_Data functionData;
+    functionData.id = id;
+    for (const auto &argument : arguments) {
+        if (argument->GetChild(3)->GetData()->ruleType == RuleType::IdType) {
+            ID_Data idData;
+            idData.isInitialized = true;
+            idData.isMutable = argument->GetChild(1) != nullptr;
+            idData.id = argument->GetChild(2)->GetData()->token.GetValue();
+            if (functionData.idTable.Has(idData.id) || functionData.arrayTable.Has(idData.id))
+                throw Err::VariableExistingError(id, argument->GetChild(2));
+
+            Node* typeNode = argument->GetChild(3);
+            idData.type.isReference = typeNode->GetChild(0) != nullptr;
+            idData.type.isMutable = typeNode->GetChild(1) != nullptr;
+            idData.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
+            functionData.idTable.AddToTable(idData);
+        }
+        else {
+            Array_Data arrayData;
+            arrayData.isInitialized = true;
+            arrayData.isMutable = argument->GetChild(1) != nullptr;
+            arrayData.id = argument->GetChild(2)->GetData()->token.GetValue();
+            if (functionData.idTable.Has(arrayData.id) || functionData.arrayTable.Has(arrayData.id))
+                throw Err::VariableExistingError(id, argument->GetChild(2));
+            Node* typeNode = argument->GetChild(3)->GetChild(0);
+            arrayData.type.isReference = typeNode->GetChild(0) != nullptr;
+            arrayData.type.isMutable = typeNode->GetChild(1) != nullptr;
+            arrayData.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
+            arrayData.elementCount = std::stoul(argument->GetChild(3)->GetChild(1)->GetData()->token.GetValue());
+            functionData.arrayTable.AddToTable(arrayData);
+        }
+    }
+    Node *functionReturnType = node->GetChild(2);
+    if (functionReturnType) {
+        functionData.type.isReference = functionReturnType->GetChild(0) != nullptr;
+        functionData.type.isMutable = functionReturnType->GetChild(1) != nullptr;
+        functionData.type.type = TypeData::ToType(functionReturnType->GetChild(2)->GetData()->token.GetType());
+    }
+    _functionTable.AddToTable(functionData);
+    Traversal(node->GetChild(3));
 }

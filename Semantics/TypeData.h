@@ -31,8 +31,9 @@ struct TypeData {
 
     bool operator == (const TypeData &right) const {
         return isReference == right.isReference &&
-                isMutable == right.isMutable &&
-                type == right.type;
+                isMutable == right.isMutable && (type == right.type ||
+                (type == Type::Integer && right.type == Type::Unsigned) ||
+                (type == Type::Unsigned && right.type == Type::Integer));
     }
 
     bool operator != (const TypeData &right) const {
