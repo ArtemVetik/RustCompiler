@@ -2,6 +2,7 @@
 #define RUSTCOMPILER_IDTABLE_H
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include "TypeData.h"
@@ -46,10 +47,13 @@ struct Array_Data : public Data {
 
 struct Function_Data : public Data {
     std::vector<Data*> parameters;
-    Table<ID_Data> idTable;
-    Table<Array_Data> arrayTable;
 
     Function_Data() : parameters() { }
+    Function_Data(const std::string &id, const TypeData &type, std::vector<Data*> &&parameters = {}) : parameters(parameters) {
+        this->id = id;
+        this->type = type;
+    }
+
 };
 
 #endif //RUSTCOMPILER_IDTABLE_H

@@ -70,6 +70,11 @@ SemanticError SemanticErrorDebugger::FunctionInvokeParametersTypeError(const std
     return SemanticError(message, GetLocation(root));
 }
 
+SemanticError SemanticErrorDebugger::FunctionReturnTypeError(const std::string &expectedType, const std::string &foundType, Node *const &root) {
+    std::string message = "Function return type mismatch. Expected " + expectedType + ", found " + foundType;
+    return SemanticError(message, GetLocation(root));
+}
+
 TokenLocation* SemanticErrorDebugger::TryGetNonNullNode(Node *const &node) {
     if (node->GetData()->token.GetLocation() == nullptr) {
         std::vector<Node *> childs = node->GetChilds();

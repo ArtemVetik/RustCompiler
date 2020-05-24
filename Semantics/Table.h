@@ -15,6 +15,7 @@ public:
     void AddToTable(const T &data);
     bool Has(const std::string &value) const;
     T& GetData(const std::string &id);
+    T Back();
 };
 
 template <typename T>
@@ -33,6 +34,11 @@ T &Table<T>::GetData(const std::string &id) {
     if (data == _table.cend())
         throw "Table _error:\n\tUnable to get data";
     return _table[std::distance(_table.cbegin(), data)];
+}
+
+template<typename T>
+T Table<T>::Back() {
+    return _table.back();
 }
 
 #endif //RUSTCOMPILER_TABLE_H

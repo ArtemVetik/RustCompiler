@@ -29,6 +29,7 @@ public:
     static SemanticError FunctionNotExistingError(const std::string &identifier, Node *const &root);
     static SemanticError FunctionInvokeParametersCountError(const std::string &expectedCount, Node *const &root);
     static SemanticError FunctionInvokeParametersTypeError(const std::string &expectedType, Node *const &root);
+    static SemanticError FunctionReturnTypeError(const std::string &expectedType, const std::string &foundType, Node *const &root);
 };
 
 #endif //RUSTCOMPILER_SEMANTICERRORDEBUGGER_H

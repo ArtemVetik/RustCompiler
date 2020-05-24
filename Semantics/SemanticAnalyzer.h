@@ -14,6 +14,8 @@ private:
     Table<Function_Data> _functionTable;
     ProgramBlock *_currentBlock;
 
+    void AddSystemFunctions();
+
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
 
@@ -31,19 +33,21 @@ private:
     std::vector<TypeData> ArrayElems(Node* const &node);
     void Assignment(Node* const &node);
     void Condition(Node* const &node);
-
     void FunctionDeclaration(Node* const &node);
-
     void VariableAssignment(Node* const& idNode, Node *const &exprNode);
     void ArrayAssignment(Node* const& idNode, Node *const &exprNode);
     void MemberAssignment(Node* const& idNode, Node *const &exprNode);
     TypeData CanAccessIdentifier(Node* const &idNode);
     TypeData CanAccessArray(Node* const &idNode);
-
     bool HasIDInUpper(const std::string &id, Node *const &root);
     bool HasArrInUpper(const std::string &id, Node *const &root);
     ID_Data& GetID(const std::string &id, Node* const &root);
     Array_Data& GetArr(const std::string &id, Node* const &root);
+    TypeData GetTypeData(Node* const &typeNode);
+    ID_Data GetIDDefineParameter(Node* const &param);
+    Array_Data GetArrayDefineParameter(Node* const &param);
+    void ReturnExpression(Node* const &returnNode);
+
 public:
     explicit SemanticAnalyzer(Node* const &root);
     ~SemanticAnalyzer();

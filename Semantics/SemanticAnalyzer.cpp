@@ -3,6 +3,8 @@
 SemanticAnalyzer::SemanticAnalyzer(Node *const &root) {
     this->_root = root;
     _currentBlock = new ProgramBlock();
+
+    AddSystemFunctions();
 }
 
 SemanticAnalyzer::~SemanticAnalyzer() {
@@ -37,12 +39,25 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
         case RuleType::AssignmentExpression:
             Assignment(node);
             break;
-        case RuleType::IfExpr:
         case RuleType::WhileExpr:
             Condition(node->GetChild(0));
+            Traversal(node->GetChild(1));
+            break;
+        case RuleType::IfExpr:
+            Condition(node->GetChild(0));
+            Traversal(node->GetChild(1));
+            if (node->GetChild(2)) Traversal(node->GetChild(2));
             break;
         case RuleType::FuncDeclaration:
+            _currentBlock = &_currentBlock->AddBlock();
             FunctionDeclaration(node);
+            _currentBlock = _currentBlock->upperBlock;
+            break;
+        case RuleType::FuncInvoke:
+            FunctionInvoke(node);
+            break;
+        case RuleType::Return:
+            ReturnExpression(node);
             break;
         case RuleType::Block:
             _currentBlock = &_currentBlock->AddBlock();
@@ -398,8 +413,12 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
     for (const auto &param : paramsNode) {
         if (param->GetData()->ruleType == RuleType::ArrayArg)
             paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
-        else if (param->GetData()->ruleType == RuleType::Identifier)
-            paramTypes.emplace_back(std::make_pair(CanAccessIdentifier(param), false));
+        else if (param->GetData()->ruleType == RuleType::Identifier) {
+            if (_currentBlock->arrayTable.Has(param->GetData()->token.GetValue()))
+                paramTypes.emplace_back(std::make_pair(CanAccessArray(param), true));
+            else
+                paramTypes.emplace_back(std::make_pair(CanAccessIdentifier(param), false));
+        }
         else
             paramTypes.emplace_back(Expr(param));
     }
@@ -508,41 +527,68 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
     Function_Data functionData;
     functionData.id = id;
     for (const auto &argument : arguments) {
-        if (argument->GetChild(3)->GetData()->ruleType == RuleType::IdType) {
-            ID_Data idData;
-            idData.isInitialized = true;
-            idData.isMutable = argument->GetChild(1) != nullptr;
-            idData.id = argument->GetChild(2)->GetData()->token.GetValue();
-            if (functionData.idTable.Has(idData.id) || functionData.arrayTable.Has(idData.id))
-                throw Err::VariableExistingError(id, argument->GetChild(2));
+        std::string varId = argument->GetChild(2)->GetData()->token.GetValue();
+        if (_currentBlock->idTable.Has(varId) || _currentBlock->arrayTable.Has(varId))
+            throw Err::VariableExistingError(varId, argument->GetChild(2));
 
-            Node* typeNode = argument->GetChild(3);
-            idData.type.isReference = typeNode->GetChild(0) != nullptr;
-            idData.type.isMutable = typeNode->GetChild(1) != nullptr;
-            idData.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
-            functionData.idTable.AddToTable(idData);
+        if (argument->GetChild(3)->GetData()->ruleType == RuleType::IdType) {
+            ID_Data idData = GetIDDefineParameter(argument);
+            _currentBlock->idTable.AddToTable(idData);
+            functionData.parameters.emplace_back(new ID_Data(idData));
         }
         else {
-            Array_Data arrayData;
-            arrayData.isInitialized = true;
-            arrayData.isMutable = argument->GetChild(1) != nullptr;
-            arrayData.id = argument->GetChild(2)->GetData()->token.GetValue();
-            if (functionData.idTable.Has(arrayData.id) || functionData.arrayTable.Has(arrayData.id))
-                throw Err::VariableExistingError(id, argument->GetChild(2));
-            Node* typeNode = argument->GetChild(3)->GetChild(0);
-            arrayData.type.isReference = typeNode->GetChild(0) != nullptr;
-            arrayData.type.isMutable = typeNode->GetChild(1) != nullptr;
-            arrayData.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
-            arrayData.elementCount = std::stoul(argument->GetChild(3)->GetChild(1)->GetData()->token.GetValue());
-            functionData.arrayTable.AddToTable(arrayData);
+            Array_Data arrData = GetArrayDefineParameter(argument);
+            _currentBlock->arrayTable.AddToTable(arrData);
+            functionData.parameters.emplace_back(new Array_Data(arrData));
         }
     }
-    Node *functionReturnType = node->GetChild(2);
-    if (functionReturnType) {
-        functionData.type.isReference = functionReturnType->GetChild(0) != nullptr;
-        functionData.type.isMutable = functionReturnType->GetChild(1) != nullptr;
-        functionData.type.type = TypeData::ToType(functionReturnType->GetChild(2)->GetData()->token.GetType());
-    }
+
+    functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
     Traversal(node->GetChild(3));
+}
+
+void SemanticAnalyzer::AddSystemFunctions() {
+    _functionTable.AddToTable(Function_Data{"sqrt", TypeData(Type::Real)});
+}
+
+TypeData SemanticAnalyzer::GetTypeData(Node*const  &typeNode) {
+    if (!typeNode)
+        return TypeData();
+
+    TypeData type;
+    type.isReference = typeNode->GetChild(0) != nullptr;
+    type.isMutable = typeNode->GetChild(1) != nullptr;
+    type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
+    return type;
+}
+
+ID_Data SemanticAnalyzer::GetIDDefineParameter(Node *const &param) {
+    ID_Data idData;
+    idData.isInitialized = true;
+    idData.isMutable = param->GetChild(1) != nullptr;
+    idData.id = param->GetChild(2)->GetData()->token.GetValue();
+
+    idData.type = GetTypeData(param->GetChild(3));
+    return idData;
+}
+
+Array_Data SemanticAnalyzer::GetArrayDefineParameter(Node *const &param) {
+    Array_Data arrayData;
+    arrayData.isInitialized = true;
+    arrayData.isMutable = param->GetChild(1) != nullptr;
+    arrayData.id = param->GetChild(2)->GetData()->token.GetValue();
+
+    arrayData.type = GetTypeData(param->GetChild(3)->GetChild(0));
+    arrayData.elementCount = std::stoul(param->GetChild(3)->GetChild(1)->GetData()->token.GetValue());
+
+    return arrayData;
+}
+
+void SemanticAnalyzer::ReturnExpression(Node* const &returnNode) {
+    TypeData funcReturnType = _functionTable.Back().type;
+    TypeData returnType = returnNode->GetChild(0) ? Expr(returnNode->GetChild(0)).first : TypeData();
+
+    if (funcReturnType != returnType)
+        throw Err::FunctionReturnTypeError(funcReturnType.ToString(), returnType.ToString(), returnNode);
 }
