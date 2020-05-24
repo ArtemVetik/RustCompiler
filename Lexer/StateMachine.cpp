@@ -37,7 +37,6 @@ void StateMachine::End() {
         _startPos = _endPos;
         if (token->GetType() != IGNORE)
             _tokens.emplace_back(token);
-
     }
 }
 

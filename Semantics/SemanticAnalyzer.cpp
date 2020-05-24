@@ -434,6 +434,16 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
             throw Err::CriticalError("It is impossible to pass an array instead of a regular variable", node->GetChild(i));
         if (!paramTypes[i].second && reinterpret_cast<ID_Data*>(funcDefineParams[i]) == nullptr)
             throw Err::CriticalError("", node->GetChild(i));
+
+        if (paramTypes[i].second) {
+            Node* arrIdNode = node->GetChild(i)->GetData()->ruleType == RuleType::ArrayArg ?
+                              node->GetChild(i)->GetChild(2) : node->GetChild(i);
+            std::string arrId = arrIdNode->GetData()->token.GetValue();
+            Array_Data* declArrData = reinterpret_cast<Array_Data*>(funcDefineParams[i]);
+            Array_Data paramArrayData = GetArr(arrId, node->GetChild(i));
+            if (declArrData->elementCount != paramArrayData.elementCount)
+                throw Err::ArrayCountElementsError(std::to_string(declArrData->elementCount), std::to_string(paramArrayData.elementCount), node);
+        }
     }
 
     return paramTypes;
