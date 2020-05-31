@@ -46,12 +46,12 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    //std::string fileName = Menu();
+    std::string fileName = Menu();
 
-    //if (fileName.empty()) {
-    //    system("pause");
-    //    return 0;
-    //}
+    if (fileName.empty()) {
+        system("pause");
+        return 0;
+    }
 
     try {
         Lexer lexer("test.txt");
@@ -68,10 +68,10 @@ int main() {
     }
     catch (std::exception& error){
         std::cout << error.what() << std::endl;
+        system("pause");
         return 0;
     }
 
-    std::cout << "\n";
     system("pause");
     return 0;
 }
