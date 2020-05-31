@@ -43,6 +43,8 @@ std::string Menu() {
 }
 
 int main() {
+
+
     system("chcp 1251");
     system("cls");
 
@@ -66,7 +68,7 @@ int main() {
         semanticAnalyzer.Analyze();
         std::cout << "Семантический анализ прошёл успешно..." << std::endl;
     }
-    catch (std::exception& error){
+    catch (std::exception& error) {
         std::cout << error.what() << std::endl;
         system("pause");
         return 0;

@@ -5,6 +5,8 @@
 #include "Table.h"
 #include "TableData.h"
 
+
+#include <iostream>
 struct ProgramBlock {
     std::vector<ProgramBlock> internalBlocks;
     ProgramBlock* upperBlock;
@@ -17,6 +19,10 @@ struct ProgramBlock {
     ProgramBlock& AddBlock() {
         internalBlocks.emplace_back(ProgramBlock(this));
         return internalBlocks.back();
+    }
+
+    ~ProgramBlock() {
+        std::cout << "programBlock destructor" << std::endl;
     }
 };
 

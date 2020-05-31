@@ -3,15 +3,17 @@
 SemanticAnalyzer::SemanticAnalyzer(Node *const &root) {
     this->_root = root;
     _currentBlock = new ProgramBlock();
-
+    std::cout << _currentBlock << std::endl;
     AddSystemFunctions();
 }
 
 SemanticAnalyzer::~SemanticAnalyzer() {
-    if (_currentBlock) {
-        delete _currentBlock;
-        _currentBlock = nullptr;
-    }
+
+    while (_currentBlock->upperBlock)
+        _currentBlock = _currentBlock->upperBlock;
+
+    delete _currentBlock;
+    _currentBlock = nullptr;
 }
 
 void SemanticAnalyzer::Analyze() {
@@ -19,7 +21,8 @@ void SemanticAnalyzer::Analyze() {
 }
 
 void SemanticAnalyzer::Traversal(Node *const &root) {
-    std::vector<Node*> childs = root->GetChilds();
+    const std::vector<Node*> &childs = root->GetChilds();
+
     for (const auto &child: childs) {
         CheckRule(child);
     }
@@ -49,13 +52,9 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             if (node->GetChild(2)) Traversal(node->GetChild(2));
             break;
         case RuleType::FuncDeclaration:
-            std::cout << "b1" << std::endl;
             _currentBlock = &(_currentBlock->AddBlock());
-            std::cout << "a1" << std::endl;
             FunctionDeclaration(node);
-            std::cout << "b2" << std::endl;
             _currentBlock = _currentBlock->upperBlock;
-            std::cout << "a2" << std::endl;
             break;
         case RuleType::FuncInvoke:
             FunctionInvoke(node);
@@ -64,13 +63,9 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             ReturnExpression(node);
             break;
         case RuleType::Block:
-            std::cout << "b3" << std::endl;
-            _currentBlock = &_currentBlock->AddBlock();
-            std::cout << "a3" << std::endl;
+            _currentBlock = &(_currentBlock->AddBlock());
             Traversal(node);
-            std::cout << "b4" << std::endl;
             _currentBlock = _currentBlock->upperBlock;
-            std::cout << "a4" << std::endl;
             break;
     }
 }
@@ -93,7 +88,7 @@ std::vector<ID_Data> SemanticAnalyzer::GroupLetVarDeclaration(Node *const &node)
         throw Err::CriticalError("Expected group var declaration", node);
 
     std::vector<ID_Data> idList;
-    std::vector<Node*> pats = node->GetChilds();
+    const std::vector<Node*> &pats = node->GetChilds();
     for (const auto &pat : pats) {
         std::string id = pat->GetChild(1)->GetData()->token.GetValue();
         if (_currentBlock->idTable.Has(id) || _currentBlock->arrayTable.Has(id))
@@ -114,7 +109,7 @@ std::vector<TypeData> SemanticAnalyzer::GroupInit(std::vector<ID_Data> variables
 
     std::vector<std::pair<TypeData, bool>> types;
     std::vector<TypeData> resTypes;
-    std::vector<Node*> childs = node->GetChilds();
+    const std::vector<Node*> &childs = node->GetChilds();
     types.reserve(childs.size());
     for (const auto &child : childs) {
         types.emplace_back(Expr(child));
@@ -244,8 +239,10 @@ std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
         throw Err::CriticalError("Expected array elements", node);
 
     std::vector<TypeData> elemsTypes;
-    std::vector<Node*> childs = node->GetChilds();
+    const std::vector<Node*> &childs = node->GetChilds();
     for (const auto &child : childs) {
+        if (child == nullptr)
+            continue;
         std::pair<TypeData, bool> type = Expr(child);
         if (type.second)
             throw Err::CriticalError("It is impossible to using array in array elements", child);
@@ -415,10 +412,12 @@ void SemanticAnalyzer::MemberAssignment(Node* const& idNode, Node *const &exprNo
 }
 
 std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(const std::string &funcId, Node *const &node) {
-    std::vector<Node*> paramsNode = node->GetChilds();
+    const std::vector<Node*> &paramsNode = node->GetChilds();
     std::vector<std::pair<TypeData, bool>> paramTypes;
 
     for (const auto &param : paramsNode) {
+        if (param == nullptr)
+            continue;
         if (param->GetData()->ruleType == RuleType::ArrayArg)
             paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
         else if (param->GetData()->ruleType == RuleType::Identifier) {
@@ -435,6 +434,7 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
     if (funcDefineParams.size() != paramTypes.size())
         throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode[paramsNode.size()-1]);
 
+
     for (unsigned int i = 0; i < funcDefineParams.size(); ++i) {
         if (funcDefineParams[i]->type != paramTypes[i].first)
             throw Err::FunctionInvokeParametersTypeError(funcDefineParams[i]->type.ToString(), paramsNode[i]);
@@ -446,6 +446,7 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
         if (paramTypes[i].second) {
             Node* arrIdNode = node->GetChild(i)->GetData()->ruleType == RuleType::ArrayArg ?
                               node->GetChild(i)->GetChild(2) : node->GetChild(i);
+
             std::string arrId = arrIdNode->GetData()->token.GetValue();
             Array_Data* declArrData = reinterpret_cast<Array_Data*>(funcDefineParams[i]);
             Array_Data paramArrayData = GetArr(arrId, node->GetChild(i));
@@ -537,17 +538,22 @@ void SemanticAnalyzer::Condition(Node *const &node) {
 
 void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
-    if (_functionTable.Has(id))
+    if (_functionTable.Has(id)) {
         throw Err::FunctionExistingError(id, node->GetChild(0));
+    }
 
     std::vector<Node*> arguments = node->GetChild(1)->GetChilds();
 
     Function_Data functionData;
     functionData.id = id;
+
     for (const auto &argument : arguments) {
+        if (argument == nullptr)
+            continue;
         std::string varId = argument->GetChild(2)->GetData()->token.GetValue();
-        if (_currentBlock->idTable.Has(varId) || _currentBlock->arrayTable.Has(varId))
+        if (_currentBlock->idTable.Has(varId) || _currentBlock->arrayTable.Has(varId)) {
             throw Err::VariableExistingError(varId, argument->GetChild(2));
+        }
 
         if (argument->GetChild(3)->GetData()->ruleType == RuleType::IdType) {
             ID_Data idData = GetIDDefineParameter(argument);
@@ -564,6 +570,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
     functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
     Traversal(node->GetChild(3));
+
 }
 
 void SemanticAnalyzer::AddSystemFunctions() {
