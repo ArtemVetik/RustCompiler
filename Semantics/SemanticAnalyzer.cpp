@@ -49,9 +49,13 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             if (node->GetChild(2)) Traversal(node->GetChild(2));
             break;
         case RuleType::FuncDeclaration:
-            _currentBlock = &_currentBlock->AddBlock();
+            std::cout << "b1" << std::endl;
+            _currentBlock = &(_currentBlock->AddBlock());
+            std::cout << "a1" << std::endl;
             FunctionDeclaration(node);
+            std::cout << "b2" << std::endl;
             _currentBlock = _currentBlock->upperBlock;
+            std::cout << "a2" << std::endl;
             break;
         case RuleType::FuncInvoke:
             FunctionInvoke(node);
@@ -60,9 +64,13 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             ReturnExpression(node);
             break;
         case RuleType::Block:
+            std::cout << "b3" << std::endl;
             _currentBlock = &_currentBlock->AddBlock();
+            std::cout << "a3" << std::endl;
             Traversal(node);
+            std::cout << "b4" << std::endl;
             _currentBlock = _currentBlock->upperBlock;
+            std::cout << "a4" << std::endl;
             break;
     }
 }
