@@ -20,10 +20,6 @@ struct ProgramBlock {
         internalBlocks.emplace_back(ProgramBlock(this));
         return internalBlocks.back();
     }
-
-    ~ProgramBlock() {
-        std::cout << "programBlock destructor" << std::endl;
-    }
 };
 
 

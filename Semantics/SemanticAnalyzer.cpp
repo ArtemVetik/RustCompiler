@@ -3,7 +3,6 @@
 SemanticAnalyzer::SemanticAnalyzer(Node *const &root) {
     this->_root = root;
     _currentBlock = new ProgramBlock();
-    std::cout << _currentBlock << std::endl;
     AddSystemFunctions();
 }
 
