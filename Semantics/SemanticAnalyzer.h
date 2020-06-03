@@ -12,7 +12,7 @@ class SemanticAnalyzer {
 private:
     Node* _root;
     Table<Function_Data> _functionTable;
-    ProgramBlock *_currentBlock;
+    ProgramBlock<ID_Data, Array_Data> *_currentBlock;
 
     void AddSystemFunctions();
 
@@ -49,7 +49,7 @@ private:
     void ReturnExpression(Node* const &returnNode);
 
 public:
-    explicit SemanticAnalyzer(Node* const &root);
+    explicit SemanticAnalyzer(const AST_Tree &tree);
     ~SemanticAnalyzer();
     void Analyze();
 };

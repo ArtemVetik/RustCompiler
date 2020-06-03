@@ -8,6 +8,8 @@ enum RuleType {
     LogicalExpression,
     UnaryExpession,
 
+    Num,
+
     VariableDeclaration,
     GroupInit,
     GroupVarDeclaration,

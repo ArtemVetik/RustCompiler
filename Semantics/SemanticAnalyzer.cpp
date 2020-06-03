@@ -1,18 +1,19 @@
 #include "SemanticAnalyzer.h"
 
-SemanticAnalyzer::SemanticAnalyzer(Node *const &root) {
-    this->_root = root;
-    _currentBlock = new ProgramBlock();
+SemanticAnalyzer::SemanticAnalyzer(const AST_Tree &tree) {
+    this->_root = tree.GetRoot();
+    _currentBlock = new ProgramBlock<ID_Data, Array_Data>();
     AddSystemFunctions();
 }
 
 SemanticAnalyzer::~SemanticAnalyzer() {
-
     while (_currentBlock->upperBlock)
-        _currentBlock = _currentBlock->upperBlock;
+       _currentBlock = _currentBlock->upperBlock;
 
-    delete _currentBlock;
-    _currentBlock = nullptr;
+    if (_currentBlock) {
+        delete _currentBlock;
+        _currentBlock = nullptr;
+    }
 }
 
 void SemanticAnalyzer::Analyze() {
@@ -30,7 +31,7 @@ void SemanticAnalyzer::Traversal(Node *const &root) {
 void SemanticAnalyzer::CheckRule(Node* const &node) {
     if (node == nullptr)
         return;
-
+    // TODO internal function invoke
     switch (node->GetData()->ruleType) {
         case RuleType::VariableDeclaration:
             VariableDeclaration(node);
@@ -482,7 +483,7 @@ TypeData SemanticAnalyzer::CanAccessArray(Node *const &idNode) {
 }
 
 bool SemanticAnalyzer::HasIDInUpper(const std::string &id, Node *const &root) {
-    ProgramBlock *tmp = _currentBlock;
+    ProgramBlock<ID_Data, Array_Data> *tmp = _currentBlock;
 
     do {
         if (tmp->idTable.Has(id))
@@ -494,7 +495,7 @@ bool SemanticAnalyzer::HasIDInUpper(const std::string &id, Node *const &root) {
 }
 
 bool SemanticAnalyzer::HasArrInUpper(const std::string &id, Node *const &root) {
-    ProgramBlock *tmp = _currentBlock;
+    ProgramBlock<ID_Data, Array_Data> *tmp = _currentBlock;
 
     do {
         if (tmp->arrayTable.Has(id))
@@ -506,7 +507,7 @@ bool SemanticAnalyzer::HasArrInUpper(const std::string &id, Node *const &root) {
 }
 
 ID_Data& SemanticAnalyzer::GetID(const std::string &id, Node* const &root) {
-    ProgramBlock *tmp = _currentBlock;
+    ProgramBlock<ID_Data, Array_Data> *tmp = _currentBlock;
 
     do {
         if (tmp->idTable.Has(id))
@@ -518,7 +519,7 @@ ID_Data& SemanticAnalyzer::GetID(const std::string &id, Node* const &root) {
 }
 
 Array_Data& SemanticAnalyzer::GetArr(const std::string &id, Node* const &root) {
-    ProgramBlock *tmp = _currentBlock;
+    ProgramBlock<ID_Data, Array_Data> *tmp = _currentBlock;
 
     do {
         if (tmp->arrayTable.Has(id))

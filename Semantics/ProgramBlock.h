@@ -5,13 +5,12 @@
 #include "Table.h"
 #include "TableData.h"
 
-
-#include <iostream>
+template <typename IDType, typename ArrType>
 struct ProgramBlock {
     std::vector<ProgramBlock> internalBlocks;
     ProgramBlock* upperBlock;
-    Table<ID_Data> idTable;
-    Table<Array_Data> arrayTable;
+    Table<IDType> idTable;
+    Table<ArrType> arrayTable;
 
     ProgramBlock() : upperBlock(nullptr) { }
     explicit ProgramBlock(ProgramBlock* const &previous) : upperBlock(previous) { }
@@ -19,6 +18,16 @@ struct ProgramBlock {
     ProgramBlock& AddBlock() {
         internalBlocks.emplace_back(ProgramBlock(this));
         return internalBlocks.back();
+    }
+
+    static void DeleteBlock(ProgramBlock *& programBlock) {
+        if (programBlock) {
+            while (programBlock->upperBlock)
+                programBlock = programBlock->upperBlock;
+
+            delete programBlock;
+            programBlock = nullptr;
+        }
     }
 };
 

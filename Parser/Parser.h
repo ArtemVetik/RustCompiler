@@ -15,7 +15,7 @@ private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
     AST_Tree _tree;
-    ParserError _error;
+    ParserError _error; // TODO errors
 
     // Объявление переменных
     bool LetDecl(Node *&root);
@@ -86,7 +86,7 @@ private:
     bool BlockChecker(Node *&root);
 
 public:
-    Node* const &GetTreeRoot() const;
+    const AST_Tree &GetASTTree() const;
 
     explicit Parser(const std::vector<Token *> &tokens);
     bool Analyze();

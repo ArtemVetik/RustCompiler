@@ -1413,6 +1413,6 @@ bool Parser::BlockExit(Node *&root) {
     return false;
 }
 
-Node *const &Parser::GetTreeRoot() const {
-    return _tree.GetRoot();
+const AST_Tree &Parser::GetASTTree() const {
+    return _tree;
 }

@@ -4,6 +4,7 @@
 #include "Semantics/Table.h"
 #include "Semantics/TableData.h"
 #include "Semantics/SemanticAnalyzer.h"
+#include "CodeGenerator/CodeGenerator.h"
 
 /************************************************************************************
 * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
@@ -43,8 +44,6 @@ std::string Menu() {
 }
 
 int main() {
-
-
     system("chcp 1251");
     system("cls");
 
@@ -64,15 +63,21 @@ int main() {
         parser.Analyze();
         std::cout << "Синтаксический анализ прошёл успешно..." << std::endl;
 
-        SemanticAnalyzer semanticAnalyzer(parser.GetTreeRoot());
+        SemanticAnalyzer semanticAnalyzer(parser.GetASTTree());
         semanticAnalyzer.Analyze();
         std::cout << "Семантический анализ прошёл успешно..." << std::endl;
+
+        CodeGenerator generator(parser.GetASTTree());
+        generator.Generate();
     }
     catch (std::exception& error) {
         std::cout << error.what() << std::endl;
         system("pause");
         return 0;
     }
+
+
+
 
     system("pause");
     return 0;

@@ -8,7 +8,7 @@ private:
     Node* _root;
 
 public:
-    explicit AST_Tree(Node* const& node);
+    explicit AST_Tree(Node* const& node = nullptr);
     ~AST_Tree() = default;
     Node* const& GetRoot() const;
     void Traversal() const;
