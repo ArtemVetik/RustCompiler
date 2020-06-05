@@ -29,6 +29,11 @@ SemanticError SemanticErrorDebugger::VariableInitializationError(const std::stri
     return SemanticError(message, GetLocation(root));
 }
 
+SemanticError SemanticErrorDebugger::VariableTypeNotExistingError(const std::string &identifier, const TokenLocation &location) {
+    std::string message = "Variable " + identifier + " has not a type";
+    return SemanticError(message, location);
+}
+
 SemanticError SemanticErrorDebugger::VariableImmutableError(const std::string &identifier, Node *const &root) {
     std::string message = "Can not assign twice to immutable variable " + identifier;
     return SemanticError(message, GetLocation(root));

@@ -21,6 +21,7 @@ public:
     static SemanticError VariableExistingError(const std::string &identifier, Node *const &root);
     static SemanticError VariableNotExistingError(const std::string &identifier, Node *const &root);
     static SemanticError VariableInitializationError(const std::string &identifier, Node *const &root);
+    static SemanticError VariableTypeNotExistingError(const std::string &identifier, const TokenLocation &location);
     static SemanticError VariableImmutableError(const std::string &identifier, Node *const &root);
     static SemanticError ArrayInitializationError(const std::string &identifier, Node *const &root);
     static SemanticError ArrayCountElementsError(const std::string &expectedCount, const std::string &foundCount, Node *const &root);

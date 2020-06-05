@@ -67,7 +67,7 @@ int main() {
         semanticAnalyzer.Analyze();
         std::cout << "Семантический анализ прошёл успешно..." << std::endl;
 
-        CodeGenerator generator(parser.GetASTTree());
+        CodeGenerator generator(parser.GetASTTree(), semanticAnalyzer.GetFunctionTable());
         generator.Generate();
     }
     catch (std::exception& error) {

@@ -9,6 +9,7 @@
 #include "Table.h"
 
 struct Data {
+    TokenLocation location;
     std::string id;
     TypeData type;
 

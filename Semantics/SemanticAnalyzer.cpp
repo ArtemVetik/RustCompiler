@@ -18,6 +18,12 @@ SemanticAnalyzer::~SemanticAnalyzer() {
 
 void SemanticAnalyzer::Analyze() {
     Traversal(_root);
+
+    auto *tmp = _currentBlock;
+    while (tmp->upperBlock)
+        tmp = tmp->upperBlock;
+
+    CheckInits(*tmp);
 }
 
 void SemanticAnalyzer::Traversal(Node *const &root) {
@@ -31,7 +37,7 @@ void SemanticAnalyzer::Traversal(Node *const &root) {
 void SemanticAnalyzer::CheckRule(Node* const &node) {
     if (node == nullptr)
         return;
-    // TODO internal function invoke
+
     switch (node->GetData()->ruleType) {
         case RuleType::VariableDeclaration:
             VariableDeclaration(node);
@@ -61,6 +67,9 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             break;
         case RuleType::Return:
             ReturnExpression(node);
+            break;
+        case RuleType::InternalFuncInvoke:
+            InternalFunctionInvoke(node);
             break;
         case RuleType::Block:
             _currentBlock = &(_currentBlock->AddBlock());
@@ -96,6 +105,7 @@ std::vector<ID_Data> SemanticAnalyzer::GroupLetVarDeclaration(Node *const &node)
         ID_Data data;
         data.isMutable = pat->GetChild(0) != nullptr;
         data.id = id;
+        data.location = *(pat->GetChild(1)->GetData()->token.GetLocation());
         _currentBlock->idTable.AddToTable(data);
         idList.emplace_back(data);
     }
@@ -154,6 +164,7 @@ ID_Data SemanticAnalyzer::Pat(Node *const &node) {
     ID_Data data;
     data.isMutable = node->GetChild(0) != nullptr;
     data.id = node->GetChild(1)->GetData()->token.GetValue();
+    data.location = *(node->GetChild(1)->GetData()->token.GetLocation());
 
     if (_currentBlock->idTable.Has(data.id) || _currentBlock->arrayTable.Has(data.id))
         throw Err::VariableExistingError(data.id, node->GetChild(1));
@@ -265,10 +276,7 @@ std::pair<TypeData, bool> SemanticAnalyzer::MinTerminal(Node *const &node) {
         return std::make_pair(FunctionInvoke(node), false);
 
     if (node->GetData()->ruleType == RuleType::InternalFuncInvoke) {
-        std::string id = node->GetChild(0)->GetData()->token.GetValue();
-        if (!HasIDInUpper(id, node->GetChild(0)))
-            throw Err::VariableNotExistingError(id, node->GetChild(0));
-        return std::make_pair(FunctionInvoke(node->GetChild(1)), false);
+        return InternalFunctionInvoke(node);
     }
 
     if (node->GetData()->ruleType == RuleType::MemberExpression) {
@@ -320,6 +328,7 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
     Array_Data data;
     data.isMutable = arrPat->GetChild(0) != nullptr;
     data.id = id;
+    data.location = *(arrPat->GetChild(1)->GetData()->token.GetLocation());
 
     Node* typeNode = arrPat->GetChild(2)->GetChild(0);
     data.type.isReference = typeNode->GetChild(0) != nullptr;
@@ -546,6 +555,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
 
     Function_Data functionData;
     functionData.id = id;
+    functionData.location = *(node->GetChild(0)->GetData()->token.GetLocation());
 
     for (const auto &argument : arguments) {
         if (argument == nullptr)
@@ -593,6 +603,7 @@ ID_Data SemanticAnalyzer::GetIDDefineParameter(Node *const &param) {
     idData.isInitialized = true;
     idData.isMutable = param->GetChild(1) != nullptr;
     idData.id = param->GetChild(2)->GetData()->token.GetValue();
+    idData.location = *(param->GetChild(2)->GetData()->token.GetLocation());
 
     idData.type = GetTypeData(param->GetChild(3));
     return idData;
@@ -603,6 +614,7 @@ Array_Data SemanticAnalyzer::GetArrayDefineParameter(Node *const &param) {
     arrayData.isInitialized = true;
     arrayData.isMutable = param->GetChild(1) != nullptr;
     arrayData.id = param->GetChild(2)->GetData()->token.GetValue();
+    arrayData.location = *(param->GetChild(2)->GetData()->token.GetLocation());
 
     arrayData.type = GetTypeData(param->GetChild(3)->GetChild(0));
     arrayData.elementCount = std::stoul(param->GetChild(3)->GetChild(1)->GetData()->token.GetValue());
@@ -616,4 +628,40 @@ void SemanticAnalyzer::ReturnExpression(Node* const &returnNode) {
 
     if (funcReturnType != returnType)
         throw Err::FunctionReturnTypeError(funcReturnType.ToString(), returnType.ToString(), returnNode);
+}
+
+const Table<Function_Data> &SemanticAnalyzer::GetFunctionTable() const {
+    return _functionTable;
+}
+
+void SemanticAnalyzer::CheckInits(const ProgramBlock<ID_Data, Array_Data> &programmBlock) {
+
+    for (const auto& block : programmBlock.internalBlocks) {
+        for (const auto &idData : block.idTable.GetTable()) {
+            if (idData.type.type == Type::None)
+                throw Err::VariableTypeNotExistingError(idData.id, idData.location);
+        }
+        for (const auto &arrData : block.arrayTable.GetTable()) {
+            if (arrData.type.type == Type::None)
+                throw Err::VariableTypeNotExistingError(arrData.id, arrData.location);
+        }
+        CheckInits(block);
+    }
+
+}
+
+std::pair<TypeData, bool> SemanticAnalyzer::InternalFunctionInvoke(Node *const &node) {
+    if (node->GetData()->ruleType != RuleType::InternalFuncInvoke)
+        Err::CriticalError("Expected internal function invoke", node);
+
+    std::string id = node->GetChild(0)->GetData()->token.GetValue();
+    if (!HasIDInUpper(id, node))
+        throw Err::VariableNotExistingError(id, node->GetChild(0));
+    ID_Data idData = GetID(id, node);
+    if (!idData.isInitialized)
+        throw Err::VariableInitializationError(id, node->GetChild(0));
+    if (idData.type.type != Type::Real)
+        throw Err::CriticalError("Variable " + id + " should be real", node);
+
+    return std::make_pair(FunctionInvoke(node->GetChild(1)), false);
 }

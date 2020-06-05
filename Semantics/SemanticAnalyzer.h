@@ -19,7 +19,7 @@ private:
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
 
-    void VariableDeclaration(Node* const &node);
+    void VariableDeclaration(Node* const &node); // TODO отформатировать порядок методов
     ID_Data Pat(Node* const &node);
     std::vector<ID_Data> GroupLetVarDeclaration(Node *const &node);
     std::vector<TypeData> GroupInit(std::vector<ID_Data> variables, Node* const &node);
@@ -28,6 +28,7 @@ private:
     std::pair<TypeData, bool> BoolExpr(Node* const &node);
     std::pair<TypeData, bool> MinTerminal(Node* const &node);
     TypeData FunctionInvoke(Node* const &node);
+    std::pair<TypeData, bool> InternalFunctionInvoke(Node* const &node);
     std::vector<std::pair<TypeData, bool>> FunctionInvokeParams(const std::string &funcId, Node* const &node);
     TypeData MemberExpr(Node* const &node);
     std::vector<TypeData> ArrayElems(Node* const &node);
@@ -47,11 +48,14 @@ private:
     ID_Data GetIDDefineParameter(Node* const &param);
     Array_Data GetArrayDefineParameter(Node* const &param);
     void ReturnExpression(Node* const &returnNode);
+    void CheckInits(const ProgramBlock<ID_Data, Array_Data> &pBlock);
 
 public:
     explicit SemanticAnalyzer(const AST_Tree &tree);
     ~SemanticAnalyzer();
+
     void Analyze();
+    const Table<Function_Data> &GetFunctionTable() const;
 };
 
 

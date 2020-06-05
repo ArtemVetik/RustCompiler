@@ -12,13 +12,15 @@ struct MasmID_Data {
     std::string id;
     std::string uid;
     MASMType type;
+    std::string typeStr;
     bool isInitialize;
     float value;
 
-    explicit MasmID_Data(std::string &id, std::string uid, const MASMType &type) {
+    explicit MasmID_Data(std::string &id, std::string uid, const MASMType &type, std::string &typeStr) {
         this->id = id;
         this->uid = std::move(uid);
         this->type = type;
+        this->typeStr = typeStr;
         isInitialize = false;
         value = 0;
     }
@@ -37,14 +39,16 @@ struct MasmArray_Data {
     std::string id;
     std::string uid;
     MASMType type;
+    std::string typeStr;
     bool isInitialize;
     unsigned int elementCount;
     float *value;
 
-    explicit MasmArray_Data(std::string &id, std::string uid, const MASMType &type) {
+    explicit MasmArray_Data(std::string &id, std::string uid, const MASMType &type, std::string &typeStr) {
         this->id = id;
         this->uid = std::move(uid);
         this->type = type;
+        this->typeStr = typeStr;
         isInitialize = false;
         elementCount = 0;
         value = nullptr;

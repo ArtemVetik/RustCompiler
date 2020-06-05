@@ -14,11 +14,11 @@ private:
     union {
         uint32_t uu;
         float d;
-    } Converter32;
+    } Converter32{};
 
     AST_Tree _tree;
+    Table<Function_Data> _funcTable;
     ProgramBlock<MasmID_Data, MasmArray_Data>* _currentBlock;
-    std::string _localVariables;
     std::string _template;
 
     std::string Traversal(Node* const &root);
@@ -35,14 +35,15 @@ private:
     MasmArray_Data& GetArr(const std::string &id);
     float BinaryOperation(float v1, float v2, Node* const &operation);
 
-    std::string Assignment(std::string id, const MASMType &type, float value);
+    std::string Assignment(const std::string &id, const MASMType &type, const float &value);
     float Optimized(Node* const &node);
     uint32_t FloatToHex(float value);
+    std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &pBlock);
 
 public:
-    explicit CodeGenerator(const AST_Tree &tree);
-
+    explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     void Generate();
+    std::pair<MASMType, std::string> DetermineType(Node *const &pNode);
 };
 
 #endif //RUSTCOMPILER_CODEGENERATOR_H
