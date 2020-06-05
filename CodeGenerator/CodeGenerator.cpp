@@ -15,7 +15,6 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
 
 void CodeGenerator::Generate() {
     std::string code = _template + Traversal(_tree.GetRoot());
-
     std::cout << code << std::endl;
 }
 
@@ -24,7 +23,7 @@ std::string CodeGenerator::Traversal(Node *const &root) {
 
     std::string code;
     std::string tmpCode;
-    for (const auto &child: childs) {
+    for (const auto &child : childs) {
         tmpCode = CheckRule(child);
         if (!tmpCode.empty())
             tmpCode += "\n";
@@ -102,7 +101,7 @@ MasmID_Data& CodeGenerator::GetID(const std::string &id) {
         if (tmp->idTable.Has(id))
             return tmp->idTable.GetData(id);
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     std::cout << "ERR ID: " << id << std::endl;
     throw std::bad_function_call();
@@ -115,7 +114,7 @@ MasmArray_Data& CodeGenerator::GetArr(const std::string &id) {
         if (tmp->arrayTable.Has(id))
             return tmp->arrayTable.GetData(id);
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     std::cout << "ERR ARR: " << id << std::endl;
     throw std::bad_function_call();
@@ -158,7 +157,7 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
     std::string paramsCode;
     std::string id;
     std::pair<MASMType, std::string> type;
-    for (const auto &argument : arguments) {
+    for (const auto& argument : arguments) {
         if (!paramsCode.empty())
             paramsCode += ", ";
 
@@ -179,8 +178,9 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
     return paramsCode;
 }
 
-std::string CodeGenerator::VeriableDeclaration(Node* const & node) {
+std::string CodeGenerator::VeriableDeclaration(Node* const &node) {
     std::string code;
+    std::string uid;
 
     std::pair<MASMType, std::string> type;
     Node* pat = node->GetChild(0);
@@ -190,7 +190,6 @@ std::string CodeGenerator::VeriableDeclaration(Node* const & node) {
         type = DetermineType(node->GetChild(1));
     else
         type = Type(typeNode);
-    std::string uid;
 
     if (HasIDInUpper(id)) {
         MasmID_Data prev = GetID(id);
@@ -203,13 +202,13 @@ std::string CodeGenerator::VeriableDeclaration(Node* const & node) {
         try {
             float value = Optimized(node->GetChild(1));
             idData.value = value;
+            idData.isInitialize = true;
             code += Assignment(id + uid, type.first, value);
         }
         catch (std::exception &err) {
-            std::cout << "Can't optimized " + idData.id + idData.uid + "\n";
-            // TODO masm calculated
+            code += CalculateExpression(node->GetChild(1), type.first);
+            code += Assignment(idData.id + idData.uid, type.first);
         }
-        idData.isInitialize = true;
     }
 
     _currentBlock->idTable.AddToTable(idData);
@@ -217,15 +216,17 @@ std::string CodeGenerator::VeriableDeclaration(Node* const & node) {
 }
 
 float CodeGenerator::Optimized(Node *const &node) {
-    if (node == nullptr)
-        return false;
-    
     std::string id;
     std::string funcId;
     float ind;
+
     switch (node->GetData()->ruleType) {
         case RuleType::UnaryExpession:
-            return Optimized(node->GetChild(0)); // TODO исправить унарный минус в оптимизации
+            if (node->GetData()->token.GetType() == TokenType::MINUS)
+                return -Optimized(node->GetChild(0));
+            else if (node->GetData()->token.GetType() == TokenType::EXCL)
+                return !(static_cast<bool>(Optimized(node->GetChild(0))));
+            return Optimized(node->GetChild(0));
         case RuleType::BinaryExpression:
             return BinaryOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
         case RuleType::Identifier:
@@ -235,8 +236,10 @@ float CodeGenerator::Optimized(Node *const &node) {
                 if (idData.isInitialize)
                     return idData.value;
             }
-            throw std::exception();
+            throw std::bad_function_call();
         case RuleType::Literal:
+            if (node->GetData()->token.GetValue() == "true") return 1.0f;
+            else if (node->GetData()->token.GetValue() == "false") return 0.0f;
             return std::stof(node->GetData()->token.GetValue());
         case RuleType::MemberExpression:
             id = node->GetChild(0)->GetData()->token.GetValue();
@@ -246,21 +249,21 @@ float CodeGenerator::Optimized(Node *const &node) {
                 if (arrdata.isInitialize)
                     return arrdata.value[static_cast<int>(ind)];
             }
-            throw std::exception();
+            throw std::bad_function_call();
         case RuleType::InternalFuncInvoke:
             funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
             if (funcId != "sqrt")
-                throw std::exception();
+                throw std::bad_function_call();
 
             id = node->GetChild(0)->GetData()->token.GetValue();
             if (HasIDInUpper(id)) {
                 MasmID_Data idData = GetID(id);
                 if (idData.isInitialize)
-                    return std::sqrt(idData.value);
+                    return sqrtf(idData.value);
             }
-            throw std::exception();
+            throw std::bad_function_call();
         default:
-            throw std::exception();
+            throw std::bad_function_call();
     }
 }
 
@@ -311,6 +314,15 @@ std::string CodeGenerator::Assignment(const std::string &id, const MASMType &typ
     return code;
 }
 
+std::string CodeGenerator::Assignment(const std::string &id, const MASMType &type) {
+    if (type == MASMType::DWORD)
+        return "\tpop eax\n\tmov " + id + ", eax\n";
+    else if (type == MASMType::REAL8)
+        return "\tFSTP " + id + "\n";
+
+    throw std::bad_function_call();
+}
+
 std::pair<MASMType, std::string> CodeGenerator::DetermineType(Node *const &node) {
     if (node == nullptr)
         return std::make_pair(MASMType::None, "None");
@@ -339,7 +351,7 @@ std::pair<MASMType, std::string> CodeGenerator::DetermineType(Node *const &node)
             return realType == Type::Real ? std::make_pair(MASMType::REAL8, "REAL8") : std::make_pair(MASMType::DWORD, "DWORD");
         case RuleType::Literal:
             tokenType = node->GetData()->token.GetType();
-            return tokenType == TokenType::INTNUM ? std::make_pair(MASMType::DWORD, "DWORD") : std::make_pair(MASMType::REAL8, "REAL8");
+            return (tokenType == TokenType::INTNUM || tokenType == TokenType::BOOL) ? std::make_pair(MASMType::DWORD, "DWORD") : std::make_pair(MASMType::REAL8, "REAL8");
         default:
             return std::make_pair(MASMType::None, "None");
     }
@@ -349,7 +361,7 @@ std::string CodeGenerator::GetLocalVariables(const ProgramBlock<MasmID_Data, Mas
     std::string variables;
 
     for (const auto& block : programmBlock.internalBlocks) {
-        for (const auto &idData : block.idTable.GetTable()) {
+        for (const auto& idData : block.idTable.GetTable()) {
             variables += "\tLOCAL " + idData.id + idData.uid + ": " + idData.typeStr + "\n";
         }
         for (const auto &arrData : block.arrayTable.GetTable()) {
@@ -358,4 +370,146 @@ std::string CodeGenerator::GetLocalVariables(const ProgramBlock<MasmID_Data, Mas
         variables += GetLocalVariables(block);
     }
     return variables;
+}
+
+std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType &type) {
+    std::string code;
+    std::string funcId;
+    MasmID_Data idData;
+
+    switch (node->GetData()->ruleType) {
+        case RuleType::UnaryExpession:
+            code += UnaryOperation(node, type);
+            break;
+        case RuleType::BinaryExpression:
+            code += CalculateExpression(node->GetChild(0), type);
+            code += CalculateExpression(node->GetChild(1), type);
+            code += BinaryOperation(node, type);
+            break;
+        case RuleType::Identifier:
+            code += CalculateIdentifier(node);
+            break;
+        case RuleType::Literal:
+            code += CalculateLiteral(node);
+            break;
+        case RuleType::MemberExpression:
+            code += CalculateMemberExpression(node, type);
+            break;
+        case RuleType::InternalFuncInvoke:
+            funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
+            if (funcId != "sqrt")
+                throw std::bad_function_call();
+
+            idData = GetID(node->GetChild(0)->GetData()->token.GetValue());
+            code += "\tFLD " + idData.id + idData.uid + "\n" + "\tFSQRT\n";
+            break;
+        default:
+            throw std::bad_function_call();
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMType &type) { // TODO REVIEW
+    std::string code;
+
+    switch (operation->GetData()->token.GetType()) {
+        case TokenType::PLUS:
+            if (type == MASMType::DWORD)
+                code += "\tpop ebx\n\tpop eax\n\tadd eax, ebx\n\tpush eax\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFADD\n";
+            break;
+        case TokenType::MINUS:
+            if (type == MASMType::DWORD)
+                code += "\tpop ebx\n\tpop eax\n\tsub eax, ebx\n\tpush eax\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFXCH\n\tFSUB\n";
+            break;
+        case TokenType::MULT:
+            if (type == MASMType::DWORD)
+                code += "\tpop ebx\n\tpop eax\n\tmul ebx\n\tpush eax\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFMUL\n";
+            break;
+        case TokenType::DIV:
+            if (type == MASMType::DWORD)
+                code += "\tpop ebx\n\tpop eax\n\txor edx, edx\n\tidiv ebx\n\tpush eax\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFXCH\n\tFDIV\n";
+            break;
+        case TokenType::MOD:
+            if (type == MASMType::DWORD)
+                code += "\tpop ebx\n\tpop eax\n\txor edx, edx\n\tidiv eax, ebx\n\tpush edx\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFXCH\n\tFPREM\n";
+            break;
+        default:
+            throw std::bad_function_call();
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::UnaryOperation(Node *const &operation, const MASMType &type) {
+    std::string code;
+    code += CalculateExpression(operation->GetChild(0), type);
+
+    if (operation->GetData()->token.GetType() == TokenType::MINUS) {
+        if (type == MASMType::DWORD)
+            code += "\tpop eax\n\tNEG eax\n\tpush eax\n";
+        else if (type == MASMType::REAL8)
+            code += "\tFCHS\n";
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::CalculateLiteral(Node *const &node) {
+    std::string code;
+    float value;
+
+    switch(node->GetData()->token.GetType()) {
+        case TokenType::INTNUM:
+            code += "\tpush " + node->GetData()->token.GetValue() + "\n";
+            break;
+        case TokenType::RNUM:
+            value = std::stof(node->GetData()->token.GetValue());
+            std::stringstream stream;
+            stream << std::hex << FloatToHex(value);
+            std::string hexStr = (value < 0) ? "0" : "";
+            hexStr += stream.str();
+            code += "\tpush " + hexStr + "h" + "\n";
+            code += "\tFLD DWORD PTR [esp]\n";
+    }
+    return code;
+}
+
+std::string CodeGenerator::CalculateIdentifier(Node *const &node) {
+    std::string id = node->GetData()->token.GetValue();
+    MASMType type = GetID(id).type;
+
+    switch (type) {
+        case MASMType::DWORD:
+            return "\tpush " + id + "\n";
+        case MASMType::REAL8:
+            return "\tFLD " + id + "\n";
+        default:
+            throw std::bad_function_call();
+    }
+}
+
+std::string CodeGenerator::CalculateMemberExpression(Node *const &node, const MASMType &type) {
+    std::string code;
+    MasmArray_Data array = GetArr(node->GetChild(0)->GetData()->token.GetValue());
+
+    code += CalculateExpression(node->GetChild(1)->GetChild(0), MASMType::DWORD);
+    code += "\tpop ebx\n";
+
+    if (type == MASMType::DWORD)
+        code += "\tpush " + array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
+    else if (type == MASMType::REAL8)
+        code += "\tFLD " + array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
+
+    return code;
 }

@@ -16,9 +16,10 @@ struct MasmID_Data {
     bool isInitialize;
     float value;
 
-    explicit MasmID_Data(std::string &id, std::string uid, const MASMType &type, std::string &typeStr) {
+    explicit MasmID_Data(const std::string &id = "", const std::string &uid = "",
+            const MASMType &type = MASMType::None, const std::string &typeStr = "") {
         this->id = id;
-        this->uid = std::move(uid);
+        this->uid = uid;
         this->type = type;
         this->typeStr = typeStr;
         isInitialize = false;

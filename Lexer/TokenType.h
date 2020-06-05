@@ -29,8 +29,6 @@ enum TokenType {
     // Разделители
     PLUS,       // +
     MINUS,      // -
-    PLUSEQUAL,  // +=
-    MINUSEQUAL, // -=
     MULT,       // *
     MOD,        // %
     DIV,        // /
@@ -85,8 +83,6 @@ public:
             case LOOP:return std::string("LOOP");
             case WHILE:return std::string("WHILE");
             case FUNCTION:return std::string("FUNCTION");
-            case PLUSEQUAL:return std::string("PLUSEQUAL");
-            case MINUSEQUAL:return std::string("MINUSEQUAL");
             case MULT:return std::string("MULT");
             case MOD:return std::string("MOD");
             case DIV:return std::string("DIV");

@@ -211,6 +211,10 @@ std::pair<TypeData, bool> SemanticAnalyzer::BoolExpr(Node *const &node) {
 
             throw Err::TypeError(left.first.ToString(), right.first.ToString(), node->GetChild(1));
         case BinaryExpression:
+            if (left.first.type == Type::Bool)
+                throw Err::CriticalError("It is impossible to using bool type in Binary Expression", node->GetChild(0));
+            if (right.first.type == Type::Bool)
+                throw Err::CriticalError("It is impossible to using bool type in Binary Expression", node->GetChild(1));
             if (left.first == right.first) {
                 if (left.second)
                     throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(0));
@@ -522,7 +526,7 @@ ID_Data& SemanticAnalyzer::GetID(const std::string &id, Node* const &root) {
         if (tmp->idTable.Has(id))
             return tmp->idTable.GetData(id);
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     throw Err::VariableNotExistingError(id, root);
 }
@@ -534,7 +538,7 @@ Array_Data& SemanticAnalyzer::GetArr(const std::string &id, Node* const &root) {
         if (tmp->arrayTable.Has(id))
             return tmp->arrayTable.GetData(id);
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     throw Err::VariableNotExistingError(id, root);
 }

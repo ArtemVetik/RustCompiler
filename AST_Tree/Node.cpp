@@ -42,7 +42,7 @@ Node::Node(const Node &node) {
         _data = new NodeData(*(node._data));
     if (node._parent)
         _parent = new Node(*(node._parent));
-    for (auto child : node._childs) {
+    for (auto &child : node._childs) {
         AddChild(child);
     }
 }

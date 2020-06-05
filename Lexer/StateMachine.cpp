@@ -47,7 +47,7 @@ bool StateMachine::SplitSeparators(const std::string& buffer){
 
     std::vector<Token*> tokens = separatorState->SplitTokens(buffer);
 
-    for (Token* token : tokens) {
+    for (auto &token : tokens) {
         if (token == nullptr)
             return false;
 
@@ -59,7 +59,7 @@ bool StateMachine::SplitSeparators(const std::string& buffer){
 }
 
 void StateMachine::PrintTokens() {
-    for (Token* token : _tokens){
+    for (const auto &token : _tokens){
         token->PrintToken();
     }
 }
@@ -69,7 +69,7 @@ const std::vector<Token*>& StateMachine::GetTokens() const {
 }
 
 StateMachine::~StateMachine() {
-    for (auto token : _tokens)
+    for (auto &token : _tokens)
         delete token;
 
     _tokens.clear();

@@ -14,7 +14,11 @@ bool IDState::CanTransitTo(const char sym) {
 }
 
 Token* IDState::GetToken(const std::string &value) {
-    auto keyToken = std::find_if(_keyWords.cbegin(), _keyWords.cend(), [&](const std::pair<std::string, TokenType> &token) {return token.first == value;});
+    auto keyToken = std::find_if(_keyWords.cbegin(), _keyWords.cend(),
+    [&](const std::pair<std::string, TokenType> &token)
+    {
+        return token.first == value;
+    });
     auto idToken = std::find(_idTable.cbegin(), _idTable.cend(), value);
 
     if (keyToken != _keyWords.cend()) {

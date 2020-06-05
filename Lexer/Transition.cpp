@@ -5,7 +5,7 @@ Transition::Transition() {
 }
 
 State* Transition::GetState(State* const &currentState, const char symbol) {
-    for (auto state : _states) {
+    for (const auto &state : _states) {
         if (state->CanTransitTo(symbol)) {
             if (!currentState || currentState->CanTransitTo(state))
                 return state;
@@ -16,7 +16,7 @@ State* Transition::GetState(State* const &currentState, const char symbol) {
 }
 
 Transition::~Transition() {
-    for (auto state : _states) {
+    for (auto &state : _states) {
         delete state;
     }
 

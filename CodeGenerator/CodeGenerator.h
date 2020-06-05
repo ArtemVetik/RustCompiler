@@ -34,16 +34,25 @@ private:
     MasmID_Data& GetID(const std::string &id);
     MasmArray_Data& GetArr(const std::string &id);
     float BinaryOperation(float v1, float v2, Node* const &operation);
+    std::string BinaryOperation(Node* const &operation, const MASMType &type);
+    std::string UnaryOperation(Node *const &operation, const MASMType &type);
 
     std::string Assignment(const std::string &id, const MASMType &type, const float &value);
+    std::string Assignment(const std::string &id, const MASMType &type);
     float Optimized(Node* const &node);
     uint32_t FloatToHex(float value);
-    std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &pBlock);
+    std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programBlock);
+    std::pair<MASMType, std::string> DetermineType(Node *const &node);
+
+    std::string CalculateExpression(Node *const &node, const MASMType &type);
+    std::string CalculateLiteral(Node *const &node);
+    std::string CalculateIdentifier(Node *const &node);
+    std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
 
 public:
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     void Generate();
-    std::pair<MASMType, std::string> DetermineType(Node *const &pNode);
+
 };
 
 #endif //RUSTCOMPILER_CODEGENERATOR_H
