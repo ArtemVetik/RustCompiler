@@ -5,7 +5,7 @@ SemanticError SemanticErrorDebugger::CriticalError(const std::string &message, N
 }
 
 SemanticError SemanticErrorDebugger::TypeError(const std::string &expectedType, const std::string &foundType, Node *const &root) {
-    std::string message = "IdType mismatch. Expected " + expectedType + ", found " + foundType;
+    std::string message = "Type mismatch. Expected " + expectedType + ", found " + foundType;
     return SemanticError(message, GetLocation(root));
 }
 

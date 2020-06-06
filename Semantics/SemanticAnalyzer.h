@@ -49,6 +49,8 @@ private:
     Array_Data GetArrayDefineParameter(Node* const &param);
     void ReturnExpression(Node* const &returnNode);
     void CheckInits(const ProgramBlock<ID_Data, Array_Data> &pBlock);
+    int CalculateConstUnsignedExpression(Node* const &node);
+    int BinaryOperation(const int &left, const int &right, Node* const &node);
 
 public:
     explicit SemanticAnalyzer(const AST_Tree &tree);

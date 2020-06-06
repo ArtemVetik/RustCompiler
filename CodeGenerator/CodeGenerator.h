@@ -27,7 +27,9 @@ private:
     std::string FunctionDeclaration(Node* const &node);
     std::string FunctionParams(Node* const &node);
     std::pair<MASMType, std::string> Type(Node* const &typeNode);
-    std::string VeriableDeclaration(Node* const &node);
+    std::string VariableDeclaration(Node* const &node);
+    std::string ArrayDeclaration(Node* const &node);
+    std::string GroupVariableDeclaration(Node* const &node);
 
     bool HasIDInUpper(const std::string &id);
     bool HasArrInUpper(const std::string &id);
@@ -36,15 +38,19 @@ private:
     float BinaryOperation(float v1, float v2, Node* const &operation);
     std::string BinaryOperation(Node* const &operation, const MASMType &type);
     std::string UnaryOperation(Node *const &operation, const MASMType &type);
-
-    std::string Assignment(const std::string &id, const MASMType &type, const float &value);
-    std::string Assignment(const std::string &id, const MASMType &type);
+    // TODO: array in func (esi)
+    std::string ArrayAssignment(const std::string &id, Node *const &expression);
+    std::string MemberArrayAssignment(const std::string &id, Node *const &expression, const unsigned int &ind);
+    std::string MemberArrayAssignment(const std::string &id, Node *const &expression, Node* const &indNode);
+    std::string IDAssignment(const std::string &id, Node *const &expression);
+    std::string AssignmentByValue(const std::string &id, const MASMType &type, const float &value);
+    std::string AssignmentFromStack(const std::string &id, const MASMType &type);
     float Optimized(Node* const &node);
     uint32_t FloatToHex(float value);
     std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programBlock);
     std::pair<MASMType, std::string> DetermineType(Node *const &node);
 
-    std::string CalculateExpression(Node *const &node, const MASMType &type);
+    std::string CalculateExpression(Node *const &expression, const MASMType &type);
     std::string CalculateLiteral(Node *const &node);
     std::string CalculateIdentifier(Node *const &node);
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);

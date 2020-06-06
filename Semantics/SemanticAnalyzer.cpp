@@ -185,7 +185,7 @@ ID_Data SemanticAnalyzer::Pat(Node *const &node) {
 
 std::pair<TypeData, bool> SemanticAnalyzer::BoolExpr(Node *const &node) {
 
-    if (node->GetData()->ruleType != LogicalExpression && node->GetData()->ruleType != BinaryExpression
+    if (node->GetData()->ruleType != LogicalExpression && node->GetData()->ruleType != RuleType::BinaryExpression
         && node->GetData()->ruleType != BinaryCompExpression)
         return MinTerminal(node);
 
@@ -195,12 +195,12 @@ std::pair<TypeData, bool> SemanticAnalyzer::BoolExpr(Node *const &node) {
     unsigned int wrongChild;
 
     switch (node->GetData()->ruleType){
-        case LogicalExpression:
+        case RuleType::LogicalExpression:
             if (left.first.type == Type::Bool && right.first.type == Type::Bool)
                 return left;
             wrongType = (left.first.type != Type::Bool) ? (wrongChild = 0, left) : (wrongChild = 1, right);
             throw Err::TypeError("Bool", wrongType.first.ToString(), node->GetChild(wrongChild));
-        case BinaryCompExpression:
+        case RuleType::BinaryCompExpression:
             if (left.first == right.first) {
                 if (left.second)
                     throw Err::CriticalError("Cannot using array in binary expressions", node->GetChild(0));
@@ -210,7 +210,7 @@ std::pair<TypeData, bool> SemanticAnalyzer::BoolExpr(Node *const &node) {
             }
 
             throw Err::TypeError(left.first.ToString(), right.first.ToString(), node->GetChild(1));
-        case BinaryExpression:
+        case RuleType::BinaryExpression:
             if (left.first.type == Type::Bool)
                 throw Err::CriticalError("It is impossible to using bool type in Binary Expression", node->GetChild(0));
             if (right.first.type == Type::Bool)
@@ -242,8 +242,9 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
     if (elemsTypes.size() != 1)
         throw Err::CriticalError("Expected single index in member expression", node->GetChild(1));
 
-    std::string index = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
-    if ((elemsTypes[0].type != Type::Integer && elemsTypes[0].type != Type::Unsigned) || index[0] == '-')
+    int indexValue = CalculateConstUnsignedExpression(node->GetChild(1)->GetChild(0));
+
+    if ((elemsTypes[0].type != Type::Integer && elemsTypes[0].type != Type::Unsigned) || indexValue < 0)
         throw Err::CriticalError("Expected unsigned type index", node->GetChild(1)->GetChild(0));
 
     return GetArr(id,node->GetChild(0)).type;
@@ -338,7 +339,10 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
     data.type.isReference = typeNode->GetChild(0) != nullptr;
     data.type.isMutable = typeNode->GetChild(1) != nullptr;
     data.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
-    data.elementCount = std::stoul(arrPat->GetChild(2)->GetChild(1)->GetData()->token.GetValue());
+    int count = CalculateConstUnsignedExpression(arrPat->GetChild(2)->GetChild(1));
+    if (count < 0)
+        throw Err::CriticalError("Array size must be unsigned", arrPat->GetChild(2)->GetChild(1));
+    data.elementCount = count;
     _currentBlock->arrayTable.AddToTable(data);
 
     if (node->GetChild(1) != nullptr)
@@ -668,4 +672,45 @@ std::pair<TypeData, bool> SemanticAnalyzer::InternalFunctionInvoke(Node *const &
         throw Err::CriticalError("Variable " + id + " should be real", node);
 
     return std::make_pair(FunctionInvoke(node->GetChild(1)), false);
+}
+
+int SemanticAnalyzer::CalculateConstUnsignedExpression(Node *const &node) {
+    switch (node->GetData()->ruleType) {
+        case RuleType::FuncInvoke:
+        case RuleType::InternalFuncInvoke:
+        case RuleType::Identifier:
+        case RuleType::MemberExpression:
+            throw Err::CriticalError("Can not using non-const value", node);
+        case RuleType::UnaryExpession:
+            throw Err::CriticalError("Unary expression can not be used", node);
+        case RuleType::BinaryExpression:
+            return BinaryOperation(CalculateConstUnsignedExpression(node->GetChild(0)),
+                                   CalculateConstUnsignedExpression(node->GetChild(1)), node);
+        case RuleType::Literal:
+            if (node->GetData()->token.GetType() == TokenType::INTNUM)
+                return std::stoi(node->GetData()->token.GetValue());
+            throw Err::CriticalError("Only unsigned type can be used", node);
+        default:
+            throw Err::CriticalError("Can not calculated expression!", node);
+    }
+}
+
+int SemanticAnalyzer::BinaryOperation(const int &left, const int &right, Node* const &operation) {
+    if (operation == nullptr)
+        throw std::exception();
+
+    switch (operation->GetData()->token.GetType()) {
+        case TokenType::PLUS:
+            return left + right;
+        case TokenType::MINUS:
+            return left - right;
+        case TokenType::MULT:
+            return left * right;
+        case TokenType::DIV:
+            return left / right;
+        case TokenType::MOD:
+            return left % right;
+        default:
+            throw Err::CriticalError("Error in binary operation", operation);
+    }
 }

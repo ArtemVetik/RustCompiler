@@ -11,17 +11,15 @@ enum class MASMType {
 struct MasmID_Data {
     std::string id;
     std::string uid;
-    MASMType type;
-    std::string typeStr;
+    std::pair<MASMType, std::string> type;
     bool isInitialize;
     float value;
 
     explicit MasmID_Data(const std::string &id = "", const std::string &uid = "",
-            const MASMType &type = MASMType::None, const std::string &typeStr = "") {
+            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None")) {
         this->id = id;
         this->uid = uid;
         this->type = type;
-        this->typeStr = typeStr;
         isInitialize = false;
         value = 0;
     }
@@ -39,20 +37,18 @@ struct MasmID_Data {
 struct MasmArray_Data {
     std::string id;
     std::string uid;
-    MASMType type;
-    std::string typeStr;
+    std::pair<MASMType, std::string> type;
     bool isInitialize;
     unsigned int elementCount;
-    float *value;
+    std::vector<float> values;
 
-    explicit MasmArray_Data(std::string &id, std::string uid, const MASMType &type, std::string &typeStr) {
+    explicit MasmArray_Data(const std::string &id = "", const std::string &uid = "",
+            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None"), const unsigned int &count = 0) : values(count) {
         this->id = id;
-        this->uid = std::move(uid);
+        this->uid = uid;
         this->type = type;
-        this->typeStr = typeStr;
         isInitialize = false;
-        elementCount = 0;
-        value = nullptr;
+        elementCount = count;
     }
 
     bool operator == (const std::string &id) const {
