@@ -58,7 +58,7 @@ bool StateMachine::SplitSeparators(const std::string& buffer){
     return true;
 }
 
-void StateMachine::PrintTokens() {
+void StateMachine::PrintTokens() const {
     for (const auto &token : _tokens){
         token->PrintToken();
     }

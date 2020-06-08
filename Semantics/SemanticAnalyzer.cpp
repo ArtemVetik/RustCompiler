@@ -48,6 +48,9 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
         case RuleType::AssignmentExpression:
             Assignment(node);
             break;
+        case RuleType::LoopExpr:
+            CheckRule(node->GetChild(0));
+            break;
         case RuleType::WhileExpr:
             Condition(node->GetChild(0));
             Traversal(node->GetChild(1));
@@ -242,12 +245,18 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
     if (elemsTypes.size() != 1)
         throw Err::CriticalError("Expected single index in member expression", node->GetChild(1));
 
-    int indexValue = CalculateConstUnsignedExpression(node->GetChild(1)->GetChild(0));
+    int indexValue;
+    try {
+        indexValue =CalculateConstUnsignedExpression(node->GetChild(1)->GetChild(0));
+    }
+    catch (SemanticError &err) {
+        indexValue = 0;
+    }
 
     if ((elemsTypes[0].type != Type::Integer && elemsTypes[0].type != Type::Unsigned) || indexValue < 0)
         throw Err::CriticalError("Expected unsigned type index", node->GetChild(1)->GetChild(0));
 
-    return GetArr(id,node->GetChild(0)).type;
+    return GetArr(id, node->GetChild(0)).type;
 }
 
 std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
@@ -368,7 +377,7 @@ void SemanticAnalyzer::Assignment(Node *const &node) {
             throw Err::VariableNotExistingError(id, node->GetChild(0));
     }
     else
-        throw Err::CriticalError("Critical _error: can not assigment", node);
+        throw Err::CriticalError("Critical error: can not assigment", node);
 }
 
 void SemanticAnalyzer::VariableAssignment(Node* const& idNode, Node *const &exprNode) {
@@ -382,6 +391,8 @@ void SemanticAnalyzer::VariableAssignment(Node* const& idNode, Node *const &expr
         throw Err::VariableImmutableError(id, idNode);
 
     std::pair<TypeData, bool> exprType = Expr(exprNode);
+    if (exprType.first.type == Type::None)
+        throw Err::CriticalError("Expected non-none type", exprNode);
     if (exprType.second)
         throw Err::CriticalError("It is impossible to assign array to ordinary variable", exprNode);
 
@@ -438,10 +449,14 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
         if (param->GetData()->ruleType == RuleType::ArrayArg)
             paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
         else if (param->GetData()->ruleType == RuleType::Identifier) {
-            if (_currentBlock->arrayTable.Has(param->GetData()->token.GetValue()))
+            if (_currentBlock->arrayTable.Has(param->GetData()->token.GetValue())) {
+                if (!GetArr(param->GetData()->token.GetValue(), param).isMutable)
+                    throw Err::CriticalError("Can not borrow immutable a array as mutable", param);
                 paramTypes.emplace_back(std::make_pair(CanAccessArray(param), true));
-            else
+            }
+            else {
                 paramTypes.emplace_back(std::make_pair(CanAccessIdentifier(param), false));
+            }
         }
         else
             paramTypes.emplace_back(Expr(param));
@@ -495,7 +510,6 @@ TypeData SemanticAnalyzer::CanAccessArray(Node *const &idNode) {
     Array_Data &arrayData = GetArr(id, idNode);
     if (!arrayData.isInitialized)
         throw Err::ArrayInitializationError(id, idNode);
-
     return arrayData.type;
 }
 
@@ -632,7 +646,7 @@ Array_Data SemanticAnalyzer::GetArrayDefineParameter(Node *const &param) {
 
 void SemanticAnalyzer::ReturnExpression(Node* const &returnNode) {
     TypeData funcReturnType = _functionTable.Back().type;
-    TypeData returnType = returnNode->GetChild(0) ? Expr(returnNode->GetChild(0)).first : TypeData();
+    TypeData returnType = returnNode->GetChild(0) != nullptr ? Expr(returnNode->GetChild(0)).first : TypeData();
 
     if (funcReturnType != returnType)
         throw Err::FunctionReturnTypeError(funcReturnType.ToString(), returnType.ToString(), returnNode);

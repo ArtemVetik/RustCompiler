@@ -38,15 +38,18 @@ struct MasmArray_Data {
     std::string id;
     std::string uid;
     std::pair<MASMType, std::string> type;
+    bool isPtr;
     bool isInitialize;
     unsigned int elementCount;
     std::vector<float> values;
 
     explicit MasmArray_Data(const std::string &id = "", const std::string &uid = "",
-            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None"), const unsigned int &count = 0) : values(count) {
+            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None"),
+            const unsigned int &count = 0, const bool &isPtr = false) : values(count) {
         this->id = id;
         this->uid = uid;
         this->type = type;
+        this->isPtr = isPtr;
         isInitialize = false;
         elementCount = count;
     }

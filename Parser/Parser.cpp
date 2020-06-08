@@ -882,7 +882,7 @@ bool Parser::LetArrayDecl(Node *&root) {
                     else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
                 }
             }
-            else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr); // TODO не выводит
         }
     }
 
@@ -1385,12 +1385,13 @@ bool Parser::BlockExit(Node *&root) {
     Node *exprNode = nullptr;
 
     if ((*_currentToken)->GetType() == RETURN) {
+        auto returnToken = _currentToken;
         _currentToken++;
         auto saveToken2 = _currentToken;
         if (!Expr(exprNode)) _currentToken = saveToken2;
         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {
             _currentToken++;
-            root = new Node(new NodeData(Token("Return"), RuleType::Return));
+            root = new Node(new NodeData(**returnToken, RuleType::Return));
             root->AddChild(exprNode);
             AST_Tree::DeleteNode(exprNode);
             return true;

@@ -1,6 +1,6 @@
 #include "SeparatorState.h"
 
-SeparatorState::SeparatorState() {
+SeparatorState::SeparatorState() : _comment(CommentType::None) {
     Init();
 }
 
@@ -35,6 +35,13 @@ void SeparatorState::Init() {
 }
 
 Token* SeparatorState::GetToken(const std::string &value) {
+    _buffer.clear();
+
+    if (_comment != CommentType::None) {
+        _comment = CommentType::None;
+        return new Token(TokenType::IGNORE, value, -1);
+    }
+
     auto foundToken = std::find_if(_tokenPair.cbegin(), _tokenPair.cend(),
     [&value](const std::pair<std::string, TokenType> &token)
     {
@@ -58,6 +65,18 @@ std::vector<Token*> SeparatorState::SplitTokens(const std::string &value){
 }
 
 bool SeparatorState::Contains(const char sym) {
+    _buffer += sym;
+
+    if (_buffer == "//")
+        _comment = CommentType::SingleLine;
+    else if (_buffer == "/*")
+        _comment = CommentType::Multiline;
+
+    if (_comment == CommentType::SingleLine)
+        return sym != '\n';
+    if (_comment == CommentType::Multiline)
+        return !(_buffer[_buffer.size()-2] == '/' && _buffer[_buffer.size()-3] == '*');
+
     return _separators.find(sym) != std::string::npos;
 }
 

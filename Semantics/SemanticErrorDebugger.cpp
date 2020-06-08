@@ -84,6 +84,8 @@ TokenLocation* SemanticErrorDebugger::TryGetNonNullNode(Node *const &node) {
     if (node->GetData()->token.GetLocation() == nullptr) {
         std::vector<Node *> childs = node->GetChilds();
         for (const auto &child : childs) {
+            if (child == nullptr)
+                continue;
             TokenLocation *tmp = TryGetNonNullNode(child);
             if (tmp) return tmp;
         }

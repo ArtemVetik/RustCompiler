@@ -201,6 +201,9 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
             idData = GetID(node->GetChild(0)->GetData()->token.GetValue());
             code += "\tFLD " + idData.id + idData.uid + "\n" + "\tFSQRT\n";
             break;
+        case RuleType::FuncInvoke:
+            FunctionInvoke(node);
+            break;
         default:
             throw std::bad_function_call();
     }
@@ -302,13 +305,28 @@ std::string CodeGenerator::CalculateMemberExpression(Node *const &node, const MA
     std::string code;
     const MasmArray_Data &array = GetArr(node->GetChild(0)->GetData()->token.GetValue());
 
-    code += CalculateExpression(node->GetChild(1)->GetChild(0), MASMType::DWORD);
-    code += "\tpop ebx\n";
+    try {
+        int ind = static_cast<int>(Optimized(node->GetChild(1)->GetChild(0)));
+        code += "\tmov ebx, " + std::to_string(ind) + "\n";
+    }
+    catch (std::exception &err) {
+        code += CalculateExpression(node->GetChild(1)->GetChild(0), MASMType::DWORD);
+        code += "\tpop ebx\n";
+    }
 
-    if (type == MASMType::DWORD)
-        code += "\tpush " + array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
+    std::string operation;
+    if (array.isPtr) {
+        operation = array.type.second + " ptr [esi + ebx * Type " + array.type.second + " ptr " + array.id + array.uid + "]\n";
+        code += "\tmov esi, " + array.id + array.uid + "\n";
+    }
+    else
+        operation = array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
+
+    if (type == MASMType::DWORD) {
+        code += "\tpush " + operation;
+    }
     else if (type == MASMType::REAL8)
-        code += "\tFLD " + array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
+        code += "\tFLD " + operation;
 
     return code;
 }
@@ -407,7 +425,7 @@ std::string CodeGenerator::FunctionDeclaration(Node* const &node) {
 
     std::string _localVariables = GetLocalVariables(*tmp);
 
-    std::string function = id + " PROC " + params + "\n" + _localVariables + "\n" + block + id + " ENDP";
+    std::string function = id + " PROC " + params + "\n" + _localVariables + block + id + " ENDP";
     if (id == "main") function += "\nEND " + id;
 
     function += "\n";
@@ -417,7 +435,7 @@ std::string CodeGenerator::FunctionDeclaration(Node* const &node) {
 std::string CodeGenerator::FunctionParams(Node *const &node) {
     const std::vector<Node*> &arguments = node->GetChilds();
 
-    std::string paramsCode;
+    std::string paramsCode, ptrStr;
     std::string id;
     std::pair<MASMType, std::string> type;
     for (const auto& argument : arguments) {
@@ -429,13 +447,15 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
             type = Type(argument->GetChild(3));
             MasmID_Data idData(id, "", type);
             _currentBlock->idTable.AddToTable(idData);
+            ptrStr = "";
         }
         else {
             type = Type(argument->GetChild(3)->GetChild(0));
-            MasmArray_Data arrData(id, "", type);
+            MasmArray_Data arrData(id, "", type, 0, true);
             _currentBlock->arrayTable.AddToTable(arrData);
+            ptrStr = "ptr ";
         }
-        paramsCode += id + ": " + type.second;
+        paramsCode += id + ": " + ptrStr + type.second;
     }
 
     return paramsCode;
@@ -450,10 +470,12 @@ std::string CodeGenerator::VariableDeclaration(Node* const &node) {
     Node* typeNode = pat->GetChild(2);
     std::string id = pat->GetChild(1)->GetData()->token.GetValue();
 
-    if (typeNode == nullptr)
+    if (typeNode == nullptr) {
         type = DetermineType(node->GetChild(1));
-    else
+    }
+    else {
         type = Type(typeNode);
+    }
 
     if (HasIDInUpper(id))
         uid = GetID(id).uid + "_";
@@ -468,6 +490,9 @@ std::string CodeGenerator::VariableDeclaration(Node* const &node) {
 }
 
 std::string CodeGenerator::IDAssignment(const std::string &id, Node *const &expression) {
+    if (expression == nullptr)
+        return "";
+
     if (expression->GetData()->ruleType == RuleType::ArrayElems)
         return ArrayAssignment(id, expression);
 
@@ -540,17 +565,23 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
     MasmArray_Data &arrData = GetArr(id);
     std::pair<MASMType, std::string> type = arrData.type;
 
-    std::string idMasm = arrData.id + arrData.uid + "[" + std::to_string(ind) + " * Type " + arrData.id + arrData.uid + "]";
+    std::string idMasm, esiMember;
+    if (arrData.isPtr) {
+        esiMember = "\tmov esi, " + arrData.id + arrData.uid + "\n";
+        idMasm = arrData.type.second + " ptr [esi + " + std::to_string(ind) + " * Type " + arrData.type.second + " ptr " + arrData.id + arrData.uid + "]";
+    }
+    else
+        idMasm = arrData.id + arrData.uid + "[" + std::to_string(ind) + " * Type " + arrData.id + arrData.uid + "]";
 
     if (expression) {
         try {
             float value = Optimized(expression);
             arrData.values[ind] = value;
-            code += AssignmentByValue(idMasm, type.first, value);
+            code += esiMember + AssignmentByValue(idMasm, type.first, value);
         }
         catch (std::exception &err) {
             code += CalculateExpression(expression, type.first);
-            code += AssignmentFromStack(idMasm, type.first);
+            code += esiMember + AssignmentFromStack(idMasm, type.first);
         }
     }
 
@@ -568,9 +599,16 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
         }
         catch (std::exception &err) {
             MasmArray_Data &arrData = GetArr(id);
-            std::string uid = arrData.id + arrData.uid;
+            std::string fullName = arrData.id + arrData.uid;
+            std::string memberExpr;
             code += CalculateExpression(indNode, MASMType::DWORD);
-            code += AssignmentFromStack(uid + "[eax * Type " + uid + "]", arrData.type.first);
+            if (arrData.isPtr) {
+                memberExpr = "[esi + eax * Type " + arrData.type.second + " ptr " + fullName + "]\n";
+                code += "\tmov esi, " + fullName + "\n";
+            }
+            else
+                memberExpr = fullName + "[eax * Type " + fullName + "]";
+            code += AssignmentFromStack(memberExpr, arrData.type.first);
         }
     }
 
@@ -624,6 +662,7 @@ std::string CodeGenerator::GetLocalVariables(const ProgramBlock<MasmID_Data, Mas
         }
         variables += GetLocalVariables(block);
     }
+    if (!variables.empty()) variables += "\n";
     return variables;
 }
 
@@ -658,6 +697,21 @@ std::string CodeGenerator::GroupVariableDeclaration(Node *const &node) {
         _currentBlock->idTable.AddToTable(idData);
 
         code += IDAssignment(id, (expressions.empty()) ? nullptr : expressions[i]) + "\n";
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::FunctionInvoke(Node *const &node) {
+    std::string code;
+
+    std::string id = node->GetChild(0)->GetData()->token.GetValue();
+    std::vector<Node*> params = node->GetChild(1)->GetChilds();
+
+    code += "\tInvoke " + id;
+
+    for (const auto& param : params) {
+
     }
 
     return code;

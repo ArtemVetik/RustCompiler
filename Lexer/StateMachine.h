@@ -21,7 +21,7 @@ public:
     ~StateMachine();
     void TakeSymbol(char symbol);
     void End();
-    void PrintTokens();
+    void PrintTokens() const;
 
     const std::vector<Token*>& GetTokens() const;
 };

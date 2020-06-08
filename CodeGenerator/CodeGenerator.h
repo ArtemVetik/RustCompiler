@@ -38,7 +38,7 @@ private:
     float BinaryOperation(float v1, float v2, Node* const &operation);
     std::string BinaryOperation(Node* const &operation, const MASMType &type);
     std::string UnaryOperation(Node *const &operation, const MASMType &type);
-    // TODO: array in func (esi)
+
     std::string ArrayAssignment(const std::string &id, Node *const &expression);
     std::string MemberArrayAssignment(const std::string &id, Node *const &expression, const unsigned int &ind);
     std::string MemberArrayAssignment(const std::string &id, Node *const &expression, Node* const &indNode);
@@ -54,11 +54,12 @@ private:
     std::string CalculateLiteral(Node *const &node);
     std::string CalculateIdentifier(Node *const &node);
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
+    std::string FunctionInvoke(Node *const &pNode);
 
 public:
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
-    void Generate();
 
+    void Generate();
 };
 
 #endif //RUSTCOMPILER_CODEGENERATOR_H

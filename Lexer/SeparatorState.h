@@ -4,11 +4,16 @@
 #include "State.h"
 #include <vector>
 
+enum class CommentType {
+    SingleLine, Multiline, None
+};
+
 class SeparatorState : public State {
 private:
     std::string _separators = "+-*/%=><{}[];(),.:!&|";
     std::vector<std::pair<std::string, TokenType>> _tokenPair;
-
+    std::string _buffer;
+    CommentType _comment;
 public:
     SeparatorState();
     ~SeparatorState() override = default;
