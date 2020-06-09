@@ -27,6 +27,8 @@ void SemanticAnalyzer::Analyze() {
 }
 
 void SemanticAnalyzer::Traversal(Node *const &root) {
+    if (root == nullptr)
+        return;
     const std::vector<Node*> &childs = root->GetChilds();
 
     for (const auto &child: childs) {
@@ -58,7 +60,7 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
         case RuleType::IfExpr:
             Condition(node->GetChild(0));
             Traversal(node->GetChild(1));
-            if (node->GetChild(2)) Traversal(node->GetChild(2));
+            if (node->GetChild(2)) CheckRule(node->GetChild(2));
             break;
         case RuleType::FuncDeclaration:
             _currentBlock = &(_currentBlock->AddBlock());
@@ -573,7 +575,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
         throw Err::FunctionExistingError(id, node->GetChild(0));
     }
 
-    std::vector<Node*> arguments = node->GetChild(1)->GetChilds();
+    const std::vector<Node*> &arguments = node->GetChild(1)->GetChilds();
 
     Function_Data functionData;
     functionData.id = id;
@@ -602,7 +604,6 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
     functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
     Traversal(node->GetChild(3));
-
 }
 
 void SemanticAnalyzer::AddSystemFunctions() {

@@ -1,6 +1,6 @@
 #include "CodeGenerator.h"
 
-CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) {
+CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0) {
     _tree = tree;
     _funcTable = funcTable;
     _currentBlock = nullptr;
@@ -11,6 +11,36 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
                 "include \\masm32\\include\\masm32rt.inc\n"
                 "\n"
                 ".code\n\tFINIT\n\n";
+
+    InitCompareOperations();
+}
+
+void CodeGenerator::InitCompareOperations() {
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::MORE, "ja", "jbe"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::LESS, "jb", "jae"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASMR, "jae", "jb"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASLS, "jbe", "ja"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::NASSIG, "jne", "je"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::EQUAL, "je", "jne"});
+}
+
+std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const CodeGenerator::CompareType &compareType) {
+    auto foundOperation = std::find_if(_compareOperations.cbegin(), _compareOperations.cend(),
+    [&operation](const MASMCompareOperation &compOperation)
+    {
+        return operation == compOperation.operation;
+    });
+    if (foundOperation == _compareOperations.cend())
+        throw std::bad_function_call();
+
+    switch (compareType) {
+        case Reverse:
+            return foundOperation->reverseComp;
+        case Direct:
+            return foundOperation->directComp;
+        default:
+            throw std::bad_function_call();
+    }
 }
 
 uint32_t CodeGenerator::FloatToHex(float value) {
@@ -24,7 +54,7 @@ void CodeGenerator::Generate() {
 }
 
 std::string CodeGenerator::Traversal(Node *const &root) {
-    const std::vector<Node*> &childs = root->GetChilds();
+    const std::vector<Node *> &childs = root->GetChilds();
 
     std::string code;
     std::string tmpCode;
@@ -54,16 +84,24 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
         case RuleType::ArrayDeclaration:
             rule = ArrayDeclaration(node);
             break;
+        case RuleType::IfExpr:
+            rule = IfExpression(node);
+            break;
+        case RuleType::LoopExpr:
+            rule = LoopExpression(node);
+            break;
         case RuleType::AssignmentExpression:
             if (node->GetChild(0)->GetData()->ruleType == RuleType::Identifier)
                 rule = IDAssignment(node->GetChild(0)->GetData()->token.GetValue(), node->GetChild(1));
             else if (node->GetChild(0)->GetData()->ruleType == RuleType::MemberExpression)
                 rule = MemberArrayAssignment(node->GetChild(0)->GetChild(0)->GetData()->token.GetValue(),
-                        node->GetChild(1), node->GetChild(0)->GetChild(1)->GetChild(0));
+                                             node->GetChild(1), node->GetChild(0)->GetChild(1)->GetChild(0));
             break;
         case RuleType::WhileExpr:
             break;
-        case RuleType::IfExpr:
+        case RuleType::Break:
+            if (!_breakLabel.empty())
+                rule = "\tjmp " + _breakLabel + "\n";
             break;
         case RuleType::FuncDeclaration:
             _currentBlock = new ProgramBlock<MasmID_Data, MasmArray_Data>();
@@ -158,13 +196,18 @@ std::pair<MASMType, std::string> CodeGenerator::DetermineType(Node *const &node)
             return masmType == MASMType::DWORD ? std::make_pair(masmType, "DWORD") : std::make_pair(masmType, "REAL8");
         case RuleType::FuncInvoke:
             realType = _funcTable.GetData(node->GetData()->token.GetValue()).type.type;
-            return realType == Type::Real ? std::make_pair(MASMType::REAL8, "REAL8") : std::make_pair(MASMType::DWORD, "DWORD");
+            return realType == Type::Real ? std::make_pair(MASMType::REAL8, "REAL8") : std::make_pair(MASMType::DWORD,
+                                                                                                      "DWORD");
         case RuleType::InternalFuncInvoke:
             realType = _funcTable.GetData(node->GetChild(1)->GetChild(0)->GetData()->token.GetValue()).type.type;
-            return realType == Type::Real ? std::make_pair(MASMType::REAL8, "REAL8") : std::make_pair(MASMType::DWORD, "DWORD");
+            return realType == Type::Real ? std::make_pair(MASMType::REAL8, "REAL8") : std::make_pair(MASMType::DWORD,
+                                                                                                      "DWORD");
         case RuleType::Literal:
             tokenType = node->GetData()->token.GetType();
-            return (tokenType == TokenType::INTNUM || tokenType == TokenType::BOOL) ? std::make_pair(MASMType::DWORD, "DWORD") : std::make_pair(MASMType::REAL8, "REAL8");
+            return (tokenType == TokenType::INTNUM || tokenType == TokenType::BOOL) ? std::make_pair(MASMType::DWORD,
+                                                                                                     "DWORD")
+                                                                                    : std::make_pair(MASMType::REAL8,
+                                                                                                     "REAL8");
         default:
             return std::make_pair(MASMType::None, "None");
     }
@@ -172,17 +215,24 @@ std::pair<MASMType, std::string> CodeGenerator::DetermineType(Node *const &node)
 
 std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType &type) {
     std::string code;
+    std::string leftCode;
+    std::string rightCode;
     std::string funcId;
     MasmID_Data idData;
+    RuleType leftRuleType;
 
     switch (node->GetData()->ruleType) {
         case RuleType::UnaryExpession:
             code += UnaryOperation(node, type);
             break;
         case RuleType::BinaryExpression:
-            code += CalculateExpression(node->GetChild(0), type);
-            code += CalculateExpression(node->GetChild(1), type);
-            code += BinaryOperation(node, type);
+            leftCode = CalculateExpression(node->GetChild(0), type);
+            rightCode = CalculateExpression(node->GetChild(1), type);
+            leftRuleType = node->GetChild(0)->GetData()->ruleType;
+            if (leftRuleType == RuleType::UnaryExpession || leftRuleType == RuleType::BinaryExpression)
+                code += leftCode + rightCode + BinaryOperation(node, type);
+            else
+                code += rightCode + leftCode + BinaryOperation(node, type, true);
             break;
         case RuleType::Identifier:
             code += CalculateIdentifier(node);
@@ -211,22 +261,31 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
     return code;
 }
 
-std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMType &type) {
+std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMType &type, bool isReverce) {
     std::string code;
-    std::string popTemplate = "\tpop ebx\n\tpop eax\n";
+    std::string popTemplate= "\tpop ebx\n\tpop eax\n";
+    TokenType opType = operation->GetData()->token.GetType();
 
-    switch (operation->GetData()->token.GetType()) {
+    if (opType != TokenType::PLUS && opType != TokenType::MULT) {
+        if (isReverce && type == MASMType::REAL8)
+            code += "\tFXCH\n";
+        else if (isReverce && type == MASMType::DWORD)
+            code += "\txchg eax, ebx\n";
+    }
+
+    switch (opType) {
         case TokenType::PLUS:
             if (type == MASMType::DWORD)
                 code += popTemplate + "\tadd eax, ebx\n\tpush eax\n";
-            else if (type == MASMType::REAL8)
+            else
                 code += "\tFADD\n";
             break;
         case TokenType::MINUS:
             if (type == MASMType::DWORD)
-                code += popTemplate + "\tsub eax, ebx\n\tpush eax\n";
-            else if (type == MASMType::REAL8)
-                code += "\tFXCH\n\tFSUB\n";
+                    code += popTemplate + "\tsub eax, ebx\n\tpush eax\n";
+            else if (type == MASMType::REAL8) {
+                code += "\tFSUB\n";
+            }
             break;
         case TokenType::MULT:
             if (type == MASMType::DWORD)
@@ -237,14 +296,16 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
         case TokenType::DIV:
             if (type == MASMType::DWORD)
                 code += popTemplate + "\txor edx, edx\n\tidiv ebx\n\tpush eax\n";
-            else if (type == MASMType::REAL8)
-                code += "\tFXCH\n\tFDIV\n";
+            else if (type == MASMType::REAL8) {
+                code += "\tFDIV\n";
+            }
             break;
         case TokenType::MOD:
             if (type == MASMType::DWORD)
-                code += popTemplate + "\txor edx, edx\n\tidiv eax, ebx\n\tpush edx\n";
-            else if (type == MASMType::REAL8)
-                code += "\tFXCH\n\tFPREM\n";
+                code += popTemplate + "\txor edx, edx\n\tidiv ebx\n\tpush edx\n";
+            else if (type == MASMType::REAL8) {
+                code += "\t\tFPREM\n";
+            }
             break;
         default:
             throw std::bad_function_call();
@@ -271,7 +332,7 @@ std::string CodeGenerator::CalculateLiteral(Node *const &node) {
     std::string code;
     float value;
 
-    switch(node->GetData()->token.GetType()) {
+    switch (node->GetData()->token.GetType()) {
         case TokenType::INTNUM:
             code += "\tpush " + node->GetData()->token.GetValue() + "\n";
             break;
@@ -316,16 +377,15 @@ std::string CodeGenerator::CalculateMemberExpression(Node *const &node, const MA
 
     std::string operation;
     if (array.isPtr) {
-        operation = array.type.second + " ptr [esi + ebx * Type " + array.type.second + " ptr " + array.id + array.uid + "]\n";
+        operation = array.type.second + " ptr [esi + ebx * Type " + array.type.second + " ptr " + array.id + array.uid +
+                    "]\n";
         code += "\tmov esi, " + array.id + array.uid + "\n";
-    }
-    else
+    } else
         operation = array.id + array.uid + "[ebx * Type " + array.id + array.uid + "]\n";
 
     if (type == MASMType::DWORD) {
         code += "\tpush " + operation;
-    }
-    else if (type == MASMType::REAL8)
+    } else if (type == MASMType::REAL8)
         code += "\tFLD " + operation;
 
     return code;
@@ -345,7 +405,7 @@ float CodeGenerator::BinaryOperation(float v1, float v2, Node *const &operation)
         case TokenType::DIV:
             return v1 / v2;
         case TokenType::MOD:
-            return std::fmod(v1,v2);
+            return std::fmod(v1, v2);
         default:
             throw std::exception();
     }
@@ -375,7 +435,7 @@ bool CodeGenerator::HasArrInUpper(const std::string &id) {
     return false;
 }
 
-MasmID_Data& CodeGenerator::GetID(const std::string &id) {
+MasmID_Data &CodeGenerator::GetID(const std::string &id) {
     ProgramBlock<MasmID_Data, MasmArray_Data> *tmp = _currentBlock;
 
     do {
@@ -388,7 +448,7 @@ MasmID_Data& CodeGenerator::GetID(const std::string &id) {
     throw std::bad_function_call();
 }
 
-MasmArray_Data& CodeGenerator::GetArr(const std::string &id) {
+MasmArray_Data &CodeGenerator::GetArr(const std::string &id) {
     ProgramBlock<MasmID_Data, MasmArray_Data> *tmp = _currentBlock;
 
     do {
@@ -402,19 +462,19 @@ MasmArray_Data& CodeGenerator::GetArr(const std::string &id) {
 }
 
 std::pair<MASMType, std::string> CodeGenerator::Type(Node *const &typeNode) {
-    Node* type = typeNode->GetChild(2);
+    Node *type = typeNode->GetChild(2);
     switch (type->GetData()->token.GetType()) {
         case TokenType::REAL:
-            return std::make_pair(MASMType::REAL8,"REAL8");
+            return std::make_pair(MASMType::REAL8, "REAL8");
         case TokenType::INTEGER:
         case TokenType::UINT:
-            return std::make_pair(MASMType::DWORD,"DWORD");
+            return std::make_pair(MASMType::DWORD, "DWORD");
         default:
-            return std::make_pair(MASMType::None,"???");
+            return std::make_pair(MASMType::None, "???");
     }
 }
 
-std::string CodeGenerator::FunctionDeclaration(Node* const &node) {
+std::string CodeGenerator::FunctionDeclaration(Node *const &node) {
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
     std::string params = FunctionParams(node->GetChild(1));
     std::string block = CheckRule(node->GetChild(3));
@@ -433,12 +493,12 @@ std::string CodeGenerator::FunctionDeclaration(Node* const &node) {
 }
 
 std::string CodeGenerator::FunctionParams(Node *const &node) {
-    const std::vector<Node*> &arguments = node->GetChilds();
+    const std::vector<Node *> &arguments = node->GetChilds();
 
     std::string paramsCode, ptrStr;
     std::string id;
     std::pair<MASMType, std::string> type;
-    for (const auto& argument : arguments) {
+    for (const auto &argument : arguments) {
         if (!paramsCode.empty())
             paramsCode += ", ";
 
@@ -448,8 +508,7 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
             MasmID_Data idData(id, "", type);
             _currentBlock->idTable.AddToTable(idData);
             ptrStr = "";
-        }
-        else {
+        } else {
             type = Type(argument->GetChild(3)->GetChild(0));
             MasmArray_Data arrData(id, "", type, 0, true);
             _currentBlock->arrayTable.AddToTable(arrData);
@@ -461,19 +520,18 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
     return paramsCode;
 }
 
-std::string CodeGenerator::VariableDeclaration(Node* const &node) {
+std::string CodeGenerator::VariableDeclaration(Node *const &node) {
     std::string code;
     std::string uid;
 
     std::pair<MASMType, std::string> type;
-    Node* pat = node->GetChild(0);
-    Node* typeNode = pat->GetChild(2);
+    Node *pat = node->GetChild(0);
+    Node *typeNode = pat->GetChild(2);
     std::string id = pat->GetChild(1)->GetData()->token.GetValue();
 
     if (typeNode == nullptr) {
         type = DetermineType(node->GetChild(1));
-    }
-    else {
+    } else {
         type = Type(typeNode);
     }
 
@@ -503,8 +561,7 @@ std::string CodeGenerator::IDAssignment(const std::string &id, Node *const &expr
     if (idData.type.first == MASMType::None) {
         type = DetermineType(expression);
         idData.type = type;
-    }
-    else
+    } else
         type = idData.type;
 
     if (expression) {
@@ -529,7 +586,7 @@ std::string CodeGenerator::ArrayDeclaration(Node *const &node) {
     std::pair<MASMType, std::string> type;
     type = Type(node->GetChild(0)->GetChild(2)->GetChild(0));
 
-    Node* countExpr = node->GetChild(0)->GetChild(2)->GetChild(1);
+    Node *countExpr = node->GetChild(0)->GetChild(2)->GetChild(1);
     auto count = static_cast<unsigned int>(Optimized(countExpr));
 
     std::string id = node->GetChild(0)->GetChild(1)->GetData()->token.GetValue();
@@ -550,7 +607,7 @@ std::string CodeGenerator::ArrayDeclaration(Node *const &node) {
 std::string CodeGenerator::ArrayAssignment(const std::string &id, Node *const &expression) {
     std::string code;
 
-    const std::vector<Node*>& expressions = expression->GetChilds();
+    const std::vector<Node *> &expressions = expression->GetChilds();
 
     for (int i = 0; i < expressions.size(); ++i) {
         code += MemberArrayAssignment(id, expressions[i], i);
@@ -559,7 +616,8 @@ std::string CodeGenerator::ArrayAssignment(const std::string &id, Node *const &e
     return code;
 }
 
-std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *const &expression, const unsigned int &ind) {
+std::string
+CodeGenerator::MemberArrayAssignment(const std::string &id, Node *const &expression, const unsigned int &ind) {
     std::string code;
 
     MasmArray_Data &arrData = GetArr(id);
@@ -568,9 +626,9 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
     std::string idMasm, esiMember;
     if (arrData.isPtr) {
         esiMember = "\tmov esi, " + arrData.id + arrData.uid + "\n";
-        idMasm = arrData.type.second + " ptr [esi + " + std::to_string(ind) + " * Type " + arrData.type.second + " ptr " + arrData.id + arrData.uid + "]";
-    }
-    else
+        idMasm = arrData.type.second + " ptr [esi + " + std::to_string(ind) + " * Type " + arrData.type.second +
+                 " ptr " + arrData.id + arrData.uid + "]";
+    } else
         idMasm = arrData.id + arrData.uid + "[" + std::to_string(ind) + " * Type " + arrData.id + arrData.uid + "]";
 
     if (expression) {
@@ -603,11 +661,13 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
             std::string memberExpr;
             code += CalculateExpression(indNode, MASMType::DWORD);
             if (arrData.isPtr) {
-                memberExpr = "[esi + eax * Type " + arrData.type.second + " ptr " + fullName + "]\n";
+                memberExpr = "[esi + ebx * Type " + arrData.type.second + " ptr " + fullName + "]";
                 code += "\tmov esi, " + fullName + "\n";
             }
             else
-                memberExpr = fullName + "[eax * Type " + fullName + "]";
+                memberExpr = fullName + "[ebx * Type " + fullName + "]";
+
+            code += "\tpop ebx\n";
             code += AssignmentFromStack(memberExpr, arrData.type.first);
         }
     }
@@ -653,12 +713,13 @@ std::string CodeGenerator::AssignmentFromStack(const std::string &id, const MASM
 std::string CodeGenerator::GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programmBlock) {
     std::string variables;
 
-    for (const auto& block : programmBlock.internalBlocks) {
-        for (const auto& idData : block.idTable.GetTable()) {
+    for (const auto &block : programmBlock.internalBlocks) {
+        for (const auto &idData : block.idTable.GetTable()) {
             variables += "\tLOCAL " + idData.id + idData.uid + ": " + idData.type.second + "\n";
         }
         for (const auto &arrData : block.arrayTable.GetTable()) {
-            variables += "\tLOCAL " + arrData.id + arrData.uid + "[" + std::to_string(arrData.elementCount) + "]: " + arrData.type.second + "\n";
+            variables += "\tLOCAL " + arrData.id + arrData.uid + "[" + std::to_string(arrData.elementCount) + "]: " +
+                         arrData.type.second + "\n";
         }
         variables += GetLocalVariables(block);
     }
@@ -671,8 +732,8 @@ std::string CodeGenerator::GroupVariableDeclaration(Node *const &node) {
     std::string id;
     std::string uid;
 
-    std::vector<Node*> variables = node->GetChild(0)->GetChilds();
-    std::vector<Node*> expressions;
+    std::vector<Node *> variables = node->GetChild(0)->GetChilds();
+    std::vector<Node *> expressions;
 
     std::pair<MASMType, std::string> type;
 
@@ -706,13 +767,114 @@ std::string CodeGenerator::FunctionInvoke(Node *const &node) {
     std::string code;
 
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
-    std::vector<Node*> params = node->GetChild(1)->GetChilds();
+    std::vector<Node *> params = node->GetChild(1)->GetChilds();
 
-    code += "\tInvoke " + id;
+    //code += "\tInvoke " + id;
 
-    for (const auto& param : params) {
+    for (const auto &param : params) {
 
     }
 
+    return code;
+}
+
+std::string CodeGenerator::LogicalOperation(Node *const &operation, const CodeGenerator::CompareType &compare,
+                                            const std::string &trueLabel, const std::string &falseLabel) {
+    std::string code;
+    std::string newLabel;
+
+    switch (operation->GetData()->token.GetType()) {
+        case TokenType::LOR:
+            newLabel = "@M" + std::to_string(_labelNum++);
+            code += LogicalOperation(operation->GetChild(0), CompareType::Direct, trueLabel, newLabel);
+            code += newLabel + ":\n";
+            code += LogicalOperation(operation->GetChild(1), compare, trueLabel, falseLabel);
+            break;
+        case TokenType::LAND:
+            newLabel = "@M" + std::to_string(_labelNum++);
+            code += LogicalOperation(operation->GetChild(0), CompareType::Reverse, newLabel, falseLabel);
+            code += newLabel + ":\n";
+            code += LogicalOperation(operation->GetChild(1), compare, trueLabel, falseLabel);
+            break;
+        case TokenType::MORE:
+        case TokenType::LESS:
+        case TokenType::ASMR:
+        case TokenType::ASLS:
+        case TokenType::NASSIG:
+        case TokenType::EQUAL:
+            code += CompareOperation(operation, compare, trueLabel, falseLabel);
+            break;
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::CompareOperation(Node* const &node, const CodeGenerator::CompareType &compare,
+                            const std::string &trueLabel, const std::string &falseLabel) {
+    std::string code;
+    MASMType type = DetermineType(node->GetChild(0)).first;
+
+    code += TryOptimizedWithPush(node->GetChild(0), type);
+    code += TryOptimizedWithPush(node->GetChild(1), type);
+
+    std::string compOperation = GetCompareOperation(node->GetData()->token.GetType(), compare);
+    std::string label = (compare == CompareType::Direct) ? trueLabel : falseLabel;
+
+    if (type == MASMType::DWORD)
+        code += "\tpop ebx\n\tpop eax\n\tcmp eax, ebx\n";
+    else
+        code += "\tFCOMPP\n\tFSTSW\n\tSAHF\n";
+
+    code += "\t" + compOperation + " " + label + "\n";
+
+    return code;
+}
+
+std::string CodeGenerator::TryOptimizedWithPush(Node* const &node, const MASMType &type) {
+    std::string code;
+
+    try {
+        float value = Optimized(node);
+        if (type == MASMType::DWORD)
+            code += "\tpush " + std::to_string(static_cast<int>(value)) + "\n";
+        else code += "\t FLD FP8(" + std::to_string(value) + ")\n";
+    }
+    catch (std::exception & error) {
+        code += CalculateExpression(node, type);
+    }
+
+    return code;
+}
+
+std::string CodeGenerator::IfExpression(Node *const &node) {
+    std::string code;
+
+    std::string trueLabel = "@M" + std::to_string(_labelNum++);
+    std::string falseLabel = "@M" + std::to_string(_labelNum++);
+
+    code += LogicalOperation(node->GetChild(0), CompareType::Reverse, trueLabel, falseLabel);
+
+    code += trueLabel + ":\n";
+    code += CheckRule(node->GetChild(1));
+    code += falseLabel + ":\n";
+
+    if (node->GetChild(2))
+        code += CheckRule(node->GetChild(2));
+
+    return code;
+}
+
+std::string CodeGenerator::LoopExpression(Node *const &node) {
+    std::string code;
+
+    std::string label = "@M" + std::to_string(_labelNum++);
+    _breakLabel = "@M" + std::to_string(_labelNum++);
+
+    code += label + ":\n";
+    code += CheckRule(node->GetChild(0));
+    code += "\tjmp " + label + "\n";
+    code += _breakLabel + ":\n";
+
+    _breakLabel.clear();
     return code;
 }

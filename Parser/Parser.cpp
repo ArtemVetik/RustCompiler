@@ -319,9 +319,6 @@ bool Parser::Analyze() {
         _tree.GetRoot()->AddChild(tmp);
         AST_Tree::DeleteNode(tmp);
     }
-    //if (!Block(tmp))
-        //throw _error;
-   // _tree.GetRoot()->AddChild(tmp);
 
     if (_currentToken == _tokens.end()) {
         _tree.Traversal();
@@ -629,8 +626,10 @@ bool Parser::ElseTail(Node *&root) {
 
     if ((*_currentToken)->GetType() == ELSE) {
         _currentToken++;
+        auto saveToken = _currentToken;
         if (IfExpr(root)) return true;
-        else if ((*_currentToken)->GetType() == LBLBR) {
+        _currentToken = saveToken;
+        if ((*_currentToken)->GetType() == LBLBR) {
             _currentToken++;
             if (Block(root)) {
                 if ((*_currentToken)->GetType() == RBLBR) {
@@ -734,9 +733,9 @@ bool Parser::BlockChecker(Node *&root) {
                                         if ((*_currentToken++)->GetType() != SEMICOLON) {
                                             _currentToken = saveToken;
                                             if (!NestedBlock(root)) {
-                                                 _currentToken = saveToken;
-                                              AST_Tree::DeleteNode(root);
-                                              return false;
+                                                _currentToken = saveToken;
+                                                AST_Tree::DeleteNode(root);
+                                                return false;
                                             }
                                         }
                                     }
@@ -1278,9 +1277,7 @@ bool Parser::FunctionDefine(Node *&root) {
                     FunctionReturn(returnTypeNode);
                     if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == LBLBR) {
                         _currentToken++;
-                        if (!Block(blockNode)) {
-                            return false;
-                        }
+                        Block(blockNode) ;
                         if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == RBLBR) {
                             _currentToken++;
                             root = new Node(new NodeData(Token("FuncDeclaration"), RuleType::FuncDeclaration));

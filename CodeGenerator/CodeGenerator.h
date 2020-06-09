@@ -16,10 +16,23 @@ private:
         float d;
     } Converter32{};
 
+    enum CompareType {
+        Reverse, Direct
+    };
+
+    struct MASMCompareOperation {
+        TokenType operation;
+        std::string directComp;
+        std::string reverseComp;
+    };
+
     AST_Tree _tree;
     Table<Function_Data> _funcTable;
     ProgramBlock<MasmID_Data, MasmArray_Data>* _currentBlock;
     std::string _template;
+    std::vector<MASMCompareOperation> _compareOperations;
+    std::string _breakLabel;
+    unsigned int _labelNum;
 
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node);
@@ -36,8 +49,11 @@ private:
     MasmID_Data& GetID(const std::string &id);
     MasmArray_Data& GetArr(const std::string &id);
     float BinaryOperation(float v1, float v2, Node* const &operation);
-    std::string BinaryOperation(Node* const &operation, const MASMType &type);
+    std::string BinaryOperation(Node* const &operation, const MASMType &type, bool isReverce = false);
     std::string UnaryOperation(Node *const &operation, const MASMType &type);
+
+    std::string LogicalOperation(Node* const &operation, const CompareType &compare, const std::string &trueLabel, const std::string &falseLabel);
+    std::string CompareOperation(Node* const &operation,const CompareType &compare, const std::string &trueLabel, const std::string &falseLabel);
 
     std::string ArrayAssignment(const std::string &id, Node *const &expression);
     std::string MemberArrayAssignment(const std::string &id, Node *const &expression, const unsigned int &ind);
@@ -46,15 +62,22 @@ private:
     std::string AssignmentByValue(const std::string &id, const MASMType &type, const float &value);
     std::string AssignmentFromStack(const std::string &id, const MASMType &type);
     float Optimized(Node* const &node);
+    std::string TryOptimizedWithPush(Node* const &node, const MASMType &type);
     uint32_t FloatToHex(float value);
     std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programBlock);
     std::pair<MASMType, std::string> DetermineType(Node *const &node);
+
+    std::string IfExpression(Node *const &pNode);
+    std::string LoopExpression(Node *const &pNode);
 
     std::string CalculateExpression(Node *const &expression, const MASMType &type);
     std::string CalculateLiteral(Node *const &node);
     std::string CalculateIdentifier(Node *const &node);
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
     std::string FunctionInvoke(Node *const &pNode);
+
+    std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType);
+    void InitCompareOperations();
 
 public:
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);

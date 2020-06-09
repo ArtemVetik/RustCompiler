@@ -15,7 +15,11 @@ private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
     AST_Tree _tree;
-    ParserError _error; // TODO errors
+    ParserError _error;
+
+    // TODO errors
+    // Examples: if discriminant << 0.0
+    // Examples: let mut array:[id32; 10]
 
     // Объявление переменных
     bool LetDecl(Node *&root);
