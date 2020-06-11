@@ -15,7 +15,7 @@ private:
     ProgramBlock<ID_Data, Array_Data> *_currentBlock;
 
     void AddSystemFunctions();
-    // TODO проверить на мемантику print
+    // TODO проверить на семантику print
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
     // TODO отформатировать порядок методов

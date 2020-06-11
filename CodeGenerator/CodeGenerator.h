@@ -22,9 +22,12 @@ private:
 
     struct MASMCompareOperation {
         TokenType operation;
-        std::string directComp;
-        std::string reverseComp;
+        std::string directCompUnsigned;
+        std::string reverseCompUnsigned;
+        std::string directCompSigned;
+        std::string reverseCompSigned;
     };
+
 
     AST_Tree _tree;
     Table<Function_Data> _funcTable;
@@ -32,7 +35,9 @@ private:
     std::string _template;
     std::vector<MASMCompareOperation> _compareOperations;
     std::string _breakLabel;
+    std::string _functionEndLabel;
     unsigned int _labelNum;
+    bool _insideCycle;
 
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node);
@@ -69,6 +74,7 @@ private:
 
     std::string IfExpression(Node *const &pNode);
     std::string LoopExpression(Node *const &pNode);
+    std::string WhileExpression(Node *const &pNode);
 
     std::string CalculateExpression(Node *const &expression, const MASMType &type);
     std::string CalculateLiteral(Node *const &node);
@@ -76,7 +82,7 @@ private:
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
     std::string FunctionInvoke(Node *const &pNode);
 
-    std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType);
+    std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType, const MASMType &type);
     void InitCompareOperations();
 
 public:

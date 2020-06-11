@@ -47,7 +47,6 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    return 0;
     /*std::string fileName = Menu();
 
     if (fileName.empty()) {

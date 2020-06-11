@@ -1,6 +1,6 @@
 #include "CodeGenerator.h"
 
-CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0) {
+CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _insideCycle(false) {
     _tree = tree;
     _funcTable = funcTable;
     _currentBlock = nullptr;
@@ -16,15 +16,15 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
 }
 
 void CodeGenerator::InitCompareOperations() {
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::MORE, "ja", "jbe"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::LESS, "jb", "jae"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASMR, "jae", "jb"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASLS, "jbe", "ja"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::NASSIG, "jne", "je"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::EQUAL, "je", "jne"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::MORE, "ja", "jbe", "jg", "jle"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::LESS, "jb", "jae", "jl", "jge"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASMR, "jae", "jb", "jge", "jl"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASLS, "jbe", "ja", "jle", "jg"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::NASSIG, "jne", "je", "jne", "je"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::EQUAL, "je", "jne", "je", "jne"});
 }
 
-std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const CodeGenerator::CompareType &compareType) {
+std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const CodeGenerator::CompareType &compareType, const MASMType &type) {
     auto foundOperation = std::find_if(_compareOperations.cbegin(), _compareOperations.cend(),
     [&operation](const MASMCompareOperation &compOperation)
     {
@@ -35,9 +35,9 @@ std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const
 
     switch (compareType) {
         case Reverse:
-            return foundOperation->reverseComp;
+            return type == MASMType::DWORD ? foundOperation->reverseCompSigned : foundOperation->reverseCompUnsigned;
         case Direct:
-            return foundOperation->directComp;
+            return type == MASMType::DWORD ? foundOperation->directCompSigned : foundOperation->directCompUnsigned;
         default:
             throw std::bad_function_call();
     }
@@ -88,7 +88,9 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
             rule = IfExpression(node);
             break;
         case RuleType::LoopExpr:
+            _insideCycle = true;
             rule = LoopExpression(node);
+            _insideCycle = false;
             break;
         case RuleType::AssignmentExpression:
             if (node->GetChild(0)->GetData()->ruleType == RuleType::Identifier)
@@ -98,6 +100,9 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
                                              node->GetChild(1), node->GetChild(0)->GetChild(1)->GetChild(0));
             break;
         case RuleType::WhileExpr:
+            _insideCycle = true;
+            rule = WhileExpression(node);
+            _insideCycle = false;
             break;
         case RuleType::Break:
             if (!_breakLabel.empty())
@@ -111,6 +116,8 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
         case RuleType::FuncInvoke:
             break;
         case RuleType::Return:
+            if (!_functionEndLabel.empty())
+                rule = "\tjmp " + _functionEndLabel + "\n";
             break;
         case RuleType::Block:
             _currentBlock = &(_currentBlock->AddBlock());
@@ -137,6 +144,7 @@ float CodeGenerator::Optimized(Node *const &node) {
         case RuleType::BinaryExpression:
             return BinaryOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
         case RuleType::Identifier:
+            if (_insideCycle) throw std::bad_function_call();
             id = node->GetData()->token.GetValue();
             if (HasIDInUpper(id)) {
                 MasmID_Data idData = GetID(id);
@@ -149,6 +157,7 @@ float CodeGenerator::Optimized(Node *const &node) {
             else if (node->GetData()->token.GetValue() == "false") return 0.0f;
             return std::stof(node->GetData()->token.GetValue());
         case RuleType::MemberExpression:
+            if (_insideCycle) throw std::bad_function_call();
             id = node->GetChild(0)->GetData()->token.GetValue();
             ind = Optimized(node->GetChild(1)->GetChild(0));
             if (HasArrInUpper(id)) {
@@ -158,6 +167,7 @@ float CodeGenerator::Optimized(Node *const &node) {
             }
             throw std::bad_function_call();
         case RuleType::InternalFuncInvoke:
+            if (_insideCycle) throw std::bad_function_call();
             funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
             if (funcId != "sqrt")
                 throw std::bad_function_call();
@@ -267,7 +277,7 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
     TokenType opType = operation->GetData()->token.GetType();
 
     if (opType != TokenType::PLUS && opType != TokenType::MULT) {
-        if (isReverce && type == MASMType::REAL8)
+        if (isReverce && type == MASMType::REAL8 && opType != TokenType::MOD)
             code += "\tFXCH\n";
         else if (isReverce && type == MASMType::DWORD)
             code += "\txchg eax, ebx\n";
@@ -304,7 +314,7 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
             if (type == MASMType::DWORD)
                 code += popTemplate + "\txor edx, edx\n\tidiv ebx\n\tpush edx\n";
             else if (type == MASMType::REAL8) {
-                code += "\t\tFPREM\n";
+                code += "\tFPREM\n\tFSTP st(1)\n";
             }
             break;
         default:
@@ -475,6 +485,9 @@ std::pair<MASMType, std::string> CodeGenerator::Type(Node *const &typeNode) {
 }
 
 std::string CodeGenerator::FunctionDeclaration(Node *const &node) {
+    _functionEndLabel = "@M" + std::to_string(_labelNum++);
+    std::cout << _functionEndLabel << std::endl;
+
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
     std::string params = FunctionParams(node->GetChild(1));
     std::string block = CheckRule(node->GetChild(3));
@@ -483,12 +496,14 @@ std::string CodeGenerator::FunctionDeclaration(Node *const &node) {
     while (tmp->upperBlock)
         tmp = tmp->upperBlock;
 
-    std::string _localVariables = GetLocalVariables(*tmp);
-
-    std::string function = id + " PROC " + params + "\n" + _localVariables + block + id + " ENDP";
+    std::string localVariables = GetLocalVariables(*tmp);
+    std::string funcEnd = (id == "main") ? "\tinkey\n\tcall ExitProcess\n" : "\tret\n";
+    std::string function = id + " PROC " + params + "\n" + localVariables + block + _functionEndLabel + ":\n" + funcEnd +  id + " ENDP";
     if (id == "main") function += "\nEND " + id;
 
     function += "\n";
+
+    _functionEndLabel.clear();
     return function;
 }
 
@@ -817,13 +832,13 @@ std::string CodeGenerator::CompareOperation(Node* const &node, const CodeGenerat
     code += TryOptimizedWithPush(node->GetChild(0), type);
     code += TryOptimizedWithPush(node->GetChild(1), type);
 
-    std::string compOperation = GetCompareOperation(node->GetData()->token.GetType(), compare);
+    std::string compOperation = GetCompareOperation(node->GetData()->token.GetType(), compare, type);
     std::string label = (compare == CompareType::Direct) ? trueLabel : falseLabel;
 
     if (type == MASMType::DWORD)
         code += "\tpop ebx\n\tpop eax\n\tcmp eax, ebx\n";
     else
-        code += "\tFCOMPP\n\tFSTSW\n\tSAHF\n";
+        code += "\tFXCH\n\tFCOMPP\n\tFSTSW ax\n\tSAHF\n";
 
     code += "\t" + compOperation + " " + label + "\n";
 
@@ -837,7 +852,7 @@ std::string CodeGenerator::TryOptimizedWithPush(Node* const &node, const MASMTyp
         float value = Optimized(node);
         if (type == MASMType::DWORD)
             code += "\tpush " + std::to_string(static_cast<int>(value)) + "\n";
-        else code += "\t FLD FP8(" + std::to_string(value) + ")\n";
+        else code += "\tFLD FP8(" + std::to_string(value) + ")\n";
     }
     catch (std::exception & error) {
         code += CalculateExpression(node, type);
@@ -873,6 +888,23 @@ std::string CodeGenerator::LoopExpression(Node *const &node) {
     code += label + ":\n";
     code += CheckRule(node->GetChild(0));
     code += "\tjmp " + label + "\n";
+    code += _breakLabel + ":\n";
+
+    _breakLabel.clear();
+    return code;
+}
+
+std::string CodeGenerator::WhileExpression(Node *const &node) {
+    std::string code;
+
+    std::string whileLabel = "@M" + std::to_string(_labelNum++);
+    std::string blockLabel = "@M" + std::to_string(_labelNum++);
+    _breakLabel = "@M" + std::to_string(_labelNum++);
+
+    code += whileLabel + ":\n";
+    code += LogicalOperation(node->GetChild(0), CompareType::Reverse, blockLabel, _breakLabel);
+    code += CheckRule(node->GetChild(1));
+    code += "\tjmp " + whileLabel + "\n";
     code += _breakLabel + ":\n";
 
     _breakLabel.clear();
