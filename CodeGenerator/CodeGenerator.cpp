@@ -1,6 +1,6 @@
 #include "CodeGenerator.h"
 
-CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0) {
+CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _rulesCount(5) {
     _tree = tree;
     _funcTable = funcTable;
     _currentBlock = nullptr;
@@ -48,6 +48,11 @@ uint32_t CodeGenerator::FloatToHex(float value) {
     return Converter32.uu;
 }
 
+uint64_t CodeGenerator::DoubleToHex(double value) {
+    Converter64.d = value;
+    return Converter64.uu;
+}
+
 void CodeGenerator::Generate() {
     std::string code = _template + Traversal(_tree.GetRoot());
     std::cout << code << std::endl;
@@ -89,7 +94,9 @@ std::string CodeGenerator::CheckRule(Node *const &node, const std::string &exitL
             break;
         case RuleType::LoopExpr:
             _rules.push(RulesForLabels::Loop);
+            _rulesCount[RulesForLabels::Loop]++;
             rule = LoopExpression(node);
+            _rulesCount[RulesForLabels::Loop]--;
             _rules.pop();
             break;
         case RuleType::AssignmentExpression:
@@ -101,7 +108,9 @@ std::string CodeGenerator::CheckRule(Node *const &node, const std::string &exitL
             break;
         case RuleType::WhileExpr:
             _rules.push(RulesForLabels::While);
+            _rulesCount[RulesForLabels::While]++;
             rule = WhileExpression(node);
+            _rulesCount[RulesForLabels::While]--;
             _rules.pop();
             break;
         case RuleType::Break:
@@ -111,6 +120,9 @@ std::string CodeGenerator::CheckRule(Node *const &node, const std::string &exitL
             _currentBlock = new ProgramBlock<MasmID_Data, MasmArray_Data>();
             rule = FunctionDeclaration(node);
             ProgramBlock<MasmID_Data, MasmArray_Data>::DeleteBlock(_currentBlock);
+            break;
+        case RuleType::Print:
+            rule = Print(node);
             break;
         case RuleType::FuncInvoke:
             break;
@@ -129,7 +141,6 @@ std::string CodeGenerator::CheckRule(Node *const &node, const std::string &exitL
 
     if (!exitLabel.empty())
         rule += "\tjmp " + exitLabel + "\n";
-
     return rule;
 }
 
@@ -137,7 +148,7 @@ float CodeGenerator::Optimized(Node *const &node) {
     std::string id;
     std::string funcId;
     float ind;
-    bool insideCycle = _rules.empty() ? false :  _rules.top() == RulesForLabels::While || _rules.top() == RulesForLabels::Loop;
+    bool insideCycle = _rulesCount[RulesForLabels::While] != 0 || _rulesCount[RulesForLabels::Loop] != 0;
 
     switch (node->GetData()->ruleType) {
         case RuleType::UnaryExpession:
@@ -292,7 +303,7 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
         case TokenType::PLUS:
             if (type == MASMType::DWORD)
                 code += popTemplate + "\tadd eax, ebx\n\tpush eax\n";
-            else
+            else if (type == MASMType::REAL8)
                 code += "\tFADD\n";
             break;
         case TokenType::MINUS:
@@ -581,7 +592,8 @@ std::string CodeGenerator::IDAssignment(const std::string &id, Node *const &expr
     if (idData.type.first == MASMType::None) {
         type = DetermineType(expression);
         idData.type = type;
-    } else
+    }
+    else
         type = idData.type;
 
     if (expression) {
@@ -926,5 +938,116 @@ std::string CodeGenerator::WhileExpression(Node *const &node) {
     code += _breakLabels.top() + ":\n";
 
     _breakLabels.pop();
+    return code;
+}
+
+std::string CodeGenerator::Print(Node *const &node) {
+    std::string code;
+    std::stack<std::string> parameters;
+
+    std::string fmtString = node->GetChild(0)->GetData()->token.GetValue();
+    std::vector<Node*> exprList = node->GetChild(1)->GetChilds();
+
+    for (const auto& expr : exprList) {
+        if (expr->GetData()->ruleType == RuleType::Identifier) {
+            if (HasIDInUpper(expr->GetData()->token.GetValue())) {
+                MasmID_Data idData = GetID(expr->GetData()->token.GetValue());
+                fmtString = FmtString(fmtString, idData.type.first);
+                if (idData.type.first == MASMType::DWORD)
+                    parameters.push("\tpush " + expr->GetData()->token.GetValue() + "\n");
+                else if (idData.type.first == MASMType::REAL8) {
+                    parameters.push("\tpush DWORD PTR " + idData.id + idData.uid + "\n");
+                    parameters.push("\tpush DWORD PTR " + idData.id + idData.uid + " + 4\n");
+                }
+
+            }
+            else if (HasArrInUpper(expr->GetData()->token.GetValue())) {
+                MasmArray_Data arrayData = GetArr(expr->GetData()->token.GetValue());
+                int posFormatPlace = fmtString.find("{:?}");
+                code += CallPrintf(fmtString.substr(0, posFormatPlace) + "\"", parameters);
+                parameters = std::stack<std::string>();
+                code += PrintArray(arrayData);
+                fmtString = "\"" + fmtString.substr(posFormatPlace+4, fmtString.size() - posFormatPlace - 4);
+            }
+
+        }
+        else if (expr->GetData()->ruleType == RuleType::Literal) {
+            MASMType type = (expr->GetData()->token.GetType() == TokenType::INTNUM) ? MASMType::DWORD : MASMType::REAL8;
+            fmtString = FmtString(fmtString, type);
+            if (type == MASMType::DWORD)
+                parameters.push("\tpush " + expr->GetData()->token.GetValue() + "\n");
+            else if (type == MASMType::REAL8) {
+                std::pair<std::string, std::string> real8Pair = PushReal8(expr);
+                parameters.push(real8Pair.second);
+                parameters.push(real8Pair.first);
+            }
+        }
+    }
+
+    code += CallPrintf(fmtString, parameters);
+    return code;
+}
+
+std::string CodeGenerator::FmtString(const std::string &sourceStr, const MASMType &type) {
+    std::string fmtString = sourceStr;
+    int pos = sourceStr.find("{}");
+    fmtString.replace(pos, 2, (type == MASMType::DWORD) ? "%d" : "%.2f");
+
+    return fmtString;
+}
+
+std::string CodeGenerator::PrintArray(const MasmArray_Data &arrayData) {
+    std::string code;
+    std::string templatePrintfString = arrayData.type.second + " ptr " + arrayData.id + arrayData.uid +
+                                                        "[ebx * Type " + arrayData.id + arrayData.uid + "]";
+
+    if (arrayData.isPtr) {
+        code += "\tmov esi, " + arrayData.id + arrayData.uid + "\n";
+        templatePrintfString = arrayData.type.second + " ptr [esi + ebx * Type " + arrayData.id + arrayData.uid + "]";
+    }
+    code += "\tmov ebx, 0\n\tprintf(\"[\")\n";
+    code += "\t.while (ebx < " + std::to_string(arrayData.elementCount) + ")\n";
+    code += "\t\tpushad\n";
+    code += "\t\tprintf(\"" + std::string(((arrayData.type.first == MASMType::DWORD) ? "%d " : "%.2f ")) + "\", " + templatePrintfString + ")\n";
+    code += "\t\tpopad\n\t\tinc ebx\n\t.endw\n";
+    code += "\tprintf(\"]\")\n";
+
+    return code;
+}
+
+std::string CodeGenerator::CallPrintf(const std::string &fmtString, std::stack<std::string> parameters) {
+    std::string code;
+
+    code += "\tpushad\n";
+
+    int paramSize = parameters.size();
+
+    while (!parameters.empty()) {
+        code += parameters.top();
+        parameters.pop();
+    }
+
+    code += "\tprintf(" + fmtString + ")\n";
+
+    while (paramSize > 0) {
+        code += "\tpop eax\n";
+        paramSize--;
+    }
+
+    code += "\tpopad\n";
+
+    return code;
+}
+
+std::pair<std::string, std::string> CodeGenerator::PushReal8(Node* const &node) {
+    std::pair<std::string, std::string> code;
+
+    double value = std::stod(node->GetData()->token.GetValue());
+    std::stringstream stream;
+    stream << std::hex << DoubleToHex(value);
+    std::string hexStr = (value < 0) ? "0" : "";
+    code.first = "\tpush " + hexStr + stream.str().substr(0, 8) + "\n";
+    code.second = "\tpush " + stream.str().substr(7, 8) + "\n";
+
     return code;
 }

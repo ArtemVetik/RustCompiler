@@ -2,6 +2,7 @@
 #define RUSTCOMPILER_CODEGENERATOR_H
 
 #include <functional>
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <stack>
@@ -17,8 +18,13 @@ private:
         float d;
     } Converter32{};
 
+    union {
+        uint64_t uu;
+        double d;
+    } Converter64{};
+
     enum RulesForLabels {
-        While, Loop, If, Else, Block
+        While = 0, Loop, If, Else, Block
     };
 
     enum CompareType {
@@ -40,8 +46,10 @@ private:
     std::vector<MASMCompareOperation> _compareOperations;
     std::string _functionEndLabel;
     std::stack<std::string> _breakLabels;
+    unsigned int _labelNum;
     std::stack<std::string> _ifEndLabels;
     std::stack<RulesForLabels> _rules;
+    std::vector<int> _rulesCount;
 
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
@@ -73,18 +81,25 @@ private:
     float Optimized(Node* const &node);
     std::string TryOptimizedWithPush(Node* const &node, const MASMType &type);
     uint32_t FloatToHex(float value);
+    uint64_t DoubleToHex(double value);
     std::string GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programBlock);
     std::pair<MASMType, std::string> DetermineType(Node *const &node);
 
-    std::string IfExpression(Node *const &pNode);
-    std::string LoopExpression(Node *const &pNode);
-    std::string WhileExpression(Node *const &pNode);
+    std::string Print(Node* const &node);
+    std::string FmtString(const std::string &sourceStr, const MASMType &type);
+    std::string PrintArray(const MasmArray_Data &arrayData);
+    std::string CallPrintf(const std::string &fmtString, std::stack<std::string> parameters);
+
+    std::string IfExpression(Node *const &Node);
+    std::string LoopExpression(Node *const &Node);
+    std::string WhileExpression(Node *const &Node);
 
     std::string CalculateExpression(Node *const &expression, const MASMType &type);
     std::string CalculateLiteral(Node *const &node);
     std::string CalculateIdentifier(Node *const &node);
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
     std::string FunctionInvoke(Node *const &pNode);
+    std::pair<std::string, std::string> PushReal8(Node* const &node);
 
     std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType, const MASMType &type);
     void InitCompareOperations();
