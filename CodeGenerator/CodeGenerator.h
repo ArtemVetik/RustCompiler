@@ -4,6 +4,7 @@
 #include <functional>
 #include <cmath>
 #include <sstream>
+#include <stack>
 #include "../AST_Tree/AST_Tree.h"
 #include "../Semantics/ProgramBlock.h"
 #include "../Lexer/Token.h"
@@ -15,6 +16,10 @@ private:
         uint32_t uu;
         float d;
     } Converter32{};
+
+    enum RulesForLabels {
+        While, Loop, If, Else, Block
+    };
 
     enum CompareType {
         Reverse, Direct
@@ -28,19 +33,18 @@ private:
         std::string reverseCompSigned;
     };
 
-
     AST_Tree _tree;
     Table<Function_Data> _funcTable;
     ProgramBlock<MasmID_Data, MasmArray_Data>* _currentBlock;
     std::string _template;
     std::vector<MASMCompareOperation> _compareOperations;
-    std::string _breakLabel;
     std::string _functionEndLabel;
-    unsigned int _labelNum;
-    bool _insideCycle;
+    std::stack<std::string> _breakLabels;
+    std::stack<std::string> _ifEndLabels;
+    std::stack<RulesForLabels> _rules;
 
     std::string Traversal(Node* const &root);
-    std::string CheckRule(Node* const &node);
+    std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
 
     std::string FunctionDeclaration(Node* const &node);
     std::string FunctionParams(Node* const &node);

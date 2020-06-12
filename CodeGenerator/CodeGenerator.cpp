@@ -1,6 +1,6 @@
 #include "CodeGenerator.h"
 
-CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _insideCycle(false) {
+CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0) {
     _tree = tree;
     _funcTable = funcTable;
     _currentBlock = nullptr;
@@ -67,7 +67,7 @@ std::string CodeGenerator::Traversal(Node *const &root) {
     return code;
 }
 
-std::string CodeGenerator::CheckRule(Node *const &node) {
+std::string CodeGenerator::CheckRule(Node *const &node, const std::string &exitLabel) {
     if (node == nullptr)
         return "";
 
@@ -88,9 +88,9 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
             rule = IfExpression(node);
             break;
         case RuleType::LoopExpr:
-            _insideCycle = true;
+            _rules.push(RulesForLabels::Loop);
             rule = LoopExpression(node);
-            _insideCycle = false;
+            _rules.pop();
             break;
         case RuleType::AssignmentExpression:
             if (node->GetChild(0)->GetData()->ruleType == RuleType::Identifier)
@@ -100,13 +100,12 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
                                              node->GetChild(1), node->GetChild(0)->GetChild(1)->GetChild(0));
             break;
         case RuleType::WhileExpr:
-            _insideCycle = true;
+            _rules.push(RulesForLabels::While);
             rule = WhileExpression(node);
-            _insideCycle = false;
+            _rules.pop();
             break;
         case RuleType::Break:
-            if (!_breakLabel.empty())
-                rule = "\tjmp " + _breakLabel + "\n";
+            rule = "\tjmp " + _breakLabels.top() + "\n";
             break;
         case RuleType::FuncDeclaration:
             _currentBlock = new ProgramBlock<MasmID_Data, MasmArray_Data>();
@@ -120,11 +119,16 @@ std::string CodeGenerator::CheckRule(Node *const &node) {
                 rule = "\tjmp " + _functionEndLabel + "\n";
             break;
         case RuleType::Block:
+            _rules.push(RulesForLabels::Block);
             _currentBlock = &(_currentBlock->AddBlock());
             rule = Traversal(node);
             _currentBlock = _currentBlock->upperBlock;
+            _rules.pop();
             break;
     }
+
+    if (!exitLabel.empty())
+        rule += "\tjmp " + exitLabel + "\n";
 
     return rule;
 }
@@ -133,6 +137,7 @@ float CodeGenerator::Optimized(Node *const &node) {
     std::string id;
     std::string funcId;
     float ind;
+    bool insideCycle = _rules.empty() ? false :  _rules.top() == RulesForLabels::While || _rules.top() == RulesForLabels::Loop;
 
     switch (node->GetData()->ruleType) {
         case RuleType::UnaryExpession:
@@ -144,7 +149,7 @@ float CodeGenerator::Optimized(Node *const &node) {
         case RuleType::BinaryExpression:
             return BinaryOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
         case RuleType::Identifier:
-            if (_insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw std::bad_function_call();
             id = node->GetData()->token.GetValue();
             if (HasIDInUpper(id)) {
                 MasmID_Data idData = GetID(id);
@@ -157,7 +162,7 @@ float CodeGenerator::Optimized(Node *const &node) {
             else if (node->GetData()->token.GetValue() == "false") return 0.0f;
             return std::stof(node->GetData()->token.GetValue());
         case RuleType::MemberExpression:
-            if (_insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw std::bad_function_call();
             id = node->GetChild(0)->GetData()->token.GetValue();
             ind = Optimized(node->GetChild(1)->GetChild(0));
             if (HasArrInUpper(id)) {
@@ -167,7 +172,7 @@ float CodeGenerator::Optimized(Node *const &node) {
             }
             throw std::bad_function_call();
         case RuleType::InternalFuncInvoke:
-            if (_insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw std::bad_function_call();
             funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
             if (funcId != "sqrt")
                 throw std::bad_function_call();
@@ -485,8 +490,8 @@ std::pair<MASMType, std::string> CodeGenerator::Type(Node *const &typeNode) {
 }
 
 std::string CodeGenerator::FunctionDeclaration(Node *const &node) {
+    _labelNum = 0;
     _functionEndLabel = "@M" + std::to_string(_labelNum++);
-    std::cout << _functionEndLabel << std::endl;
 
     std::string id = node->GetChild(0)->GetData()->token.GetValue();
     std::string params = FunctionParams(node->GetChild(1));
@@ -864,17 +869,30 @@ std::string CodeGenerator::TryOptimizedWithPush(Node* const &node, const MASMTyp
 std::string CodeGenerator::IfExpression(Node *const &node) {
     std::string code;
 
+    if (_rules.top() != RulesForLabels::Else) {
+        _rules.push(RulesForLabels::If);
+        _ifEndLabels.push("@M" + std::to_string(_labelNum++));
+    }
+
     std::string trueLabel = "@M" + std::to_string(_labelNum++);
     std::string falseLabel = "@M" + std::to_string(_labelNum++);
 
     code += LogicalOperation(node->GetChild(0), CompareType::Reverse, trueLabel, falseLabel);
 
     code += trueLabel + ":\n";
-    code += CheckRule(node->GetChild(1));
+    code += CheckRule(node->GetChild(1), _ifEndLabels.top());
     code += falseLabel + ":\n";
 
+    _rules.push(RulesForLabels::Else);
     if (node->GetChild(2))
         code += CheckRule(node->GetChild(2));
+    _rules.pop();
+
+    if (_rules.top() != RulesForLabels::Else) {
+        code += _ifEndLabels.top() + ":\n";
+        _ifEndLabels.pop();
+        _rules.pop();
+    }
 
     return code;
 }
@@ -883,14 +901,14 @@ std::string CodeGenerator::LoopExpression(Node *const &node) {
     std::string code;
 
     std::string label = "@M" + std::to_string(_labelNum++);
-    _breakLabel = "@M" + std::to_string(_labelNum++);
+    _breakLabels.push("@M" + std::to_string(_labelNum++));
 
     code += label + ":\n";
     code += CheckRule(node->GetChild(0));
     code += "\tjmp " + label + "\n";
-    code += _breakLabel + ":\n";
+    code += _breakLabels.top() + ":\n";
 
-    _breakLabel.clear();
+    _breakLabels.pop();
     return code;
 }
 
@@ -899,14 +917,14 @@ std::string CodeGenerator::WhileExpression(Node *const &node) {
 
     std::string whileLabel = "@M" + std::to_string(_labelNum++);
     std::string blockLabel = "@M" + std::to_string(_labelNum++);
-    _breakLabel = "@M" + std::to_string(_labelNum++);
+    _breakLabels.push("@M" + std::to_string(_labelNum++));
 
     code += whileLabel + ":\n";
-    code += LogicalOperation(node->GetChild(0), CompareType::Reverse, blockLabel, _breakLabel);
+    code += LogicalOperation(node->GetChild(0), CompareType::Reverse, blockLabel, _breakLabels.top());
     code += CheckRule(node->GetChild(1));
     code += "\tjmp " + whileLabel + "\n";
-    code += _breakLabel + ":\n";
+    code += _breakLabels.top() + ":\n";
 
-    _breakLabel.clear();
+    _breakLabels.pop();
     return code;
 }

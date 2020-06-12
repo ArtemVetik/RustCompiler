@@ -55,11 +55,11 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             break;
         case RuleType::WhileExpr:
             Condition(node->GetChild(0));
-            Traversal(node->GetChild(1));
+            CheckRule(node->GetChild(1));
             break;
         case RuleType::IfExpr:
             Condition(node->GetChild(0));
-            Traversal(node->GetChild(1));
+            CheckRule(node->GetChild(1));
             if (node->GetChild(2)) CheckRule(node->GetChild(2));
             break;
         case RuleType::FuncDeclaration:
