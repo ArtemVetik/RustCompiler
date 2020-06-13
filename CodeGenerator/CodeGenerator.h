@@ -56,6 +56,7 @@ private:
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
 
     std::string FunctionDeclaration(Node* const &node);
+    std::string ReturnExpression(Node* const &node);
     std::string FunctionParams(Node* const &node);
     std::pair<MASMType, std::string> Type(Node* const &typeNode);
     std::string VariableDeclaration(Node* const &node);
@@ -101,6 +102,7 @@ private:
     std::string CalculateMemberExpression(Node *const &node, const MASMType &type);
     std::string FunctionInvoke(Node *const &pNode);
     std::pair<std::string, std::string> PushReal8(Node* const &node);
+    std::pair<std::string, std::string> PushReal8(double value);
 
     std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType, const MASMType &type);
     void InitCompareOperations();

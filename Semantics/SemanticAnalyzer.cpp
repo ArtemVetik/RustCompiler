@@ -451,9 +451,9 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
         if (param->GetData()->ruleType == RuleType::ArrayArg)
             paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
         else if (param->GetData()->ruleType == RuleType::Identifier) {
-            if (_currentBlock->arrayTable.Has(param->GetData()->token.GetValue())) {
+            if (HasArrInUpper(param->GetData()->token.GetValue(), param)) {
                 if (!GetArr(param->GetData()->token.GetValue(), param).isMutable)
-                    throw Err::CriticalError("Can not borrow immutable a array as mutable", param);
+                    throw Err::CriticalError("Can not borrow immutable array as mutable", param);
                 paramTypes.emplace_back(std::make_pair(CanAccessArray(param), true));
             }
             else {
