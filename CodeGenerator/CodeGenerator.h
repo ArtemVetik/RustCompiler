@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <sstream>
 #include <stack>
@@ -45,8 +46,8 @@ private:
     std::string _template;
     std::vector<MASMCompareOperation> _compareOperations;
     std::string _functionEndLabel;
-    std::stack<std::string> _breakLabels;
     unsigned int _labelNum;
+    std::stack<std::string> _breakLabels;
     std::stack<std::string> _ifEndLabels;
     std::stack<RulesForLabels> _rules;
     std::vector<int> _rulesCount;

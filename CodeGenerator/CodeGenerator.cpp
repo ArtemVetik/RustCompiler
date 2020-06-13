@@ -4,7 +4,7 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
     _tree = tree;
     _funcTable = funcTable;
     _currentBlock = nullptr;
-    _template = ".386\n"
+    _template = "\n.386\n" // TODO добавить вывод времени (chrono)
                 ".model flat, stdcall\n"
                 ".stack 4096h\n"
                 "\n"
@@ -980,6 +980,28 @@ std::string CodeGenerator::Print(Node *const &node) {
                 std::pair<std::string, std::string> real8Pair = PushReal8(expr);
                 parameters.push(real8Pair.second);
                 parameters.push(real8Pair.first);
+            }
+        }
+        else if (expr->GetData()->ruleType == RuleType::MemberExpression || expr->GetData()->ruleType == RuleType::InternalFuncInvoke ||
+                 expr->GetData()->ruleType == RuleType::BinaryExpression || expr->GetData()->ruleType == RuleType::UnaryExpession) {
+            MASMType type = DetermineType(expr).first;
+            fmtString = FmtString(fmtString, type);
+            try {
+                float value = Optimized(expr);
+                if (type == MASMType::DWORD)
+                    parameters.push("\tpush " + std::to_string(static_cast<int>(value)) + "\n");
+                else if (type == MASMType::REAL8) {
+                    parameters.push("\tFLD FP8(" + std::to_string(value) + ")\n\tFSTP QWORD PTR [ebp]\n\tpush [ebp+4]\n\tpush [ebp]\n");
+                    parameters.push("");
+                }
+            }
+            catch (std::exception &err) {
+                if (type == MASMType::DWORD)
+                    parameters.push(CalculateExpression(expr, type));
+                else if (type == MASMType::REAL8) {
+                    parameters.push(CalculateExpression(expr, type) + "\tFSTP QWORD PTR [ebp]\n\tpush [ebp+4]\n\tpush [ebp]\n");
+                    parameters.push("");
+                }
             }
         }
     }
