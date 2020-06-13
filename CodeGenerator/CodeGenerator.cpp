@@ -164,6 +164,10 @@ float CodeGenerator::Optimized(Node *const &node) {
             return Optimized(node->GetChild(0));
         case RuleType::BinaryExpression:
             return BinaryOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
+        case RuleType::Literal:
+            if (node->GetData()->token.GetValue() == "true") return 1.0f;
+            else if (node->GetData()->token.GetValue() == "false") return 0.0f;
+            return std::stof(node->GetData()->token.GetValue());
         case RuleType::Identifier:
             if (insideCycle) throw std::bad_function_call();
             id = node->GetData()->token.GetValue();
@@ -173,10 +177,6 @@ float CodeGenerator::Optimized(Node *const &node) {
                     return idData.value;
             }
             throw std::bad_function_call();
-        case RuleType::Literal:
-            if (node->GetData()->token.GetValue() == "true") return 1.0f;
-            else if (node->GetData()->token.GetValue() == "false") return 0.0f;
-            return std::stof(node->GetData()->token.GetValue());
         case RuleType::MemberExpression:
             if (insideCycle) throw std::bad_function_call();
             id = node->GetChild(0)->GetData()->token.GetValue();
@@ -303,14 +303,14 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
 
 std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMType &type, bool isReverce) {
     std::string code;
-    std::string popTemplate= "\tpop ebx\n\tpop eax\n";
+    std::string popTemplate = "\tpop ebx\n\tpop eax\n";
     TokenType opType = operation->GetData()->token.GetType();
 
     if (opType != TokenType::PLUS && opType != TokenType::MULT) {
         if (isReverce && type == MASMType::REAL8 && opType != TokenType::MOD)
             code += "\tFXCH\n";
         else if (isReverce && type == MASMType::DWORD)
-            code += "\txchg eax, ebx\n";
+            popTemplate += "\txchg eax, ebx\n";
     }
 
     switch (opType) {
@@ -460,7 +460,7 @@ bool CodeGenerator::HasIDInUpper(const std::string &id) {
         if (tmp->idTable.Has(id))
             return true;
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     return false;
 }
@@ -472,7 +472,7 @@ bool CodeGenerator::HasArrInUpper(const std::string &id) {
         if (tmp->arrayTable.Has(id))
             return true;
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     return false;
 }
@@ -707,6 +707,8 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
             MasmArray_Data &arrData = GetArr(id);
             std::string fullName = arrData.id + arrData.uid;
             std::string memberExpr;
+
+            code += CalculateExpression(expression, DetermineType(expression).first);
             code += CalculateExpression(indNode, MASMType::DWORD);
             if (arrData.isPtr) {
                 memberExpr = "[esi + ebx * Type " + arrData.type.second + " ptr " + fullName + "]";
@@ -831,8 +833,12 @@ std::string CodeGenerator::FunctionInvoke(Node *const &node) {
             }
         }
         catch (std::exception &err) {
-            if (HasArrInUpper(param->GetData()->token.GetValue())) {
-                MasmArray_Data arrayData = GetArr(param->GetData()->token.GetValue());
+            if (param->GetData()->ruleType == RuleType::ArrayArg || HasArrInUpper(param->GetData()->token.GetValue())) {
+                MasmArray_Data arrayData;
+                if (param->GetData()->ruleType == RuleType::ArrayArg)
+                    arrayData = GetArr(param->GetChild(2)->GetData()->token.GetValue());
+                else
+                    arrayData = GetArr(param->GetData()->token.GetValue());
                 if (arrayData.isPtr)
                     parameters.push("\tpush " + arrayData.id + arrayData.uid + "\n");
                 else

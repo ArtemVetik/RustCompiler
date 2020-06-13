@@ -522,7 +522,7 @@ bool SemanticAnalyzer::HasIDInUpper(const std::string &id, Node *const &root) {
         if (tmp->idTable.Has(id))
             return true;
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     return false;
 }
@@ -534,7 +534,7 @@ bool SemanticAnalyzer::HasArrInUpper(const std::string &id, Node *const &root) {
         if (tmp->arrayTable.Has(id))
             return true;
         tmp = tmp->upperBlock;
-    } while (tmp->upperBlock);
+    } while (tmp);
 
     return false;
 }
@@ -603,7 +603,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
 
     functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
-    Traversal(node->GetChild(3));
+    CheckRule(node->GetChild(3));
 }
 
 void SemanticAnalyzer::AddSystemFunctions() {
