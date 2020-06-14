@@ -67,6 +67,9 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             FunctionDeclaration(node);
             _currentBlock = _currentBlock->upperBlock;
             break;
+        case RuleType::Print:
+            Print(node);
+            break;
         case RuleType::FuncInvoke:
             FunctionInvoke(node);
             break;
@@ -448,8 +451,11 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
     for (const auto &param : paramsNode) {
         if (param == nullptr)
             continue;
-        if (param->GetData()->ruleType == RuleType::ArrayArg)
+        if (param->GetData()->ruleType == RuleType::ArrayArg) {
+            if (!GetArr(param->GetChild(2)->GetData()->token.GetValue(), param).isMutable)
+                throw Err::CriticalError("Can not borrow immutable array as mutable", param->GetChild(2));
             paramTypes.emplace_back(std::make_pair(CanAccessArray(param->GetChild(2)), true));
+        }
         else if (param->GetData()->ruleType == RuleType::Identifier) {
             if (HasArrInUpper(param->GetData()->token.GetValue(), param)) {
                 if (!GetArr(param->GetData()->token.GetValue(), param).isMutable)
@@ -603,7 +609,11 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
 
     functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
+
     CheckRule(node->GetChild(3));
+
+    if (node->GetChild(2) != nullptr && !_functionTable.Back().hasReturn)
+        throw Err::FunctionReturnTypeError(_functionTable.Back().type.ToString(), "None", node->GetChild(2));
 }
 
 void SemanticAnalyzer::AddSystemFunctions() {
@@ -646,11 +656,13 @@ Array_Data SemanticAnalyzer::GetArrayDefineParameter(Node *const &param) {
 }
 
 void SemanticAnalyzer::ReturnExpression(Node* const &returnNode) {
+    _functionTable.GetData(_functionTable.Back().id).hasReturn = true;
     TypeData funcReturnType = _functionTable.Back().type;
     TypeData returnType = returnNode->GetChild(0) != nullptr ? Expr(returnNode->GetChild(0)).first : TypeData();
 
-    if (funcReturnType != returnType)
+    if (funcReturnType != returnType) {
         throw Err::FunctionReturnTypeError(funcReturnType.ToString(), returnType.ToString(), returnNode);
+    }
 }
 
 const Table<Function_Data> &SemanticAnalyzer::GetFunctionTable() const {
@@ -728,4 +740,67 @@ int SemanticAnalyzer::BinaryOperation(const int &left, const int &right, Node* c
         default:
             throw Err::CriticalError("Error in binary operation", operation);
     }
+}
+
+void SemanticAnalyzer::Print(Node *const &node) {
+    if (node->GetData()->ruleType != RuleType::Print)
+        throw Err::CriticalError("Expected print", node);
+
+    std::vector<Node*> params = node->GetChild(1)->GetChilds();
+    if (params.empty())
+        return;
+
+    bool isArrayParam = false;
+    bool isArrayFormat = false;
+    std::string id;
+    std::string fmtString = node->GetChild(0)->GetData()->token.GetValue();
+
+    for (const auto& param : params) {
+        isArrayParam = false;
+        isArrayFormat = false;
+        switch (param->GetData()->ruleType) {
+            case RuleType::UnaryExpession:
+            case RuleType::BinaryExpression:
+            case RuleType::MemberExpression:
+                Expr(param);
+                break;
+            case RuleType::Identifier:
+                id = param->GetData()->token.GetValue();
+                if (HasArrInUpper(id, param)) {
+                    isArrayParam = true;
+                    Array_Data arrData = GetArr(id, param);
+                    if (!arrData.isInitialized)
+                        throw Err::ArrayInitializationError(arrData.id, param);
+                }
+                else if (HasIDInUpper(id, param)) {
+                    ID_Data idData = GetID(id, param);
+                    if (!idData.isInitialized)
+                        throw Err::VariableInitializationError(idData.id, param);
+                }
+                else
+                    throw Err::VariableNotExistingError(id, param);
+                break;
+        }
+
+        int arrFormatPos = fmtString.find("{:?}");
+        int idFormatPos = fmtString.find("{}");
+        if (arrFormatPos == std::string::npos && idFormatPos == std::string::npos)
+            throw Err::CriticalError("Discrepancy in the number of formatted parameters", param);
+        isArrayFormat = arrFormatPos == std::string::npos ? false :
+                        idFormatPos  == std::string::npos ? true :
+                        arrFormatPos < idFormatPos;
+
+        if (isArrayFormat != isArrayParam) {
+            if (isArrayParam)
+                throw Err::CriticalError("Array cannot be formatted with the default formatter", param);
+            else
+                throw Err::CriticalError("Ordinary variable cannot be formatted with the array formatter", param);
+        }
+
+        fmtString = isArrayFormat ? fmtString.substr(arrFormatPos+4, fmtString.size() - arrFormatPos - 4) :
+                fmtString.substr(idFormatPos + 2, fmtString.size() - idFormatPos - 2);
+    }
+
+    if (fmtString.find("{}") != std::string::npos || fmtString.find("{:?}") != std::string::npos)
+        throw Err::CriticalError("Discrepancy in the number of formatted parameters", params.back());
 }

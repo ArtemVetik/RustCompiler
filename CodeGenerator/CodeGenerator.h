@@ -51,6 +51,7 @@ private:
     std::stack<std::string> _ifEndLabels;
     std::stack<RulesForLabels> _rules;
     std::vector<int> _rulesCount;
+    // TODO таблица ключевых слов
 
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");

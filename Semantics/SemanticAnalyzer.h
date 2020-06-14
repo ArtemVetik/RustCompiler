@@ -15,7 +15,7 @@ private:
     ProgramBlock<ID_Data, Array_Data> *_currentBlock;
 
     void AddSystemFunctions();
-    // TODO проверить на семантику print
+
     void Traversal(Node* const &root);
     void CheckRule(Node* const &node);
     // TODO отформатировать порядок методов
@@ -44,6 +44,7 @@ private:
     std::vector<TypeData> ArrayElems(Node* const &node);
 
     void ReturnExpression(Node* const &returnNode);
+    void Print(Node* const &node);
 
     int CalculateConstUnsignedExpression(Node* const &node);
     int BinaryOperation(const int &left, const int &right, Node* const &node);

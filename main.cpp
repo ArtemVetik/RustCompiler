@@ -76,9 +76,6 @@ int main() {
         return 0;
     }
 
-
-
-
     system("pause");
     return 0;
 }

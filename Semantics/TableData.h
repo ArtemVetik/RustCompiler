@@ -47,14 +47,15 @@ struct Array_Data : public Data {
 };
 
 struct Function_Data : public Data {
+    bool hasReturn;
     std::vector<Data*> parameters;
 
-    Function_Data() : parameters() { }
+    Function_Data() : parameters(), hasReturn(false) { }
     Function_Data(const std::string &id, const TypeData &type, std::vector<Data*> &&parameters = {}) : parameters(parameters) {
         this->id = id;
         this->type = type;
+        this->hasReturn = false;
     }
-
 };
 
 #endif //RUSTCOMPILER_IDTABLE_H
