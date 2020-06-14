@@ -7,8 +7,10 @@
 #include <cmath>
 #include <sstream>
 #include <stack>
+#include <fstream>
 #include "../AST_Tree/AST_Tree.h"
 #include "../Semantics/ProgramBlock.h"
+#include "../Exceptions/CodeGeneratorError.h"
 #include "../Lexer/Token.h"
 #include "MasmTypeData.h"
 
@@ -41,6 +43,7 @@ private:
     };
 
     AST_Tree _tree;
+    std::ifstream _tableOfReservedWords;
     Table<Function_Data> _funcTable;
     ProgramBlock<MasmID_Data, MasmArray_Data>* _currentBlock;
     std::string _template;
@@ -51,7 +54,7 @@ private:
     std::stack<std::string> _ifEndLabels;
     std::stack<RulesForLabels> _rules;
     std::vector<int> _rulesCount;
-    // TODO таблица ключевых слов
+
 
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
@@ -106,11 +109,12 @@ private:
     std::pair<std::string, std::string> PushReal8(double value);
 
     std::string GetCompareOperation(const TokenType &operation, const CompareType &compareType, const MASMType &type);
+    bool HasInReservedWordsTable(std::string identifier);
     void InitCompareOperations();
 
 public:
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
-
+    ~CodeGenerator();
     void Generate();
 };
 

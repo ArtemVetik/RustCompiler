@@ -472,7 +472,8 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
 
     std::vector<Data*> funcDefineParams = _functionTable.GetData(funcId).parameters;
     if (funcDefineParams.size() != paramTypes.size())
-        throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode[paramsNode.size()-1]);
+        throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode.empty() ? node :
+                                                                                    paramsNode[paramsNode.size() - 1]);
 
 
     for (unsigned int i = 0; i < funcDefineParams.size(); ++i) {

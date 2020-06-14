@@ -2,6 +2,10 @@
 
 CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _rulesCount(5) {
     _tree = tree;
+    _tableOfReservedWords.open("ReservedWords/TableOfReservedWords.dat");
+    if (!_tableOfReservedWords.is_open())
+        throw CodeGeneratorError("Can not find \"TableOfReservedWords.dat\" file");
+
     _funcTable = funcTable;
     _currentBlock = nullptr;
     auto currentTimeClock = std::chrono::system_clock::now();
@@ -18,6 +22,20 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
         "\tFINIT\t\n\n";
 
     InitCompareOperations();
+}
+
+bool CodeGenerator::HasInReservedWordsTable(std::string identifier) {
+    _tableOfReservedWords.seekg(0, std::ios_base::beg);
+    std::transform(identifier.begin(), identifier.end(), identifier.begin(), toupper);
+    std::string sym;
+    while (!_tableOfReservedWords.eof()) {
+        _tableOfReservedWords >> sym;
+        if (identifier == sym) return true;
+        if (_tableOfReservedWords.eof())
+            break;
+    }
+
+    return false;
 }
 
 void CodeGenerator::InitCompareOperations() {
@@ -526,6 +544,10 @@ std::string CodeGenerator::FunctionDeclaration(Node *const &node) {
     std::string params = FunctionParams(node->GetChild(1));
     std::string block = CheckRule(node->GetChild(3));
 
+    if (HasInReservedWordsTable(id))
+        id += "_";
+
+
     auto *tmp = _currentBlock;
     while (tmp->upperBlock)
         tmp = tmp->upperBlock;
@@ -580,7 +602,8 @@ std::string CodeGenerator::VariableDeclaration(Node *const &node) {
 
     if (typeNode == nullptr) {
         type = DetermineType(node->GetChild(1));
-    } else {
+    }
+    else {
         type = Type(typeNode);
     }
 
@@ -588,6 +611,8 @@ std::string CodeGenerator::VariableDeclaration(Node *const &node) {
         uid = GetID(id).uid + "_";
     else if (HasArrInUpper(id))
         uid = GetArr(id).uid + "_";
+    if (HasInReservedWordsTable(id))
+        uid += "_";
 
     MasmID_Data idData(id, uid, type);
     _currentBlock->idTable.AddToTable(idData);
@@ -644,6 +669,8 @@ std::string CodeGenerator::ArrayDeclaration(Node *const &node) {
         uid = GetID(id).uid + "_";
     else if (HasArrInUpper(id))
         uid = GetArr(id).uid + "_";
+    if (HasInReservedWordsTable(id))
+        uid += "_";
 
     MasmArray_Data arrData(id, uid, type, count);
     _currentBlock->arrayTable.AddToTable(arrData);
@@ -800,6 +827,8 @@ std::string CodeGenerator::GroupVariableDeclaration(Node *const &node) {
             uid = GetID(id).uid + "_";
         else if (HasArrInUpper(id))
             uid = GetArr(id).uid + "_";
+        if (HasInReservedWordsTable(id))
+            uid += "_";
 
         if (expressions.empty())
             type = std::make_pair(MASMType::None, "None");
@@ -858,6 +887,9 @@ std::string CodeGenerator::FunctionInvoke(Node *const &node) {
         code += parameters.top();
         parameters.pop();
     }
+
+    if (HasInReservedWordsTable(functionID))
+        functionID += "_";
 
     code += "\tcall " + functionID + "\n";
     return code;
@@ -1038,7 +1070,8 @@ std::string CodeGenerator::Print(Node *const &node) {
             }
         }
         else if (expr->GetData()->ruleType == RuleType::MemberExpression || expr->GetData()->ruleType == RuleType::InternalFuncInvoke ||
-                 expr->GetData()->ruleType == RuleType::BinaryExpression || expr->GetData()->ruleType == RuleType::UnaryExpession) {
+                 expr->GetData()->ruleType == RuleType::BinaryExpression || expr->GetData()->ruleType == RuleType::UnaryExpession ||
+                                                                                expr->GetData()->ruleType == RuleType::FuncInvoke) {
             MASMType type = DetermineType(expr).first;
             fmtString = FmtString(fmtString, type);
             try {
@@ -1159,3 +1192,9 @@ std::pair<std::string, std::string> CodeGenerator::PushReal8(double value) {
 
     return code;
 }
+
+CodeGenerator::~CodeGenerator() {
+    if (_tableOfReservedWords.is_open())
+        _tableOfReservedWords.close();
+}
+
