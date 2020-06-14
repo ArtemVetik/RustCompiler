@@ -1079,7 +1079,7 @@ std::string CodeGenerator::Print(Node *const &node) {
                 if (type == MASMType::DWORD)
                     parameters.push("\tpush " + std::to_string(static_cast<int>(value)) + "\n");
                 else if (type == MASMType::REAL8) {
-                    parameters.push("\tFLD FP8(" + std::to_string(value) + ")\n\tFSTP QWORD PTR [eax]\n\tpush [eax+4]\n\tpush [eax]\n");
+                    parameters.push("\tFLD FP8(" + std::to_string(value) + ")\n\tFromFPUToEaxEdx\n\tpush edx\n\tpush eax\n");
                     parameters.push("");
                 }
             }
@@ -1087,7 +1087,7 @@ std::string CodeGenerator::Print(Node *const &node) {
                 if (type == MASMType::DWORD)
                     parameters.push(CalculateExpression(expr, type));
                 else if (type == MASMType::REAL8) {
-                    parameters.push(CalculateExpression(expr, type) + "\tFSTP QWORD PTR [eax]\n\tpush [eax+4]\n\tpush [eax]\n");
+                    parameters.push(CalculateExpression(expr, type) + "\tFromFPUToEaxEdx\n\tpush edx\n\tpush eax\n");
                     parameters.push("");
                 }
             }
