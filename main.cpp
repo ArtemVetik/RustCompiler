@@ -6,7 +6,6 @@
 #include "Semantics/SemanticAnalyzer.h"
 #include "CodeGenerator/CodeGenerator.h"
 
-
 /************************************************************************************
 * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
 * @Военмех - лучше всех                                                             *
@@ -48,13 +47,9 @@ int main() {
     system("chcp 1251");
     system("cls");
     
-    /*std::string fileName = Menu();
-
-    if (fileName.empty()) {
-        system("pause");
-        return 0;
-    }*/
-
+    const char k = 'p';
+    std::cout <<  << std::endl;
+    return 0;
     try {
         Lexer lexer("test.txt");
         lexer.Analyze();
