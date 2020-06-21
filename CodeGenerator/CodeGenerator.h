@@ -47,6 +47,7 @@ private:
     Table<Function_Data> _funcTable;
     ProgramBlock<MasmID_Data, MasmArray_Data>* _currentBlock;
     std::string _template;
+    std::string _asmCodeString;
     std::vector<MASMCompareOperation> _compareOperations;
     std::string _functionEndLabel;
     unsigned int _labelNum;
@@ -68,7 +69,9 @@ private:
     std::string GroupVariableDeclaration(Node* const &node);
 
     bool HasIDInUpper(const std::string &id);
+    std::pair<bool, std::string> GetUID(ProgramBlock<MasmID_Data, MasmArray_Data>* const &block, const std::string &id);
     bool HasArrInUpper(const std::string &id);
+    std::pair<bool, unsigned int> HasInUpper(const std::string &id);
     MasmID_Data& GetID(const std::string &id);
     MasmArray_Data& GetArr(const std::string &id);
     float BinaryOperation(float v1, float v2, Node* const &operation);
@@ -113,9 +116,11 @@ private:
     void InitCompareOperations();
 
 public:
+
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     ~CodeGenerator();
     void Generate();
+    void CreateAsmFile();
 };
 
 #endif //RUSTCOMPILER_CODEGENERATOR_H

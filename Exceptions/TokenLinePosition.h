@@ -4,11 +4,13 @@
 struct TokenLinePosition {
     unsigned int line;
     unsigned int column;
+    unsigned int linearPosition;
 
-    TokenLinePosition() : line(1), column(1) { }
+    TokenLinePosition() : line(1), column(1), linearPosition(0) { }
     TokenLinePosition(const unsigned int &line, const unsigned int &column) : line(line), column(column) { }
 
     void AddSymbol(const char &symbol) {
+        linearPosition++;
         if (symbol == '\n') {
             line++;
             column = 0;

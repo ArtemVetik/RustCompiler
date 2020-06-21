@@ -7,7 +7,7 @@
 
 template <typename IDType, typename ArrType>
 struct ProgramBlock {
-    std::vector<ProgramBlock> internalBlocks;
+    std::vector<ProgramBlock<IDType, ArrType>> internalBlocks;
     ProgramBlock* upperBlock;
     Table<IDType> idTable;
     Table<ArrType> arrayTable;

@@ -11,10 +11,3 @@ Node* const& AST_Tree::GetRoot() const {
 void AST_Tree::Traversal() const {
     _root->Traversal();
 }
-
-void AST_Tree::DeleteNode(Node *&node) {
-    if (node) {
-        delete node;
-        node = nullptr;
-    }
-}

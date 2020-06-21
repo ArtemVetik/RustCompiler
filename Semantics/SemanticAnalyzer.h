@@ -46,7 +46,7 @@ private:
     void ReturnExpression(Node* const &returnNode);
     void Print(Node* const &node);
 
-    int CalculateConstUnsignedExpression(Node* const &node);
+    int CalculateConstUnsignedExpression(Node* const &node, const std::vector<RuleType> &forbiddenRule = std::vector<RuleType>());
     int BinaryOperation(const int &left, const int &right, Node* const &node);
 
     TypeData CanAccessIdentifier(Node* const &idNode);
@@ -56,6 +56,7 @@ private:
     ID_Data GetIDDefineParameter(Node* const &param);
     Array_Data GetArrayDefineParameter(Node* const &param);
     bool HasIDInUpper(const std::string &id, Node *const &root);
+    std::pair<bool, unsigned int> HasInUpper(const std::string &id);
     bool HasArrInUpper(const std::string &id, Node *const &root);
     ID_Data& GetID(const std::string &id, Node* const &root);
     Array_Data& GetArr(const std::string &id, Node* const &root);
