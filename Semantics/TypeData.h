@@ -42,17 +42,17 @@ struct TypeData {
 
     static Type ToType(const TokenType &tokenType) {
         switch (tokenType){
-            case REAL:
-            case RNUM:
+            case TokenType::REAL:
+            case TokenType::RNUM:
                 return Type::Real;
-            case INTEGER:
-            case INTNUM:
+            case TokenType::INTEGER:
+            case TokenType::INTNUM:
                 return Type::Integer;
-            case UINT:
+            case TokenType::UINT:
                 return Type::Unsigned;
-            case STRING:
+            case TokenType::STRING:
                 return Type::String;
-            case BOOL:
+            case TokenType::BOOL:
                 return Type::Bool;
             default:
                 return Type::None;

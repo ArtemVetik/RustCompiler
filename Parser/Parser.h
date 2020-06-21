@@ -8,8 +8,6 @@
 #include "../AST_Tree/AST_Tree.h"
 #include "../AST_Tree/Node.h"
 
-#define print std::cout << "->" <<(*_currentToken)->GetValue() << "<-" << std::endl;
-
 class Parser {
 private:
     std::vector<Token*> _tokens;
@@ -77,6 +75,7 @@ private:
     bool FunctionDefine(Node *&root);
     bool FunctionDefineArg(Node *&root);
     bool FunctionReturn(Node *&root);
+    bool FunctionParameters(Node *&pNode);
 
     // Присваивание
     bool Assignment(Node *&root);

@@ -2,7 +2,7 @@
 #define RUSTCOMPILER_TOKENTYPE_H
 #include <string>
 
-enum TokenType {
+enum class TokenType {
     ID,       // Идентификатор
     INTNUM,   // Целое число
     RNUM,     // Вещественное число
@@ -43,76 +43,76 @@ enum TokenType {
     // Операции отношения
     MORE,       // >
     LESS,       // <
-    ASMR,       // >=
-    ASLS,       // <=
+    MOREEQUAL,  // >=
+    LESSEQUAL,  // <=
     NASSIG,     // !=
     EQUAL,      // ==
 
-    LBLBR,      // {
-    RBLBR,      // }
-    SLBR,       // [
-    SRBR,       // ]
+    LFIGBR,     // {
+    RFIGBR,     // }
+    LSQRBR,     // [
+    RSQRBR,     // ]
     COLON,      // :
     SEMICOLON,  // ;
-    LFBR,       // (
-    RGBR,       // )
+    LRBR,       // (
+    RRBR,       // )
     COM,        // ,
     DOT,        // .
-    IGNORE,     // Пробелы, табуляции, перенос строки
+    IGNORE,     // Пробелы, табуляции, перенос строки, комментарии
 };
 
 class TokenTypePrinter {
 public:
     static std::string PrintTokenType(const TokenType &type) {
         switch (type) {
-            case ID:return std::string("ID");
-            case INTNUM:return std::string("INTNUM");
-            case RNUM:return std::string("RNUM");
-            case UINT:return std::string("UINT");
-            case STRING:return std::string("STRING");
-            case INTEGER:return std::string("INTEGER");
-            case REAL:return std::string("REAL");
-            case BREAK:return std::string("BREAK");
-            case LET:return std::string("LET");
-            case MUT:return std::string("MUT");
-            case FOR:return std::string("FOR");
-            case IF:return std::string("IF");
-            case ELSE:return std::string("ELSE");
-            case PLUS:return std::string("PLUS");
-            case MINUS:return std::string("MINUS");
-            case LOOP:return std::string("LOOP");
-            case WHILE:return std::string("WHILE");
-            case FUNCTION:return std::string("FUNCTION");
-            case MULT:return std::string("MULT");
-            case MOD:return std::string("MOD");
-            case DIV:return std::string("DIV");
-            case ASSIG:return std::string("ASSIG");
-            case MORE:return std::string("MORE");
-            case LESS:return std::string("LESS");
-            case ASMR:return std::string("ASMR");
-            case ASLS:return std::string("ASLS");
-            case NASSIG:return std::string("NASSIG");
-            case EQUAL:return std::string("EQUAL");
-            case LBLBR:return std::string("LBLBR");
-            case RBLBR:return std::string("RBLBR");
-            case SLBR:return std::string("SLBR");
-            case SRBR:return std::string("SRBR");
-            case COLON:return std::string("COLON");
-            case SEMICOLON:return std::string("SEMICOLON");
-            case LFBR:return std::string("LFBR");
-            case RGBR:return std::string("RGBR");
-            case COM:return std::string("COM");
-            case DOT:return std::string("DOT");
-            case EXCL:return std::string("EXLC");
-            case PRINTLN:return std::string("PRINTLN");
-            case RETURN:return std::string("RETURN");
-            case IGNORE:return std::string("IGNORE");
-            case LAND:return std::string("LAND");
-            case LOR:return std::string("LOR");
-            case PRINT: return std::string("PRINT");
-            case BAND: return std::string("BAND");
-            case ARROW: return std::string("ARROW");
-            case BOOL: return std::string("BOOL");
+            case TokenType::ID:return std::string("ID");
+            case TokenType::INTNUM:return std::string("INTNUM");
+            case TokenType::RNUM:return std::string("RNUM");
+            case TokenType::UINT:return std::string("UINT");
+            case TokenType::STRING:return std::string("STRING");
+            case TokenType::INTEGER:return std::string("INTEGER");
+            case TokenType::REAL:return std::string("REAL");
+            case TokenType::BREAK:return std::string("BREAK");
+            case TokenType::LET:return std::string("LET");
+            case TokenType::MUT:return std::string("MUT");
+            case TokenType::FOR:return std::string("FOR");
+            case TokenType::IF:return std::string("IF");
+            case TokenType::ELSE:return std::string("ELSE");
+            case TokenType::PLUS:return std::string("PLUS");
+            case TokenType::MINUS:return std::string("MINUS");
+            case TokenType::LOOP:return std::string("LOOP");
+            case TokenType::WHILE:return std::string("WHILE");
+            case TokenType::FUNCTION:return std::string("FUNCTION");
+            case TokenType::MULT:return std::string("MULT");
+            case TokenType::MOD:return std::string("MOD");
+            case TokenType::DIV:return std::string("DIV");
+            case TokenType::ASSIG:return std::string("ASSIG");
+            case TokenType::MORE:return std::string("MORE");
+            case TokenType::LESS:return std::string("LESS");
+            case TokenType::MOREEQUAL:return std::string("MOREEQUAL");
+            case TokenType::LESSEQUAL:return std::string("LESSEQUAL");
+            case TokenType::NASSIG:return std::string("NASSIG");
+            case TokenType::EQUAL:return std::string("EQUAL");
+            case TokenType::LFIGBR:return std::string("LFIGBR");
+            case TokenType::RFIGBR:return std::string("RFIGBR");
+            case TokenType::LSQRBR:return std::string("LSQRBR");
+            case TokenType::RSQRBR:return std::string("RSQRBR");
+            case TokenType::COLON:return std::string("COLON");
+            case TokenType::SEMICOLON:return std::string("SEMICOLON");
+            case TokenType::LRBR:return std::string("LRBR");
+            case TokenType::RRBR:return std::string("RRBR");
+            case TokenType::COM:return std::string("COM");
+            case TokenType::DOT:return std::string("DOT");
+            case TokenType::EXCL:return std::string("EXLC");
+            case TokenType::PRINTLN:return std::string("PRINTLN");
+            case TokenType::RETURN:return std::string("RETURN");
+            case TokenType::IGNORE:return std::string("IGNORE");
+            case TokenType::LAND:return std::string("LAND");
+            case TokenType::LOR:return std::string("LOR");
+            case TokenType::PRINT: return std::string("PRINT");
+            case TokenType::BAND: return std::string("BAND");
+            case TokenType::ARROW: return std::string("ARROW");
+            case TokenType::BOOL: return std::string("BOOL");
             default: return "";
         }
     }

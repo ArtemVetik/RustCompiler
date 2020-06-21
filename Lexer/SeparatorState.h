@@ -14,6 +14,9 @@ private:
     std::vector<std::pair<std::string, TokenType>> _tokenPair;
     std::string _buffer;
     CommentType _comment;
+
+    bool HasInTable(const std::string &value);
+
 public:
     SeparatorState();
     ~SeparatorState() override = default;

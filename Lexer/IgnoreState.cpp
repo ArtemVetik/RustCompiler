@@ -9,5 +9,5 @@ bool IgnoreState::CanTransitTo(const char sym) {
 }
 
 Token* IgnoreState::GetToken(const std::string &value) {
-    return new Token(IGNORE, "", -1);
+    return new Token(TokenType::IGNORE, "", -1);
 }

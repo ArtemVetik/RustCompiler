@@ -5,33 +5,33 @@ SeparatorState::SeparatorState() : _comment(CommentType::None) {
 }
 
 void SeparatorState::Init() {
-    _tokenPair.emplace_back(std::make_pair("+", PLUS));
-    _tokenPair.emplace_back(std::make_pair("-", MINUS));
-    _tokenPair.emplace_back(std::make_pair("*", MULT));
-    _tokenPair.emplace_back(std::make_pair("/", DIV));
-    _tokenPair.emplace_back(std::make_pair("%", MOD));
-    _tokenPair.emplace_back(std::make_pair("=", ASSIG));
-    _tokenPair.emplace_back(std::make_pair("==", EQUAL));
-    _tokenPair.emplace_back(std::make_pair(">=", ASMR));
-    _tokenPair.emplace_back(std::make_pair("<=", ASLS));
-    _tokenPair.emplace_back(std::make_pair("!=", NASSIG));
-    _tokenPair.emplace_back(std::make_pair("<", LESS));
-    _tokenPair.emplace_back(std::make_pair(">", MORE));
-    _tokenPair.emplace_back(std::make_pair("{", LBLBR));
-    _tokenPair.emplace_back(std::make_pair("}", RBLBR));
-    _tokenPair.emplace_back(std::make_pair("[", SLBR));
-    _tokenPair.emplace_back(std::make_pair("]", SRBR));
-    _tokenPair.emplace_back(std::make_pair(":", COLON));
-    _tokenPair.emplace_back(std::make_pair(";", SEMICOLON));
-    _tokenPair.emplace_back(std::make_pair("(", LFBR));
-    _tokenPair.emplace_back(std::make_pair(")", RGBR));
-    _tokenPair.emplace_back(std::make_pair(",", COM));
-    _tokenPair.emplace_back(std::make_pair(".", DOT));
-    _tokenPair.emplace_back(std::make_pair("!", EXCL));
-    _tokenPair.emplace_back(std::make_pair("&&", LAND));
-    _tokenPair.emplace_back(std::make_pair("||", LOR));
-    _tokenPair.emplace_back(std::make_pair("&", BAND));
-    _tokenPair.emplace_back(std::make_pair("->", ARROW));
+    _tokenPair.emplace_back(std::make_pair("+", TokenType::PLUS));
+    _tokenPair.emplace_back(std::make_pair("-", TokenType::MINUS));
+    _tokenPair.emplace_back(std::make_pair("*", TokenType::MULT));
+    _tokenPair.emplace_back(std::make_pair("/", TokenType::DIV));
+    _tokenPair.emplace_back(std::make_pair("%", TokenType::MOD));
+    _tokenPair.emplace_back(std::make_pair("=", TokenType::ASSIG));
+    _tokenPair.emplace_back(std::make_pair("==", TokenType::EQUAL));
+    _tokenPair.emplace_back(std::make_pair(">=", TokenType::MOREEQUAL));
+    _tokenPair.emplace_back(std::make_pair("<=", TokenType::LESSEQUAL));
+    _tokenPair.emplace_back(std::make_pair("!=", TokenType::NASSIG));
+    _tokenPair.emplace_back(std::make_pair("<", TokenType::LESS));
+    _tokenPair.emplace_back(std::make_pair(">", TokenType::MORE));
+    _tokenPair.emplace_back(std::make_pair("{", TokenType::LFIGBR));
+    _tokenPair.emplace_back(std::make_pair("}", TokenType::RFIGBR));
+    _tokenPair.emplace_back(std::make_pair("[", TokenType::LSQRBR));
+    _tokenPair.emplace_back(std::make_pair("]", TokenType::RSQRBR));
+    _tokenPair.emplace_back(std::make_pair(":", TokenType::COLON));
+    _tokenPair.emplace_back(std::make_pair(";", TokenType::SEMICOLON));
+    _tokenPair.emplace_back(std::make_pair("(", TokenType::LRBR));
+    _tokenPair.emplace_back(std::make_pair(")", TokenType::RRBR));
+    _tokenPair.emplace_back(std::make_pair(",", TokenType::COM));
+    _tokenPair.emplace_back(std::make_pair(".", TokenType::DOT));
+    _tokenPair.emplace_back(std::make_pair("!", TokenType::EXCL));
+    _tokenPair.emplace_back(std::make_pair("&&", TokenType::LAND));
+    _tokenPair.emplace_back(std::make_pair("||", TokenType::LOR));
+    _tokenPair.emplace_back(std::make_pair("&", TokenType::BAND));
+    _tokenPair.emplace_back(std::make_pair("->", TokenType::ARROW));
 }
 
 Token* SeparatorState::GetToken(const std::string &value) {
@@ -55,13 +55,33 @@ Token* SeparatorState::GetToken(const std::string &value) {
     return nullptr;
 }
 
-std::vector<Token*> SeparatorState::SplitTokens(const std::string &value){
+std::vector<Token*> SeparatorState::SplitTokens(const std::string &value) {
+    if (value.empty())
+        return std::vector<Token*>();
+
+    if (HasInTable(value))
+        return std::vector<Token*>({GetToken(value)});
+
     std::vector<Token*> tokens;
-    for (const char &symbol : value) {
-        tokens.emplace_back(GetToken(std::string(1, symbol)));
+
+    std::string subString;
+    for (int j = 1; j < value.size(); ++j) {
+        for (int i = 0; i <= j; ++i) {
+            subString = value.substr(i, value.size()-j);
+            if (HasInTable(subString)) {
+                std::vector<Token*> part = SplitTokens(value.substr(0, i));
+                tokens.insert(tokens.cend(), part.cbegin(), part.cend());
+
+                tokens.emplace_back(GetToken(subString));
+
+                part = SplitTokens(value.substr(i+subString.size(), value.size()-i-subString.size()));
+                tokens.insert(tokens.cend(), part.cbegin(), part.cend());
+                return tokens;
+            }
+        }
     }
 
-    return tokens;
+    return std::vector<Token*>({nullptr});
 }
 
 bool SeparatorState::Contains(const char sym) {
@@ -82,4 +102,14 @@ bool SeparatorState::Contains(const char sym) {
 
 bool SeparatorState::CanTransitTo(const char sym) {
     return Contains(sym);
+}
+
+bool SeparatorState::HasInTable(const std::string &value) {
+    auto foundToken = std::find_if(_tokenPair.cbegin(), _tokenPair.cend(),
+    [&value](const std::pair<std::string, TokenType> &token)
+    {
+        return token.first == value;
+    });
+
+    return foundToken != _tokenPair.cend();
 }

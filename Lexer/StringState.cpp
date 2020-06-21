@@ -17,6 +17,6 @@ bool StringState::CanTransitTo(const char sym) {
 
 Token* StringState::GetToken(const std::string &value) {
     if (value[0] == '\"' && value[value.size()-1] == '\"')
-        return new Token(STRING, value, 0);
+        return new Token(TokenType::STRING, value, 0);
     return nullptr;
 }

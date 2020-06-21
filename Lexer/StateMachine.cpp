@@ -6,18 +6,18 @@ StateMachine::StateMachine() : _startPos(), _endPos() {
 }
 
 void StateMachine::TakeSymbol(char symbol) {
-    if (_currentState && _currentState->Contains(symbol)) {
-        _buffer += symbol;
-        _endPos.AddSymbol(symbol);
-        return;
-    }
     if (_currentState) {
+        if (_currentState->Contains(symbol)) {
+            _buffer += symbol;
+            _endPos.AddSymbol(symbol);
+            return;
+        }
         End();
         _endPos.AddSymbol(symbol);
         _startPos.AddSymbol(symbol);
     }
 
-    _buffer = "";
+    _buffer.clear();
     _buffer += symbol;
 
     _currentState = _transition.GetState(_currentState, symbol);
@@ -29,13 +29,13 @@ void StateMachine::End() {
     Token* token = _currentState->GetToken(_buffer);
     if (!token)
     {
-        if (!SplitSeparators(_buffer)) // TODO tokens location
-            throw LexError(_buffer, TokenLocation(_startPos, _endPos)); // TODO исправить tokenLocation
+        if (!SplitSeparators(_buffer))
+            throw LexError(_buffer, TokenLocation(_startPos, _endPos));
     }
     else {
         token->SetLocation(TokenLocation(_startPos, _endPos));
         _startPos = _endPos;
-        if (token->GetType() != IGNORE)
+        if (token->GetType() != TokenType::IGNORE)
             _tokens.emplace_back(token);
     }
 }
@@ -51,9 +51,12 @@ bool StateMachine::SplitSeparators(const std::string& buffer){
         if (token == nullptr)
             return false;
 
-        token->SetLocation(TokenLocation(_startPos, _endPos));
+        token->SetLocation(TokenLocation(_startPos, _startPos + token->GetValue()-1));
+        _startPos = _startPos + token->GetValue();
         _tokens.emplace_back(token);
     }
+    _startPos = _startPos - 1;
+    _endPos = _startPos;
 
     return true;
 }

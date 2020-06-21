@@ -42,7 +42,7 @@ Token::~Token() {
     }
 }
 
-Token &Token::operator=(const Token &right) {
+Token &Token::operator = (const Token &right) {
     if (_location) {
         delete _location;
         _location = nullptr;

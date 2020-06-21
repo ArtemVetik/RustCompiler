@@ -31,28 +31,28 @@ Token* IDState::GetToken(const std::string &value) {
             idToken = _idTable.cend() - 1;
         }
         int id = std::distance(_idTable.cbegin(), idToken);
-        return new Token(ID, value, id);
+        return new Token(TokenType::ID, value, id);
     }
 }
 
 void IDState::InitKeyWords() {
-    _keyWords.emplace_back(std::make_pair("fn", FUNCTION));
-    _keyWords.emplace_back(std::make_pair("for", FOR));
-    _keyWords.emplace_back(std::make_pair("if", IF));
-    _keyWords.emplace_back(std::make_pair("loop", LOOP));
-    _keyWords.emplace_back(std::make_pair("while", WHILE));
-    _keyWords.emplace_back(std::make_pair("else", ELSE));
-    _keyWords.emplace_back(std::make_pair("let", LET));
-    _keyWords.emplace_back(std::make_pair("mut", MUT));
-    _keyWords.emplace_back(std::make_pair("f32", REAL));
-    _keyWords.emplace_back(std::make_pair("i32", INTEGER));
-    _keyWords.emplace_back(std::make_pair("usize", UINT));
-    _keyWords.emplace_back(std::make_pair("println", PRINTLN));
-    _keyWords.emplace_back(std::make_pair("print", PRINT));
-    _keyWords.emplace_back(std::make_pair("break", BREAK));
-    _keyWords.emplace_back(std::make_pair("return", RETURN));
-    _keyWords.emplace_back(std::make_pair("true", BOOL));
-    _keyWords.emplace_back(std::make_pair("false", BOOL));
+    _keyWords.emplace_back(std::make_pair("fn", TokenType::FUNCTION));
+    _keyWords.emplace_back(std::make_pair("for", TokenType::FOR));
+    _keyWords.emplace_back(std::make_pair("if", TokenType::IF));
+    _keyWords.emplace_back(std::make_pair("loop", TokenType::LOOP));
+    _keyWords.emplace_back(std::make_pair("while", TokenType::WHILE));
+    _keyWords.emplace_back(std::make_pair("else", TokenType::ELSE));
+    _keyWords.emplace_back(std::make_pair("let", TokenType::LET));
+    _keyWords.emplace_back(std::make_pair("mut", TokenType::MUT));
+    _keyWords.emplace_back(std::make_pair("f32", TokenType::REAL));
+    _keyWords.emplace_back(std::make_pair("i32", TokenType::INTEGER));
+    _keyWords.emplace_back(std::make_pair("usize", TokenType::UINT));
+    _keyWords.emplace_back(std::make_pair("println", TokenType::PRINTLN));
+    _keyWords.emplace_back(std::make_pair("print", TokenType::PRINT));
+    _keyWords.emplace_back(std::make_pair("break", TokenType::BREAK));
+    _keyWords.emplace_back(std::make_pair("return", TokenType::RETURN));
+    _keyWords.emplace_back(std::make_pair("true", TokenType::BOOL));
+    _keyWords.emplace_back(std::make_pair("false", TokenType::BOOL));
 }
 
 bool IDState::CanTransitTo(State *const &to) const {

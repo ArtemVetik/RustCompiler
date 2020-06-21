@@ -19,6 +19,13 @@ struct TokenLinePosition {
             column++;
     }
 
+    friend TokenLinePosition operator + (const TokenLinePosition &left, const std::string &right) {
+        TokenLinePosition newPosition(left);
+        for (const auto &sym : right)
+            newPosition.AddSymbol(sym);
+        return newPosition;
+    }
+
     friend TokenLinePosition operator - (const TokenLinePosition &left, const int &right) {
         return TokenLinePosition(left.line, left.column - 1);
     }

@@ -41,8 +41,8 @@ bool CodeGenerator::HasInReservedWordsTable(std::string identifier) {
 void CodeGenerator::InitCompareOperations() {
     _compareOperations.emplace_back(MASMCompareOperation {TokenType::MORE, "ja", "jbe", "jg", "jle"});
     _compareOperations.emplace_back(MASMCompareOperation {TokenType::LESS, "jb", "jae", "jl", "jge"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASMR, "jae", "jb", "jge", "jl"});
-    _compareOperations.emplace_back(MASMCompareOperation {TokenType::ASLS, "jbe", "ja", "jle", "jg"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::MOREEQUAL, "jae", "jb", "jge", "jl"});
+    _compareOperations.emplace_back(MASMCompareOperation {TokenType::LESSEQUAL, "jbe", "ja", "jle", "jg"});
     _compareOperations.emplace_back(MASMCompareOperation {TokenType::NASSIG, "jne", "je", "jne", "je"});
     _compareOperations.emplace_back(MASMCompareOperation {TokenType::EQUAL, "je", "jne", "je", "jne"});
 }
@@ -967,8 +967,8 @@ std::string CodeGenerator::LogicalOperation(Node *const &operation, const CodeGe
             break;
         case TokenType::MORE:
         case TokenType::LESS:
-        case TokenType::ASMR:
-        case TokenType::ASLS:
+        case TokenType::MOREEQUAL:
+        case TokenType::LESSEQUAL:
         case TokenType::NASSIG:
         case TokenType::EQUAL:
             code += CompareOperation(operation, compare, trueLabel, falseLabel);
