@@ -8,7 +8,7 @@ SemanticAnalyzer::SemanticAnalyzer(const AST_Tree &tree) {
 
 SemanticAnalyzer::~SemanticAnalyzer() {
     while (_currentBlock->upperBlock)
-       _currentBlock = _currentBlock->upperBlock;
+        _currentBlock = _currentBlock->upperBlock;
 
     if (_currentBlock) {
         delete _currentBlock;
@@ -252,7 +252,7 @@ TypeData SemanticAnalyzer::MemberExpr(Node *const &node) {
 
     int indexValue;
     try {
-        indexValue =CalculateConstUnsignedExpression(node->GetChild(1)->GetChild(0));
+        indexValue = CalculateConstUnsignedExpression(node->GetChild(1)->GetChild(0));
     }
     catch (SemanticError &err) {
         indexValue = 0;
@@ -353,7 +353,9 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
     data.type.isReference = typeNode->GetChild(0) != nullptr;
     data.type.isMutable = typeNode->GetChild(1) != nullptr;
     data.type.type = TypeData::ToType(typeNode->GetChild(2)->GetData()->token.GetType());
-    int count = CalculateConstUnsignedExpression(arrPat->GetChild(2)->GetChild(1));
+    auto count = CalculateConstUnsignedExpression(arrPat->GetChild(2)->GetChild(1),
+            {RuleType::UnaryExpession, RuleType::Identifier, RuleType::MemberExpression, RuleType::FuncInvoke, RuleType::InternalFuncInvoke});
+
     if (count < 0)
         throw Err::CriticalError("Array size must be unsigned", arrPat->GetChild(2)->GetChild(1));
     data.elementCount = count;
@@ -421,7 +423,7 @@ void SemanticAnalyzer::ArrayAssignment(Node* const& idNode, Node *const &exprNod
     std::vector<TypeData> exprTypes = ArrayElems(exprNode);
     if (exprTypes.size() != arrData.elementCount)
         throw Err::ArrayCountElementsError(std::to_string(arrData.elementCount), std::to_string(exprTypes.size()), exprNode->GetChild(exprTypes.size()-1));
-    if (arrData.type != exprTypes[0])
+    if (!exprTypes.empty() && arrData.type != exprTypes[0])
         throw Err::TypeError(arrData.type.ToString(), exprTypes[0].ToString(), exprNode);
 
     arrData.isInitialized = true;
@@ -473,7 +475,7 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
     std::vector<Data*> funcDefineParams = _functionTable.GetData(funcId).parameters;
     if (funcDefineParams.size() != paramTypes.size())
         throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode.empty() ? node :
-                                                                                    paramsNode[paramsNode.size() - 1]);
+                                                                                               paramsNode[paramsNode.size() - 1]);
 
 
     for (unsigned int i = 0; i < funcDefineParams.size(); ++i) {
@@ -520,6 +522,20 @@ TypeData SemanticAnalyzer::CanAccessArray(Node *const &idNode) {
     if (!arrayData.isInitialized)
         throw Err::ArrayInitializationError(id, idNode);
     return arrayData.type;
+}
+
+std::pair<bool, unsigned int> SemanticAnalyzer::HasInUpper(const std::string &id) {
+    ProgramBlock<ID_Data, Array_Data> *tmp = _currentBlock;
+
+    do {
+        if (tmp->idTable.Has(id))
+            return std::make_pair(true, typeid(ID_Data).hash_code());
+        if (tmp->arrayTable.Has(id))
+            return std::make_pair(true, typeid(Array_Data).hash_code());
+        tmp = tmp->upperBlock;
+    } while (tmp);
+
+    return std::make_pair(false, 0);
 }
 
 bool SemanticAnalyzer::HasIDInUpper(const std::string &id, Node *const &root) {
@@ -702,18 +718,25 @@ std::pair<TypeData, bool> SemanticAnalyzer::InternalFunctionInvoke(Node *const &
     return std::make_pair(FunctionInvoke(node->GetChild(1)), false);
 }
 
-int SemanticAnalyzer::CalculateConstUnsignedExpression(Node *const &node) {
+int SemanticAnalyzer::CalculateConstUnsignedExpression(Node *const &node, const std::vector<RuleType> &forbiddenRule) {
+
     switch (node->GetData()->ruleType) {
         case RuleType::FuncInvoke:
         case RuleType::InternalFuncInvoke:
         case RuleType::Identifier:
         case RuleType::MemberExpression:
-            throw Err::CriticalError("Can not using non-const value", node);
+            if (std::find(forbiddenRule.cbegin(), forbiddenRule.cend(), node->GetData()->ruleType) != forbiddenRule.cend())
+                throw Err::CriticalError("Can not using non-const value", node);
+            throw Err::CriticalError("Can not calculated expression!", node);
         case RuleType::UnaryExpession:
-            throw Err::CriticalError("Unary expression can not be used", node);
+            if (std::find(forbiddenRule.cbegin(), forbiddenRule.cend(), node->GetData()->ruleType) != forbiddenRule.cend())
+                throw Err::CriticalError("Unary expression can not be used", node);
+            if (node->GetData()->token.GetType() == TokenType::PLUS)
+                return CalculateConstUnsignedExpression(node->GetChild(0), forbiddenRule);
+            return -CalculateConstUnsignedExpression(node->GetChild(0), forbiddenRule);
         case RuleType::BinaryExpression:
-            return BinaryOperation(CalculateConstUnsignedExpression(node->GetChild(0)),
-                                   CalculateConstUnsignedExpression(node->GetChild(1)), node);
+            return BinaryOperation(CalculateConstUnsignedExpression(node->GetChild(0), forbiddenRule),
+                                   CalculateConstUnsignedExpression(node->GetChild(1), forbiddenRule), node);
         case RuleType::Literal:
             if (node->GetData()->token.GetType() == TokenType::INTNUM)
                 return std::stoi(node->GetData()->token.GetValue());
@@ -755,6 +778,7 @@ void SemanticAnalyzer::Print(Node *const &node) {
     bool isArrayFormat = false;
     std::string id;
     std::string fmtString = node->GetChild(0)->GetData()->token.GetValue();
+    std::pair<bool, unsigned int> varData;
 
     for (const auto& param : params) {
         isArrayParam = false;
@@ -767,19 +791,26 @@ void SemanticAnalyzer::Print(Node *const &node) {
                 break;
             case RuleType::Identifier:
                 id = param->GetData()->token.GetValue();
-                if (HasArrInUpper(id, param)) {
+                varData = HasInUpper(id);
+                if (varData.second == typeid(Array_Data).hash_code()) {
                     isArrayParam = true;
                     Array_Data arrData = GetArr(id, param);
                     if (!arrData.isInitialized)
                         throw Err::ArrayInitializationError(arrData.id, param);
                 }
-                else if (HasIDInUpper(id, param)) {
+                else if (varData.second == typeid(ID_Data).hash_code()) {
                     ID_Data idData = GetID(id, param);
                     if (!idData.isInitialized)
                         throw Err::VariableInitializationError(idData.id, param);
                 }
                 else
                     throw Err::VariableNotExistingError(id, param);
+                break;
+            case RuleType::FuncInvoke:
+                FunctionInvoke(param);
+                break;
+            case RuleType::InternalFuncInvoke:
+                InternalFunctionInvoke(param);
                 break;
         }
 
@@ -799,7 +830,7 @@ void SemanticAnalyzer::Print(Node *const &node) {
         }
 
         fmtString = isArrayFormat ? fmtString.substr(arrFormatPos+4, fmtString.size() - arrFormatPos - 4) :
-                fmtString.substr(idFormatPos + 2, fmtString.size() - idFormatPos - 2);
+                    fmtString.substr(idFormatPos + 2, fmtString.size() - idFormatPos - 2);
     }
 
     if (fmtString.find("{}") != std::string::npos || fmtString.find("{:?}") != std::string::npos)

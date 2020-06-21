@@ -6,7 +6,6 @@
 #include "Semantics/SemanticAnalyzer.h"
 #include "CodeGenerator/CodeGenerator.h"
 
-
 /************************************************************************************
 * Работу выполнили студенты И584 Труфанов Глеб Евгеньевич и Ветик Артём Владимирович*
 * @Военмех - лучше всех                                                             *
@@ -15,45 +14,11 @@
 *************************************************************************************
 */
 
-std::string Menu() {
-    char menu;
-
-    do {
-        system("cls");
-        std::cout << "Выберите файл на Rust'е:" << std::endl;
-        std::cout << "1. Квадратное уравнение" << std::endl;
-        std::cout << "2. Бинарная сортировка" << std::endl;
-        std::cout << "3. Алгоритм проверки на простое число" << std::endl;
-        std::cout << "4. Выход" << std::endl;
-
-        menu = getchar();
-        while(getchar() != '\n');
-
-        switch (menu) {
-            case '1':
-                return "test.txt";
-            case '2':
-                return "test2.txt";
-            case '3':
-                return "test3.txt";
-            default:
-                break;
-        }
-    } while(menu != '4');
-
-    return "";
-}
-
 int main() {
     system("chcp 1251");
     system("cls");
-    
-    /*std::string fileName = Menu();
 
-    if (fileName.empty()) {
-        system("pause");
-        return 0;
-    }*/
+    //FILE* file = freopen("Output/consoleOutput.txt","w",stdout);
 
     try {
         Lexer lexer("test.txt");
@@ -70,13 +35,15 @@ int main() {
 
         CodeGenerator generator(parser.GetASTTree(), semanticAnalyzer.GetFunctionTable());
         generator.Generate();
+        //fclose(file);
+        //remove("Output/errorOutput.txt");
     }
-    catch (std::exception& error) {
+    catch (const std::exception& error) {
+        //fclose(file);
+        //file = freopen("Output/errorOutput.txt","w",stdout);
         std::cout << error.what() << std::endl;
-        system("pause");
-        return 0;
+        //fclose(file);
     }
 
-    system("pause");
     return 0;
 }

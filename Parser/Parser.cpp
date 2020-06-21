@@ -5,6 +5,10 @@ Parser::Parser(const std::vector<Token *> &tokens) : _tree(new Node(new NodeData
     _currentToken = _tokens.begin();
 }
 
+bool Parser::TryGetToken(const TokenType &type) {
+    return (_currentToken < _tokens.end() && (*_currentToken)->GetType() == type);
+}
+
 bool Parser::BoolExpr(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
@@ -339,7 +343,7 @@ bool Parser::LetDecl(Node *&root) {
         _currentToken++;
         if (Pat(leftChild)) {
             auto saveToken = _currentToken;
-            if (!Init(rightChild)){
+            if (!Init(rightChild)) {
                 _currentToken = saveToken;
             }
             if (_currentToken < _tokens.end() && (*_currentToken)->GetType() == SEMICOLON) {

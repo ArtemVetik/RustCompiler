@@ -89,6 +89,7 @@ private:
     bool NestedBlock(Node *& root);
     bool BlockChecker(Node *&root);
 
+    bool TryGetToken(const TokenType &type);
 public:
     const AST_Tree &GetASTTree() const;
 
