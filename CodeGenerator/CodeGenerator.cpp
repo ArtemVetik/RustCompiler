@@ -1,6 +1,7 @@
 #include "CodeGenerator.h"
 
 CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _rulesCount(5) {
+    // TODO кодировка и сложные выражения  let c = b || d > 3;
     _tree = tree;
     _tableOfReservedWords.open("ReservedWords/TableOfReservedWords.dat");
     if (!_tableOfReservedWords.is_open())
@@ -176,6 +177,10 @@ float CodeGenerator::Optimized(Node *const &node) {
     bool insideCycle = _rulesCount[RulesForLabels::While] != 0 || _rulesCount[RulesForLabels::Loop] != 0;
 
     switch (node->GetData()->ruleType) {
+        case RuleType::LogicalExpression:
+            return LogicalCompOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
+        case RuleType::BinaryCompExpression:
+            return BinaryCompOperation(Optimized(node->GetChild(0)), Optimized(node->GetChild(1)), node);
         case RuleType::UnaryExpession:
             if (node->GetData()->token.GetType() == TokenType::MINUS)
                 return -Optimized(node->GetChild(0));
@@ -258,9 +263,9 @@ std::pair<MASMType, std::string> CodeGenerator::DetermineType(Node *const &node)
                                                                                                       "DWORD");
         case RuleType::Literal:
             tokenType = node->GetData()->token.GetType();
-            return (tokenType == TokenType::INTNUM || tokenType == TokenType::BOOL) ? std::make_pair(MASMType::DWORD,
-                                                                                                     "DWORD")
-                                                                                    : std::make_pair(MASMType::REAL8,
+            return (tokenType == TokenType::INTNUM || tokenType == TokenType::BOOLLIT) ? std::make_pair(MASMType::DWORD,
+                                                                                                        "DWORD")
+                                                                                       : std::make_pair(MASMType::REAL8,
                                                                                                      "REAL8");
         default:
             return std::make_pair(MASMType::None, "None");
@@ -413,14 +418,14 @@ std::string CodeGenerator::CalculateLiteral(Node *const &node) {
 }
 
 std::string CodeGenerator::CalculateIdentifier(Node *const &node) {
-    std::string id = node->GetData()->token.GetValue();
-    MASMType type = GetID(id).type.first;
+    MasmID_Data idData = GetID(node->GetData()->token.GetValue());
+    MASMType type = idData.type.first;
 
     switch (type) {
         case MASMType::DWORD:
-            return "\tpush " + id + "\n";
+            return "\tpush " + idData.id + idData.uid + "\n";
         case MASMType::REAL8:
-            return "\tFLD " + id + "\n";
+            return "\tFLD " + idData.id + idData.uid + "\n";
         default:
             throw std::bad_function_call();
     }
@@ -476,6 +481,43 @@ float CodeGenerator::BinaryOperation(float v1, float v2, Node *const &operation)
             throw std::bad_function_call();
     }
 }
+
+float CodeGenerator::BinaryCompOperation(float v1, float v2, Node *const &operation) {
+    if (operation == nullptr)
+        throw std::bad_function_call();
+
+    switch (operation->GetData()->token.GetType()) {
+        case TokenType::MORE:
+            return v1 > v2;
+        case TokenType::LESS:
+            return v1 < v2;
+        case TokenType::MOREEQUAL:
+            return v1 >= v2;
+        case TokenType::LESSEQUAL:
+            return v1 <= v2;
+        case TokenType::EQUAL:
+            return v1 == v2;
+        case TokenType::NASSIG:
+            return v1 != v2;
+        default:
+            throw std::bad_function_call();
+    }
+}
+
+float CodeGenerator::LogicalCompOperation(float v1, float v2, Node *const &operation) {
+    if (operation == nullptr)
+        throw std::bad_function_call();
+
+    switch (operation->GetData()->token.GetType()) {
+        case TokenType::LOR:
+            return static_cast<bool>(v1) || static_cast<bool>(v2);
+        case TokenType::LAND:
+            return static_cast<bool>(v1) && static_cast<bool>(v2);
+        default:
+            throw std::bad_function_call();
+    }
+}
+
 
 std::pair<bool, unsigned int> CodeGenerator::HasInUpper(const std::string &id) {
     ProgramBlock<MasmID_Data, MasmArray_Data> *tmp = _currentBlock;
@@ -570,6 +612,7 @@ std::pair<MASMType, std::string> CodeGenerator::Type(Node *const &typeNode) {
             return std::make_pair(MASMType::REAL8, "REAL8");
         case TokenType::INTEGER:
         case TokenType::UINT:
+        case TokenType::BOOL:
             return std::make_pair(MASMType::DWORD, "DWORD");
         default:
             return std::make_pair(MASMType::None, "???");

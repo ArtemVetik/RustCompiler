@@ -18,6 +18,7 @@ private:
     // TODO errors
     // Examples: if discriminant << 0.0
     // Examples: let mut array:[id32; 10]
+    // let arr:[bool; 4] = [true, !false, false !true];
 
     // Объявление переменных
     bool LetDecl(Node *&root);

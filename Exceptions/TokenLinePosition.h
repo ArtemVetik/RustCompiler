@@ -7,7 +7,8 @@ struct TokenLinePosition {
     unsigned int linearPosition;
 
     TokenLinePosition() : line(1), column(1), linearPosition(0) { }
-    TokenLinePosition(const unsigned int &line, const unsigned int &column) : line(line), column(column) { }
+    TokenLinePosition(const unsigned int &line, const unsigned int &column, const unsigned int &linearPosition)
+        : line(line), column(column), linearPosition(linearPosition) { }
 
     void AddSymbol(const char &symbol) {
         linearPosition++;
@@ -27,7 +28,7 @@ struct TokenLinePosition {
     }
 
     friend TokenLinePosition operator - (const TokenLinePosition &left, const int &right) {
-        return TokenLinePosition(left.line, left.column - 1);
+        return TokenLinePosition(left.line, left.column - 1, left.linearPosition - 1);
     }
 };
 

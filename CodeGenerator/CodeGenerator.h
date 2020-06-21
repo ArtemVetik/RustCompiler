@@ -75,6 +75,8 @@ private:
     MasmID_Data& GetID(const std::string &id);
     MasmArray_Data& GetArr(const std::string &id);
     float BinaryOperation(float v1, float v2, Node* const &operation);
+    float BinaryCompOperation(float v1, float v2, Node* const &operation);
+    float LogicalCompOperation(float v1, float v2, Node* const &operation);
     std::string BinaryOperation(Node* const &operation, const MASMType &type, bool isReverce = false);
     std::string UnaryOperation(Node *const &operation, const MASMType &type);
 

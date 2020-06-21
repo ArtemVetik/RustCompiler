@@ -627,7 +627,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
     functionData.type = GetTypeData(node->GetChild(2));
     _functionTable.AddToTable(functionData);
 
-    CheckRule(node->GetChild(3));
+    Traversal(node->GetChild(3));
 
     if (node->GetChild(2) != nullptr && !_functionTable.Back().hasReturn)
         throw Err::FunctionReturnTypeError(_functionTable.Back().type.ToString(), "None", node->GetChild(2));

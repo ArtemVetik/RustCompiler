@@ -3,19 +3,20 @@
 #include <string>
 
 enum class TokenType {
-    ID,       // Идентификатор
-    INTNUM,   // Целое число
-    RNUM,     // Вещественное число
-    PRINTLN,  // Println
-    PRINT,    // Print
-    STRING,   // Строка
-    BOOL,     // Логический тип
+    ID,         // Идентификатор
+    INTNUM,     // Целое число
+    RNUM,       // Вещественное число
+    STRINGLIT,  // Строка
+    BOOLLIT,    // Логический тип
 
     // Ключевые слова
+    PRINTLN,    // Println
+    PRINT,      // Prints
     FUNCTION,   // fn
     INTEGER,    // i32
     REAL,       // f32
     UINT,       // usize
+    BOOL,       // bool
     LET,        // let
     MUT,        // mut
     FOR,        // for
@@ -69,7 +70,7 @@ public:
             case TokenType::INTNUM:return std::string("INTNUM");
             case TokenType::RNUM:return std::string("RNUM");
             case TokenType::UINT:return std::string("UINT");
-            case TokenType::STRING:return std::string("STRING");
+            case TokenType::STRINGLIT:return std::string("STRINGLIT");
             case TokenType::INTEGER:return std::string("INTEGER");
             case TokenType::REAL:return std::string("REAL");
             case TokenType::BREAK:return std::string("BREAK");
@@ -112,7 +113,7 @@ public:
             case TokenType::PRINT: return std::string("PRINT");
             case TokenType::BAND: return std::string("BAND");
             case TokenType::ARROW: return std::string("ARROW");
-            case TokenType::BOOL: return std::string("BOOL");
+            case TokenType::BOOLLIT: return std::string("BOOLLIT");
             default: return "";
         }
     }

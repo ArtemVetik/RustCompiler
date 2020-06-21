@@ -50,8 +50,9 @@ struct TypeData {
                 return Type::Integer;
             case TokenType::UINT:
                 return Type::Unsigned;
-            case TokenType::STRING:
+            case TokenType::STRINGLIT:
                 return Type::String;
+            case TokenType::BOOLLIT:
             case TokenType::BOOL:
                 return Type::Bool;
             default:

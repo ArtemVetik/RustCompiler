@@ -248,7 +248,7 @@ bool Parser::IsLiteral(Node *&root) {
 }
 
 bool Parser::IsString(Node *&root) {
-    if (TryGetToken(TokenType::STRING)) {
+    if (TryGetToken(TokenType::STRINGLIT)) {
         root = new Node(new NodeData(**_currentToken, Literal));
         _currentToken++;
         return true;
@@ -266,7 +266,7 @@ bool Parser::IsNum(Node *&root) {
 }
 
 bool Parser::IsBool(Node *&root) {
-    if (TryGetToken(TokenType::BOOL)) {
+    if (TryGetToken(TokenType::BOOLLIT)) {
         root = new Node(new NodeData(**_currentToken, RuleType::Literal));
         _currentToken++;
         return true;
@@ -524,7 +524,7 @@ bool Parser::Type(Node *&root) {
         return false;
     }
 
-    if (TryGetToken(TokenType::INTEGER) || TryGetToken(TokenType::REAL) || TryGetToken(TokenType::UINT)) {
+    if (TryGetToken(TokenType::INTEGER) || TryGetToken(TokenType::REAL) || TryGetToken(TokenType::UINT) || TryGetToken(TokenType::BOOL)) {
         typeNode = new Node(new NodeData(**_currentToken, RuleType::None));
         _currentToken++;
         root = new Node(new NodeData(Token("TypeData"), RuleType::IdType));

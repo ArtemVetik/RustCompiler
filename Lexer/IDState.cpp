@@ -51,8 +51,9 @@ void IDState::InitKeyWords() {
     _keyWords.emplace_back(std::make_pair("print", TokenType::PRINT));
     _keyWords.emplace_back(std::make_pair("break", TokenType::BREAK));
     _keyWords.emplace_back(std::make_pair("return", TokenType::RETURN));
-    _keyWords.emplace_back(std::make_pair("true", TokenType::BOOL));
-    _keyWords.emplace_back(std::make_pair("false", TokenType::BOOL));
+    _keyWords.emplace_back(std::make_pair("true", TokenType::BOOLLIT));
+    _keyWords.emplace_back(std::make_pair("false", TokenType::BOOLLIT));
+    _keyWords.emplace_back(std::make_pair("bool", TokenType::BOOL));
 }
 
 bool IDState::CanTransitTo(State *const &to) const {
