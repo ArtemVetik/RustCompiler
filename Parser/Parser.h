@@ -27,6 +27,7 @@ private:
     bool Init(Node *&root);
     bool Expr(Node *&root);
     bool SimpleExpr(Node *&root);
+    bool MemberExpr(Node *&root);
     bool GroupInit(Node *&root);
     bool LitList(Node *&root);
     bool Type(Node *&root);

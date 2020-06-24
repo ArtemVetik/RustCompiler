@@ -56,7 +56,10 @@ private:
     std::stack<RulesForLabels> _rules;
     std::vector<int> _rulesCount;
 
-
+    /// тестовый комментарий
+    /// @return тестовое возвращаемое значение
+    /// @brief тестовый бриф
+    /// @arg тестовые аргументы
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
 

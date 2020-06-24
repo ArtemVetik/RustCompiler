@@ -464,25 +464,18 @@ bool Parser::Init(Node *&root) {
 bool Parser::Expr(Node *&root) {
     auto saveToken = _currentToken;
 
-    Node *idNode = nullptr, *arrayExprNode = nullptr;
-
     if (BoolExpr(root))
         return true;
     _currentToken = saveToken;
 
-    if (IsID(idNode) && ArrayExpr(arrayExprNode)) {
-        root = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
-        root->AddChild(idNode);
-        root->AddChild(arrayExprNode);
-        AST_Tree::DeleteNode(idNode, arrayExprNode);
+    if (MemberExpr(root))
         return true;
-    }
-
     _currentToken = saveToken;
+
     if (ArrayExpr(root))
         return true;
 
-    AST_Tree::DeleteNode(idNode, arrayExprNode);
+    _currentToken = saveToken;
     return false;
 }
 
@@ -498,6 +491,24 @@ bool Parser::SimpleExpr(Node *&root) {
         throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
     }
 
+    return false;
+}
+
+bool Parser::MemberExpr(Node *&root) {
+    Node* idNode = nullptr, *arrayExprNode = nullptr;
+
+    auto saveToken = _currentToken;
+
+    if (IsID(idNode) && ArrayExpr(arrayExprNode)) {
+        root = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
+        root->AddChild(idNode);
+        root->AddChild(arrayExprNode);
+        AST_Tree::DeleteNode(idNode, arrayExprNode);
+        return true;
+    }
+
+    _currentToken = saveToken;
+    AST_Tree::DeleteNode(idNode, arrayExprNode);
     return false;
 }
 
@@ -670,7 +681,7 @@ bool Parser::Block(Node *&root) {
     return true;
 }
 
-bool Parser::BlockChecker(Node *&root) {
+    bool Parser::BlockChecker(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
@@ -748,9 +759,8 @@ bool Parser::Println(Node *&root) {
                 _currentToken++;
                 if (IsString(stringNode)) {
                     auto saveToken = _currentToken;
-                    if (!ExprList(exprListNode)) {
+                    if (!ExprList(exprListNode))
                         _currentToken = saveToken;
-                    }
                     if (TryGetToken(TokenType::RRBR)) {
                         _currentToken++;
                         if (TryGetToken(TokenType::SEMICOLON)) {
@@ -940,23 +950,18 @@ bool Parser::Assignment(Node *&root) {
         return false;
 
     root = new Node(new NodeData(Token("AssignmentExpr"), RuleType::AssignmentExpression));
-    Node *idNode = nullptr, *memberExprNode = nullptr, *arrayExprNode = nullptr, *initNode = nullptr;
+    Node *idNode = nullptr, *memberExprNode = nullptr, *initNode = nullptr;
 
     auto saveToken = _currentToken;
-    if (IsID(idNode) && ArrayExpr(arrayExprNode)) {
-        memberExprNode = new Node(new NodeData(Token("MemberExpression"), RuleType::MemberExpression));
-        memberExprNode->AddChild(idNode);
-        memberExprNode->AddChild(arrayExprNode);
-        if (Init(initNode)) {
-            if (TryGetToken(TokenType::SEMICOLON)) {
-                _currentToken++;
-                root->AddChild(memberExprNode);
-                root->AddChild(initNode);
-                AST_Tree::DeleteNode(idNode, arrayExprNode, memberExprNode, initNode);
-                return true;
-            }
-            else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+    if (MemberExpr(memberExprNode) && Init(initNode)) {
+        if (TryGetToken(TokenType::SEMICOLON)) {
+            _currentToken++;
+            root->AddChild(memberExprNode);
+            root->AddChild(initNode);
+            AST_Tree::DeleteNode(idNode, memberExprNode, initNode);
+            return true;
         }
+        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
     }
 
     _currentToken = saveToken;
@@ -972,7 +977,7 @@ bool Parser::Assignment(Node *&root) {
     }
 
     _currentToken = saveToken;
-    AST_Tree::DeleteNode(idNode, arrayExprNode, memberExprNode, initNode, root);
+    AST_Tree::DeleteNode(idNode, memberExprNode, initNode, root);
     return false;
 }
 

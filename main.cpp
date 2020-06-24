@@ -18,7 +18,7 @@ int main() {
     system("chcp 1251");
     system("cls");
 
-    FILE* file = freopen("Output/consoleOutput.txt","w",stdout);
+    //FILE* file = freopen("Output/consoleOutput.txt","w",stdout);
 
     try {
         Lexer lexer("test.txt");
@@ -36,14 +36,14 @@ int main() {
         CodeGenerator generator(parser.GetASTTree(), semanticAnalyzer.GetFunctionTable());
         generator.Generate();
         generator.CreateAsmFile();
-        fclose(file);
+        //fclose(file);
         remove("Output/errorOutput.txt");
     }
     catch (const std::exception& error) {
-        fclose(file);
-        file = freopen("Output/errorOutput.txt","w",stdout);
+        //fclose(file);
+        //file = freopen("Output/errorOutput.txt","w",stdout);
         std::cout << error.what() << std::endl;
-        fclose(file);
+        //fclose(file);
     }
 
     return 0;
