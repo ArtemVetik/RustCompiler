@@ -118,7 +118,6 @@ private:
     void InitCompareOperations();
 
 public:
-
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     ~CodeGenerator();
     void Generate();

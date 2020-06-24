@@ -1,7 +1,7 @@
 #include "CodeGenerator.h"
 
 CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _rulesCount(5) {
-    // TODO кодировка и сложные выражения  let c = b || d > 3;
+    // TODO кодировка
     _tree = tree;
     _tableOfReservedWords.open("ReservedWords/TableOfReservedWords.dat");
     if (!_tableOfReservedWords.is_open())
@@ -277,10 +277,33 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
     std::string leftCode;
     std::string rightCode;
     std::string funcId;
+    std::string trueLabel;
+    std::string falseLabel;
+    std::string endLabel;
     MasmID_Data idData;
     RuleType leftRuleType;
 
+
     switch (node->GetData()->ruleType) {
+        case RuleType::LogicalExpression:
+        case RuleType::BinaryCompExpression:
+            trueLabel = "@M" + std::to_string(_labelNum++);
+            falseLabel = "@M" + std::to_string(_labelNum++);
+            code += LogicalOperation(node, CompareType::Reverse, trueLabel, falseLabel);
+            code += trueLabel + ":\n";
+            if (type == MASMType::DWORD)
+                code += "\tpush 1\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFLD1\n";
+            endLabel = "@M" + std::to_string(_labelNum++);
+            code += "\tjmp " + endLabel + "\n";
+            code += falseLabel + ":\n";
+            if (type == MASMType::DWORD)
+                code += "\tpush 0\n";
+            else if (type == MASMType::REAL8)
+                code += "\tFLDZ\n";
+            code += endLabel + ":\n";
+            break;
         case RuleType::UnaryExpession:
             code += UnaryOperation(node, type);
             break;
@@ -387,7 +410,9 @@ std::string CodeGenerator::UnaryOperation(Node *const &operation, const MASMType
     std::string code;
     code += CalculateExpression(operation->GetChild(0), type);
 
-    if (operation->GetData()->token.GetType() == TokenType::MINUS) {
+    TokenType operationType = operation->GetData()->token.GetType();
+
+    if (operationType == TokenType::MINUS || operationType == TokenType::EXCL) {
         if (type == MASMType::DWORD)
             code += "\tpop eax\n\tNEG eax\n\tpush eax\n";
         else if (type == MASMType::REAL8)
@@ -399,7 +424,10 @@ std::string CodeGenerator::UnaryOperation(Node *const &operation, const MASMType
 
 std::string CodeGenerator::CalculateLiteral(Node *const &node) {
     std::string code;
+
     float value;
+    std::stringstream stream;
+    std::string hexStr;
 
     switch (node->GetData()->token.GetType()) {
         case TokenType::INTNUM:
@@ -407,12 +435,15 @@ std::string CodeGenerator::CalculateLiteral(Node *const &node) {
             break;
         case TokenType::RNUM:
             value = std::stof(node->GetData()->token.GetValue());
-            std::stringstream stream;
             stream << std::hex << FloatToHex(value);
-            std::string hexStr = (value < 0) ? "0" : "";
+            hexStr = (value < 0) ? "0" : "";
             hexStr += stream.str();
             code += "\tpush " + hexStr + "h" + "\n";
             code += "\tFLD DWORD PTR [esp]\n\tpop eax\n";
+            break;
+        case TokenType::BOOLLIT:
+            code += "\tpush " + std::to_string(node->GetData()->token.GetValue() == "true") + "\n";
+            break;
     }
     return code;
 }
@@ -1016,6 +1047,12 @@ std::string CodeGenerator::LogicalOperation(Node *const &operation, const CodeGe
         case TokenType::EQUAL:
             code += CompareOperation(operation, compare, trueLabel, falseLabel);
             break;
+        default:
+            code += CalculateExpression(operation, MASMType::DWORD);
+            code += "\tpop eax\n\tmov ebx, 0\n\tcmp eax, ebx\n";
+            std::string label = (compare == CompareType::Direct) ? trueLabel : falseLabel;
+            code += "\t" + GetCompareOperation(TokenType::NASSIG, compare, MASMType::DWORD) + " " + label + "\n";
+            break;
     }
 
     return code;
@@ -1296,7 +1333,14 @@ CodeGenerator::~CodeGenerator() {
 }
 
 void CodeGenerator::CreateAsmFile() {
-    std::ofstream asmFile("TempCompile\\temp.asm");
+    /*FILE* file = fopen("TempCompile\\temp.asm", "w+");
+    fwrite(_asmCodeString.c_str(), sizeof(char),_asmCodeString.size(), file);
+    fclose(file);
+    return;
+    */
+
+    std::ofstream asmFile("TempCompile\\temp.asm", std::ios::binary);
+
     asmFile << _asmCodeString;
     asmFile.close();
 

@@ -13,7 +13,6 @@ private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
     AST_Tree _tree;
-    ParserError _error;
 
     // TODO errors
     // Examples: if discriminant << 0.0
