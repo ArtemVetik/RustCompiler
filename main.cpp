@@ -15,10 +15,8 @@
 */
 
 int main() {
-
-    //setlocale(LC_ALL,"Russian");
-    //system("chcp 866");
-    //system("cls");
+    system("chcp 1251");
+    system("cls");
 
     FILE* file = freopen("Output/consoleOutput.txt","w",stdout);
 

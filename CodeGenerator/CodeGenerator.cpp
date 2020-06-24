@@ -1333,12 +1333,6 @@ CodeGenerator::~CodeGenerator() {
 }
 
 void CodeGenerator::CreateAsmFile() {
-    /*FILE* file = fopen("TempCompile\\temp.asm", "w+");
-    fwrite(_asmCodeString.c_str(), sizeof(char),_asmCodeString.size(), file);
-    fclose(file);
-    return;
-    */
-
     std::ofstream asmFile("TempCompile\\temp.asm", std::ios::binary);
 
     asmFile << _asmCodeString;

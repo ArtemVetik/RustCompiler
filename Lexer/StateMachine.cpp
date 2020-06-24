@@ -12,7 +12,7 @@ void StateMachine::TakeSymbol(char symbol) {
             _endPos.AddSymbol(symbol);
             return;
         }
-        End();
+        GenerateToken();
         _endPos.AddSymbol(symbol);
         _startPos.AddSymbol(symbol);
     }
@@ -25,7 +25,7 @@ void StateMachine::TakeSymbol(char symbol) {
         throw LexError(std::string("Can't find symbol " + std::string(1,symbol)), TokenLocation(_startPos, _endPos));
 }
 
-void StateMachine::End() {
+void StateMachine::GenerateToken() {
     Token* token = _currentState->GetToken(_buffer);
     if (!token)
     {

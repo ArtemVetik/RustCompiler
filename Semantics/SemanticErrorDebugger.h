@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include "../AST_Tree/AST_Tree.h"
+#include "../Parser//AST_Tree/AST_Tree.h"
 #include "../Exceptions/SemanticError.h"
 #include "../Exceptions/TokenLinePosition.h"
 

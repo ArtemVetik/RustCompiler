@@ -4,8 +4,8 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include "../Lexer/Token.h"
-#include "../Semantics/RuleType.h"
+#include "../../Lexer/Token.h"
+#include "RuleType.h"
 
 struct NodeData {
     Token token;
@@ -28,7 +28,6 @@ class Node {
 private:
     NodeData* _data;
     std::vector<Node*> _childs;
-    Node* _parent;
 
 public:
     explicit Node(NodeData* const &data);
@@ -38,7 +37,7 @@ public:
     ~Node();
     void AddChild(Node *const &child);
     const std::vector<Node*> &GetChilds() const;
-    Node* const &GetChild(unsigned int const &ind) const;
+    Node* const &GetChild(const unsigned int &ind) const;
     NodeData* GetData() const;
     void Traversal();
 };

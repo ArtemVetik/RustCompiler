@@ -1,10 +1,10 @@
 #ifndef RUSTCOMPILER_LEXER_H
 #define RUSTCOMPILER_LEXER_H
 
-
 #include "StateMachine.h"
 #include <string>
 #include <fstream>
+#include <utility>
 
 class Lexer {
 private:
@@ -16,6 +16,5 @@ public:
     void Analyze();
     const std::vector<Token*>& GetTokens() const;
 };
-
 
 #endif //RUSTCOMPILER_LEXER_H

@@ -1,7 +1,5 @@
 #include "Lexer.h"
 
-#include <utility>
-
 Lexer::Lexer(std::string fileName) : _fileName(std::move(fileName)){
 
 }
@@ -23,7 +21,7 @@ void Lexer::Analyze() {
 
         _stateMachine.TakeSymbol(sym);
     }
-    _stateMachine.End();
+    _stateMachine.GenerateToken();
     _stateMachine.PrintTokens();
 
     file.close();

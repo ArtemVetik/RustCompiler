@@ -5,8 +5,8 @@
 #include <vector>
 #include "../Exceptions/ParserError.h"
 #include "../Lexer/Token.h"
-#include "../AST_Tree/AST_Tree.h"
-#include "../AST_Tree/Node.h"
+#include "AST_Tree/AST_Tree.h"
+#include "AST_Tree/Node.h"
 
 class Parser {
 private:

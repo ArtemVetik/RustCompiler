@@ -16,15 +16,15 @@ private:
     std::vector<Token*> _tokens;
 
     bool SplitSeparators(const std::string& buffer);
+
 public:
     StateMachine();
     ~StateMachine();
     void TakeSymbol(char symbol);
-    void End();
+    void GenerateToken();
     void PrintTokens() const;
 
     const std::vector<Token*>& GetTokens() const;
 };
-
 
 #endif //RUSTCOMPILER_STATEMACHINE_H

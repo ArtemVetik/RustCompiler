@@ -2,7 +2,6 @@
 
 Node::Node(NodeData *const &data) {
     _data = new NodeData(*data);
-    _parent = nullptr;
 }
 
 void Node::AddChild(Node *const &child) {
@@ -27,7 +26,6 @@ void Node::Traversal() {
 
 Node::Node() {
     _data = nullptr;
-    _parent = nullptr;
 }
 
 NodeData *Node::GetData() const {
@@ -35,13 +33,11 @@ NodeData *Node::GetData() const {
 }
 
 Node::Node(const Node &node) {
-    _parent = nullptr;
     _data = nullptr;
 
     if (node._data)
         _data = new NodeData(*(node._data));
-    if (node._parent)
-        _parent = new Node(*(node._parent));
+
     for (auto &child : node._childs) {
         AddChild(child);
     }
@@ -52,10 +48,7 @@ Node::~Node() {
         delete _data;
         _data = nullptr;
     }
-    if (_parent) {
-        delete _parent;
-        _parent = nullptr;
-    }
+
     for (Node* child : _childs){
         delete child;
         child = nullptr;
@@ -67,6 +60,6 @@ const std::vector<Node *> &Node::GetChilds() const {
     return _childs;
 }
 
-Node* const& Node::GetChild(unsigned int const &ind) const {
+Node* const& Node::GetChild(const unsigned int &ind) const {
     return _childs.at(ind);
 }
