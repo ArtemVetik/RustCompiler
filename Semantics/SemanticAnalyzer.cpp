@@ -477,21 +477,20 @@ std::vector<std::pair<TypeData, bool>> SemanticAnalyzer::FunctionInvokeParams(co
         throw Err::FunctionInvokeParametersCountError(std::to_string(funcDefineParams.size()), paramsNode.empty() ? node :
                                                                                                paramsNode[paramsNode.size() - 1]);
 
-
     for (unsigned int i = 0; i < funcDefineParams.size(); ++i) {
         if (funcDefineParams[i]->type != paramTypes[i].first)
             throw Err::FunctionInvokeParametersTypeError(funcDefineParams[i]->type.ToString(), paramsNode[i]);
-        if (paramTypes[i].second && reinterpret_cast<Array_Data*>(funcDefineParams[i]) == nullptr)
+        if (paramTypes[i].second && dynamic_cast<Array_Data*>(funcDefineParams[i]) == nullptr)
             throw Err::CriticalError("It is impossible to pass an array instead of a regular variable", node->GetChild(i));
-        if (!paramTypes[i].second && reinterpret_cast<ID_Data*>(funcDefineParams[i]) == nullptr)
-            throw Err::CriticalError("", node->GetChild(i));
+        if (!paramTypes[i].second && dynamic_cast<ID_Data*>(funcDefineParams[i]) == nullptr)
+            throw Err::CriticalError("It is impossible to pass a regular variable instead of array", node->GetChild(i));
 
         if (paramTypes[i].second) {
             Node* arrIdNode = node->GetChild(i)->GetData()->ruleType == RuleType::ArrayArg ?
                               node->GetChild(i)->GetChild(2) : node->GetChild(i);
 
             std::string arrId = arrIdNode->GetData()->token.GetValue();
-            Array_Data* declArrData = reinterpret_cast<Array_Data*>(funcDefineParams[i]);
+            Array_Data* declArrData = dynamic_cast<Array_Data*>(funcDefineParams[i]);
             Array_Data paramArrayData = GetArr(arrId, node->GetChild(i));
             if (declArrData->elementCount != paramArrayData.elementCount)
                 throw Err::ArrayCountElementsError(std::to_string(declArrData->elementCount), std::to_string(paramArrayData.elementCount), node);
@@ -699,7 +698,6 @@ void SemanticAnalyzer::CheckInits(const ProgramBlock<ID_Data, Array_Data> &progr
         }
         CheckInits(block);
     }
-
 }
 
 std::pair<TypeData, bool> SemanticAnalyzer::InternalFunctionInvoke(Node *const &node) {
@@ -771,13 +769,18 @@ void SemanticAnalyzer::Print(Node *const &node) {
         throw Err::CriticalError("Expected print", node);
 
     std::vector<Node*> params = node->GetChild(1)->GetChilds();
-    if (params.empty())
+    std::string fmtString = node->GetChild(0)->GetData()->token.GetValue();
+    if (params.empty()) {
+        int arrFormatPos = fmtString.find("{:?}");
+        int idFormatPos = fmtString.find("{}");
+        if (arrFormatPos != std::string::npos || idFormatPos != std::string::npos)
+            throw Err::CriticalError("Discrepancy in the number of formatted parameters", node->GetChild(0));
         return;
+    }
 
     bool isArrayParam = false;
     bool isArrayFormat = false;
     std::string id;
-    std::string fmtString = node->GetChild(0)->GetData()->token.GetValue();
     std::pair<bool, unsigned int> varData;
 
     for (const auto& param : params) {
@@ -826,7 +829,7 @@ void SemanticAnalyzer::Print(Node *const &node) {
             if (isArrayParam)
                 throw Err::CriticalError("Array cannot be formatted with the default formatter", param);
             else
-                throw Err::CriticalError("Ordinary variable cannot be formatted with the array formatter", param);
+                throw Err::CriticalError("Ordinary variable or number cannot be formatted with the array formatter", param);
         }
 
         fmtString = isArrayFormat ? fmtString.substr(arrFormatPos+4, fmtString.size() - arrFormatPos - 4) :

@@ -41,7 +41,7 @@ struct TypeData {
     }
 
     static Type ToType(const TokenType &tokenType) {
-        switch (tokenType){
+        switch (tokenType) {
             case TokenType::REAL:
             case TokenType::RNUM:
                 return Type::Real;

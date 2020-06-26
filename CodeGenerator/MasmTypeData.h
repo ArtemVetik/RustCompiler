@@ -24,7 +24,6 @@ struct MasmID_Data {
         value = 0;
     }
 
-
     bool operator == (const std::string &id) const {
         return this->id == id;
     }
@@ -62,6 +61,5 @@ struct MasmArray_Data {
         return this->id == data.id;
     }
 };
-
 
 #endif //RUSTCOMPILER_MASMTYPEDATA_H

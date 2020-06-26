@@ -22,6 +22,8 @@ struct Data {
     bool operator == (const Data &data) const {
         return this->id == data.id;
     }
+
+    virtual ~Data() = default;
 };
 
 struct ID_Data : public Data {

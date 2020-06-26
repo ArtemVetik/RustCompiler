@@ -692,7 +692,8 @@ std::string CodeGenerator::FunctionParams(Node *const &node) {
             MasmID_Data idData(id, "", type);
             _currentBlock->idTable.AddToTable(idData);
             ptrStr = "";
-        } else {
+        }
+        else {
             type = Type(argument->GetChild(3)->GetChild(0));
             unsigned int arrSize = std::stoul(argument->GetChild(3)->GetChild(1)->GetData()->token.GetValue());
             MasmArray_Data arrData(id, "", type, arrSize, true);
@@ -824,7 +825,8 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
         esiMember = "\tmov esi, " + arrData.id + arrData.uid + "\n";
         idMasm = arrData.type.second + " ptr [esi + " + std::to_string(ind) + " * Type " + arrData.type.second +
                  " ptr " + arrData.id + arrData.uid + "]";
-    } else
+    }
+    else
         idMasm = arrData.id + arrData.uid + "[" + std::to_string(ind) + " * Type " + arrData.id + arrData.uid + "]";
 
     if (expression) {
@@ -1249,7 +1251,8 @@ std::string CodeGenerator::PrintArray(const MasmArray_Data &arrayData) {
 
     if (arrayData.isPtr) {
         code += "\tmov esi, " + arrayData.id + arrayData.uid + "\n";
-        templatePrintfString = arrayData.type.second + " ptr [esi + ebx * Type " + arrayData.id + arrayData.uid + "]";
+        templatePrintfString = arrayData.type.second + " ptr [esi + ebx * Type " + arrayData.type.second +
+                " ptr " + arrayData.id + arrayData.uid + "]";
     }
     code += "\tmov ebx, 0\n\tprintf(\"[\")\n";
     code += "\t.while (ebx < " + std::to_string(arrayData.elementCount) + ")\n";

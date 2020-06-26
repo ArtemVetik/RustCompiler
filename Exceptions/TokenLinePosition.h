@@ -42,7 +42,7 @@ struct TokenLocation {
 
     std::string ToString() {
         return std::string("Start: " + std::to_string(start.line) + " " + std::to_string(start.column)
-            + " GenerateToken: " + std::to_string(end.line) + " " + std::to_string(end.column));
+            + " End: " + std::to_string(end.line) + " " + std::to_string(end.column));
     }
 };
 
