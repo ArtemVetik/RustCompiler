@@ -8,6 +8,7 @@
 
 #define Err SemanticErrorDebugger
 
+/// @brief семантический анализатор
 class SemanticAnalyzer {
 private:
     Node* _root;
@@ -61,11 +62,14 @@ private:
     Array_Data& GetArr(const std::string &id, Node* const &root);
 
 public:
+    /// @param tree абстрактное синтаксическое дерево, полученное в результате синтаксического анализа
     explicit SemanticAnalyzer(const AST_Tree &tree);
     ~SemanticAnalyzer();
 
+    /// @brief запускает семантический анализ
     void Analyze();
-    const Table<Function_Data> &GetFunctionTable() const;
+    /// @return таблица функций, сформированная на этапе семантического анализа
+    [[nodiscard]] const Table<Function_Data> &GetFunctionTable() const;
 };
 
 

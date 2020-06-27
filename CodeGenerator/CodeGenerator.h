@@ -14,6 +14,7 @@
 #include "../Lexer/Token.h"
 #include "MasmTypeData.h"
 
+/// @brief класс генерации ассемблерного кода
 class CodeGenerator {
 private:
     union {
@@ -56,10 +57,6 @@ private:
     std::stack<RulesForLabels> _rules;
     std::vector<int> _rulesCount;
 
-    /// тестовый комментарий
-    /// @return тестовое возвращаемое значение
-    /// @brief тестовый бриф
-    /// @arg тестовые аргументы
     std::string Traversal(Node* const &root);
     std::string CheckRule(Node* const &node, const std::string &exitLabel = "");
 
@@ -120,9 +117,14 @@ private:
     MasmArray_Data& GetArr(const std::string &id);
 
 public:
+    /// @param tree абстрактное дерево синтаксического разбора, полученное на этапе синтаксического анализа
+    /// @param funcTable таблица функций, полученная на этапе семантического разбора
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     ~CodeGenerator();
+    /// @brief запуск генерации кода
     void Generate();
+    /// @brief создание ассемблерного файла
+    /// @note создает файл с именем temp.asm в подкаталоге TempCompile
     void CreateAsmFile();
 };
 

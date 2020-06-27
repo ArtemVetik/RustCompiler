@@ -88,7 +88,7 @@ bool Parser::BoolExprComp(Node *&root) {
         {
             if (!Add(rightChild)){
                 AST_Tree::DeleteNode(rightChild, tmpRoot);
-                return false;
+                throw ParserError("expression", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
 
             if (root == nullptr)
@@ -309,11 +309,11 @@ bool Parser::Analyze() {
     }
 
     if (_currentToken == _tokens.end()) {
-        _tree.Traversal();
+        _tree.Print();
         AST_Tree::DeleteNode(tmp);
         return true;
     }
-    else throw ParserError();
+    else throw ParserError("function declaration", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
 }
 
 bool Parser::LetDecl(Node *&root) {
@@ -338,7 +338,7 @@ bool Parser::LetDecl(Node *&root) {
                 AST_Tree::DeleteNode(leftChild, rightChild);
                 return true;
             }
-            else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -390,7 +390,7 @@ bool Parser::GroupLet(Node *&root) {
                 _currentToken++;
                 return true;
             }
-            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -431,7 +431,7 @@ bool Parser::VarList(Node *&root) {
             }
             if (!IsID(idNode)){
                 AST_Tree::DeleteNode(mutNode, idNode, patNode);
-                throw ParserError("id", _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                throw ParserError("id", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 return false;
             }
         }
@@ -488,7 +488,7 @@ bool Parser::SimpleExpr(Node *&root) {
             _currentToken++;
             return true;
         }
-        throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     return false;
@@ -563,7 +563,7 @@ bool Parser::GroupInit(Node *&root) {
                 _currentToken++;
                 return true;
             }
-            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -616,10 +616,10 @@ bool Parser::ElseTail(Node *&root) {
                     _currentToken++;
                     return true;
                 }
-                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
         }
-        else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     return false;
@@ -650,10 +650,10 @@ bool Parser::IfExpr(Node *&root) {
                         AST_Tree::DeleteNode(boolExprNode, blockNode, elseTailNode);
                         return true;
                     }
-                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 }
             }
-            else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -738,7 +738,7 @@ bool Parser::NestedBlock(Node *& root) {
             _currentToken++;
             return true;
         }
-        else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -771,14 +771,14 @@ bool Parser::Println(Node *&root) {
                             AST_Tree::DeleteNode(stringNode, exprListNode);
                             return true;
                         }
-                        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                     }
-                    else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                    else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 }
             }
-            else throw ParserError('(', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError('(', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
-        else throw ParserError('!', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError('!', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     AST_Tree::DeleteNode(stringNode, exprListNode);
@@ -844,10 +844,10 @@ bool Parser::LetArrayDecl(Node *&root) {
                         AST_Tree::DeleteNode(mutArrNode, idArrNode, arrTypeNode, arrInitNode, arrPatNode);
                         return true;
                     }
-                    else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                    else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 }
             }
-            else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr); // TODO не выводит
+            else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -868,12 +868,15 @@ bool Parser::ArrayType(Node *&root) {
         if (Type(typeNode)) {
             if (TryGetToken(TokenType::SEMICOLON)) {
                _currentToken++;
+               saveToken = _currentToken;
                if (!Expr(countNode)) {
                    _currentToken = saveToken;
                    AST_Tree::DeleteNode(typeNode, countNode);
-                   return false;
+                   throw ParserError("expression", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                }
             }
+            else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
+
             if (TryGetToken(TokenType::RSQRBR)) {
                 _currentToken++;
                 root = new Node(new NodeData(Token("ArrType"), RuleType::ArrayType));
@@ -882,8 +885,9 @@ bool Parser::ArrayType(Node *&root) {
                 AST_Tree::DeleteNode(typeNode, countNode);
                 return true;
             }
-            else throw ParserError(']', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(']', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
+        else throw ParserError("array type", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -904,7 +908,7 @@ bool Parser::ArrayExpr(Node *&root) {
                 _currentToken++;
                 return true;
             }
-            else throw ParserError(']', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(']', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -961,7 +965,7 @@ bool Parser::Assignment(Node *&root) {
             AST_Tree::DeleteNode(idNode, memberExprNode, initNode);
             return true;
         }
-        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -973,7 +977,7 @@ bool Parser::Assignment(Node *&root) {
             AST_Tree::DeleteNode(idNode, initNode);
             return true;
         }
-        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -1002,10 +1006,10 @@ bool Parser::WhileExpr(Node *&root) {
                         AST_Tree::DeleteNode(boolExprNode, blockNode);
                         return true;
                     }
-                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 }
             }
-            else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -1034,10 +1038,10 @@ bool Parser::LoopExpr(Node *&root) {
                     AST_Tree::DeleteNode(blockNode);
                     return true;
                 }
-                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
         }
-        else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -1084,7 +1088,7 @@ bool Parser::FunctionInvoke(Node *&root) {
                 AST_Tree::DeleteNode(idNode, argumentNode, parameterNode);
                 return true;
             }
-            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
     }
 
@@ -1225,15 +1229,15 @@ bool Parser::FunctionDefine(Node *&root) {
                             AST_Tree::DeleteNode(idNode, parameterNode, returnTypeNode, blockNode);
                             return true;
                         }
-                        else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                        else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                     }
-                    else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                    else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
                 }
-                else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+                else throw ParserError(')', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
-            else throw ParserError('(', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+            else throw ParserError('(', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
-        else throw ParserError("id", _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError("id", _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -1271,7 +1275,7 @@ bool Parser::FunctionDefineArg(Node *&root) {
                 return true;
             }
         }
-        else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError(':', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     _currentToken = saveToken;
@@ -1316,7 +1320,7 @@ bool Parser::BlockExit(Node *&root) {
             AST_Tree::DeleteNode(exprNode);
             return true;
         }
-        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
 
     if (TryGetToken(TokenType::BREAK)) {
@@ -1326,7 +1330,7 @@ bool Parser::BlockExit(Node *&root) {
             root = new Node(new NodeData(Token("Break"), RuleType::Break));
             return true;
         }
-        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr);
+        else throw ParserError(';', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
     _currentToken = saveToken;
 

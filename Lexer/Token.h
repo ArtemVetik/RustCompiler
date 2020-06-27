@@ -7,6 +7,7 @@
 #include "TokenType.h"
 #include "../Exceptions/TokenLinePosition.h"
 
+/// @brief класс, описывабщий токен
 class Token {
 private:
     TokenLocation* _location;
@@ -18,10 +19,13 @@ public:
     explicit Token(const std::string &value = "");
     Token(const TokenType &type, std::string value, int id);
     ~Token();
+    /// @brief задает позицию токена в тексте программы
+    /// @param location позиция токена
     void SetLocation(const TokenLocation &location);
-    TokenLocation* const & GetLocation() const;
-    std::string GetValue() const;
-    TokenType GetType() const;
+    /// @return возвращает позицию токена
+    [[nodiscard]] TokenLocation* const & GetLocation() const;
+    [[nodiscard]] std::string GetValue() const;
+    [[nodiscard]] TokenType GetType() const;
     void PrintToken() const;
 
     Token& operator = (const Token &right);

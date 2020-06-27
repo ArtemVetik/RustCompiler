@@ -4,9 +4,11 @@
 #include <string>
 #include <exception>
 #include "TokenLinePosition.h"
+#include "../Lexer/Token.h"
 
+/// @brief базовый класс ошибок компилятора
 class BaseError : public std::exception {
-private:
+protected:
     std::string _error;
     TokenLocation _location;
 
@@ -24,6 +26,7 @@ public:
         _error = error;
     }
 
+    /// @brief возвращает позицию токена
     const TokenLocation& GetTokenLocation() const {
         return _location;
     }

@@ -4,6 +4,8 @@
 #include "State.h"
 #include <string>
 
+/// @brief состояние игнорируемых символов
+/// @details содержит символы \\n \\t \\r space
 class IgnoreState : public State {
 private:
     std::string _ignoreSymbols = " \n\r\t";

@@ -3,8 +3,33 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/CodeGenerator/CodeGenerator.cpp" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/CodeGenerator/CodeGenerator.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CodeGenerator/MasmTypeData.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Exceptions/BaseError.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Exceptions/CodeGeneratorError.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Exceptions/LexError.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Exceptions/ParserError.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Exceptions/SemanticError.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Exceptions/TokenLinePosition.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/IDState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/IgnoreState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/Lexer.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/NumState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/SeparatorState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/State.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/StateMachine.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/StringState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/Token.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/Transition.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Parser.cpp" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/Parser/AST_Tree/AST_Tree.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Parser/AST_Tree/Node.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Parser/AST_Tree/RuleType.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/ProgramBlock.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/SemanticAnalyzer.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/SemanticErrorDebugger.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/Table.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/TableData.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Semantics/TypeData.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/TESTTTTTT.inc" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/cmake-build-debug/test.txt" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/cmake-build-debug/test3.txt" charset="windows-1251" />

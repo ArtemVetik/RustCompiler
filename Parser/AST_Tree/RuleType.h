@@ -1,6 +1,9 @@
 #ifndef RUSTCOMPILER_RULETYPE_H
 #define RUSTCOMPILER_RULETYPE_H
 
+/// @file RuleType.h
+
+/// @brief тип правил для вершин AST дерева
 enum RuleType {
     AssignmentExpression,
     BinaryExpression,

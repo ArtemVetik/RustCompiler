@@ -1,16 +1,10 @@
 #ifndef RUSTCOMPILER_LEXERROR_H
 #define RUSTCOMPILER_LEXERROR_H
 
-#include <iostream>
-#include <exception>
-#include <string>
-#include "TokenLinePosition.h"
 #include "BaseError.h"
 
+/// @brief ошибка на этапе лексического анализа
 class LexError : public BaseError {
-private:
-    std::string _error;
-
 public:
     explicit LexError(const std::string &error, const TokenLocation &location) : BaseError(error, location) {
         _error = std::string("LexError:\n\t") + error + "\n\tStart:\n\t\tline: "

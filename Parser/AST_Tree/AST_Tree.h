@@ -5,16 +5,21 @@
 #include <forward_list>
 #include <functional>
 
+/// @brief абстрактное синтаксическое дерево
 class AST_Tree {
 private:
     Node* _root;
 
 public:
-    explicit AST_Tree(Node* const& node = nullptr);
+    explicit AST_Tree(Node* const& root = nullptr);
     ~AST_Tree() = default;
-    Node* const& GetRoot() const;
-    void Traversal() const;
+    /// @return корень дерева
+    [[nodiscard]] Node* const& GetRoot() const;
+    /// @brief вывод дерева
+    /// @note осуществляет симметричный обход дерева и вывод данных в узлах
+    void Print() const;
 
+    /// @brief удаление вершин
     template<typename... T>
     static void DeleteNode(T& ... nodes) {
         for (auto &node : std::forward_list<std::reference_wrapper<Node*>>{nodes...}) {

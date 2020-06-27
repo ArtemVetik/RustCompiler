@@ -7,6 +7,9 @@
 #include "../../Lexer/Token.h"
 #include "RuleType.h"
 
+/// @file Node.h
+
+/// @brief данный в вершине
 struct NodeData {
     Token token;
     RuleType ruleType;
@@ -24,6 +27,7 @@ struct NodeData {
     }
 };
 
+/// @brief вершина дерева
 class Node {
 private:
     NodeData* _data;
@@ -36,9 +40,10 @@ public:
     explicit Node();
     ~Node();
     void AddChild(Node *const &child);
-    const std::vector<Node*> &GetChilds() const;
-    Node* const &GetChild(const unsigned int &ind) const;
-    NodeData* GetData() const;
+    [[nodiscard]] const std::vector<Node*> &GetChilds() const;
+    [[nodiscard]] Node* const &GetChild(const unsigned int &ind) const;
+    [[nodiscard]] NodeData* GetData() const;
+    /// @brief симметричный обход дерева
     void Traversal();
 };
 

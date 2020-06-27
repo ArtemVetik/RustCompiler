@@ -8,6 +8,7 @@
 #include "../Exceptions/SemanticError.h"
 #include "../Exceptions/TokenLinePosition.h"
 
+/// @brief статический класс для ошибок семантического анализатора
 class SemanticErrorDebugger final {
 private:
     static TokenLocation* TryGetNonNullNode(Node *const &node);

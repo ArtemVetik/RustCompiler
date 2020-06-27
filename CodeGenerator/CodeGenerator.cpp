@@ -1,7 +1,6 @@
 #include "CodeGenerator.h"
 
 CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable) : _labelNum(0), _rulesCount(5) {
-    // TODO кодировка
     _tree = tree;
     _tableOfReservedWords.open("ReservedWords/TableOfReservedWords.dat");
     if (!_tableOfReservedWords.is_open())
@@ -979,7 +978,7 @@ std::string CodeGenerator::FunctionInvoke(Node *const &node) {
     std::string functionID = node->GetChild(0)->GetData()->token.GetValue();
     std::vector<Node*> params = node->GetChild(1)->GetChilds();
 
-    for (const auto& param : params) { // TODO: token location 1 1 (когда ноль параметров)
+    for (const auto& param : params) {
         MASMType type = DetermineType(param).first;
         try {
             float value = Optimized(param);

@@ -1,15 +1,19 @@
 #ifndef RUSTCOMPILER_TOKENLINEPOSITION_H
 #define RUSTCOMPILER_TOKENLINEPOSITION_H
 
+/// @file TokenLinePosition.h
+
+/// @brief позиция символа в файле
 struct TokenLinePosition {
-    unsigned int line;
-    unsigned int column;
-    unsigned int linearPosition;
+    unsigned int line; ///< @brief строка
+    unsigned int column; ///< @brief столбец
+    unsigned int linearPosition; ///< @brief линейная позиция
 
     TokenLinePosition() : line(1), column(1), linearPosition(0) { }
     TokenLinePosition(const unsigned int &line, const unsigned int &column, const unsigned int &linearPosition)
         : line(line), column(column), linearPosition(linearPosition) { }
 
+    /// @brief меняет позицию строки и столбца по входящему символу
     void AddSymbol(const char &symbol) {
         linearPosition++;
         if (symbol == '\n') {
@@ -32,9 +36,10 @@ struct TokenLinePosition {
     }
 };
 
+/// @brief позиция токена
 struct TokenLocation {
-    TokenLinePosition start;
-    TokenLinePosition end;
+    TokenLinePosition start; ///< @brief позиция первого символа
+    TokenLinePosition end; ///< @brief позиция последнего символа
 
     TokenLocation() : start(), end() { }
     TokenLocation(const TokenLinePosition &start, const TokenLinePosition &end) : start(start), end(end) { }

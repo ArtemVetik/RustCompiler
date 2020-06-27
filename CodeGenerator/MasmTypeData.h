@@ -4,19 +4,25 @@
 #include <string>
 #include <utility>
 
+/// @file MasmTypeData.h
+
+/// @brief тип в макро ассемблере
 enum class MASMType {
-    DWORD, REAL8, None
+    DWORD, ///< целочисленный тип
+    REAL8, ///< вещественный тип
+    None, ///< обозначает отсутствие типа
 };
 
+/// @brief описывает переменную в макро ассемблере
 struct MasmID_Data {
-    std::string id;
-    std::string uid;
-    std::pair<MASMType, std::string> type;
+    std::string id; ///< @brief идентификатор
+    std::string uid; ///< @brief уникальный идентификатор
+    std::pair<MASMType, std::string> type; ///< @brief тип переменной в паре со строковым предтавлением типа
     bool isInitialize;
     float value;
 
     explicit MasmID_Data(const std::string &id = "", const std::string &uid = "",
-            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None")) {
+                         const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None")) {
         this->id = id;
         this->uid = uid;
         this->type = type;
@@ -33,18 +39,19 @@ struct MasmID_Data {
     }
 };
 
+/// @brief описывает массив в макро ассемблере
 struct MasmArray_Data {
-    std::string id;
-    std::string uid;
-    std::pair<MASMType, std::string> type;
+    std::string id; ///< @brief идентификатор
+    std::string uid; ///< @brief уникальный идентификатор
+    std::pair<MASMType, std::string> type; ///< @brief тип переменной в паре со строковым предтавлением типа
     bool isPtr;
     bool isInitialize;
     unsigned int elementCount;
     std::vector<float> values;
 
     explicit MasmArray_Data(const std::string &id = "", const std::string &uid = "",
-            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None"),
-            const unsigned int &count = 0, const bool &isPtr = false) : values(count) {
+                            const std::pair<MASMType, std::string>& type = std::make_pair(MASMType::None, "None"),
+                            const unsigned int &count = 0, const bool &isPtr = false) : values(count) {
         this->id = id;
         this->uid = uid;
         this->type = type;

@@ -2,68 +2,71 @@
 #define RUSTCOMPILER_TOKENTYPE_H
 #include <string>
 
+/// @file TokenType.h
+
+/// @brief тип покена
 enum class TokenType {
-    ID,         // Идентификатор
-    INTNUM,     // Целое число
-    RNUM,       // Вещественное число
-    STRINGLIT,  // Строка
-    BOOLLIT,    // Логический тип
+    ID,         ///< Идентификатор
+    INTNUM,     ///< Целое число
+    RNUM,       ///< Вещественное число
+    STRINGLIT,  ///< Строка
+    BOOLLIT,    ///< Логический тип
 
     // Ключевые слова
-    PRINTLN,    // Println
-    PRINT,      // Prints
-    FUNCTION,   // fn
-    INTEGER,    // i32
-    REAL,       // f32
-    UINT,       // usize
-    BOOL,       // bool
-    LET,        // let
-    MUT,        // mut
-    FOR,        // for
-    IF,         // if
-    LOOP,       // loop
-    WHILE,      // while
-    ELSE,       // else
-    BREAK,      // break
-    RETURN,     // return
+    PRINTLN,    ///< Println
+    PRINT,      ///< Prints
+    FUNCTION,   ///< fn
+    INTEGER,    ///< i32
+    REAL,       ///< f32
+    UINT,       ///< usize
+    BOOL,       ///< bool
+    LET,        ///< let
+    MUT,        ///< mut
+    FOR,        ///< for
+    IF,         ///< if
+    LOOP,       ///< loop
+    WHILE,      ///< while
+    ELSE,       ///< else
+    BREAK,      ///< break
+    RETURN,     ///< return
 
     // Разделители
-    PLUS,       // +
-    MINUS,      // -
-    MULT,       // *
-    MOD,        // %
-    DIV,        // /
-    ASSIG,      // =
-    EXCL,       // !
-    LAND,       // &&
-    BAND,       // &
-    LOR,        // ||
-    ARROW,      // ->
-
+    PLUS,       ///< +
+    MINUS,      ///< -
+    MULT,       ///< *
+    MOD,        ///< %
+    DIV,        ///< /
+    ASSIG,      ///< =
+    EXCL,       ///< !
+    LAND,       ///< &&
+    BAND,       ///< &
+    LOR,        ///< ||
+    ARROW,      ///< ->
 
     // Операции отношения
-    MORE,       // >
-    LESS,       // <
-    MOREEQUAL,  // >=
-    LESSEQUAL,  // <=
-    NASSIG,     // !=
-    EQUAL,      // ==
+    MORE,       ///< >
+    LESS,       ///< <
+    MOREEQUAL,  ///< >=
+    LESSEQUAL,  ///< <=
+    NASSIG,     ///< !=
+    EQUAL,      ///< ==
 
-    LFIGBR,     // {
-    RFIGBR,     // }
-    LSQRBR,     // [
-    RSQRBR,     // ]
-    COLON,      // :
-    SEMICOLON,  // ;
-    LRBR,       // (
-    RRBR,       // )
-    COM,        // ,
-    DOT,        // .
-    IGNORE,     // Пробелы, табуляции, перенос строки, комментарии
+    LFIGBR,     ///< {
+    RFIGBR,     ///< }
+    LSQRBR,     ///< [
+    RSQRBR,     ///< ]
+    COLON,      ///< :
+    SEMICOLON,  ///< ;
+    LRBR,       ///< (
+    RRBR,       ///< )
+    COM,        ///< ,
+    DOT,        ///< .
+    IGNORE,     ///< Пробелы, табуляции, перенос строки, комментарии
 };
 
 class TokenTypePrinter {
 public:
+    /// @return возвращает тип токена в виде строки
     static std::string PrintTokenType(const TokenType &type) {
         switch (type) {
             case TokenType::ID:return std::string("ID");

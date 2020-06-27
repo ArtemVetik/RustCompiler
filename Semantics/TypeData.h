@@ -3,22 +3,26 @@
 
 #include "../Lexer/TokenType.h"
 
+/// @file TypeData.h
+
+/// @brief тип переменной на входном языке
 enum class Type {
-    None,
+    None, ///< неизвестный тип
 
-    Bool,
-    String,
+    Bool, ///< логический тип
+    String, ///< строковый тип
 
-    Real,
-    Integer,
-    Unsigned
+    Real, ///< вещественный тип
+    Integer, ///< целочисленный тип
+    Unsigned ///< беззнаковый тип
 
 };
 
+/// @brief Данный о типе
 struct TypeData {
-    bool isReference;
-    bool isMutable;
-    Type type;
+    bool isReference; ///< @brief является ли ссылочным типом
+    bool isMutable; ///< @brief является ли mutable типом
+    Type type; ///< @brief тип
 
     explicit TypeData() : isReference(false), isMutable(false), type(Type::None) { }
     explicit TypeData(const Type &type) : isReference(false), isMutable(false), type(type) { }
@@ -40,6 +44,7 @@ struct TypeData {
         return !(*this == right);
     }
 
+    /// @brief перевод из TokenType в Type
     static Type ToType(const TokenType &tokenType) {
         switch (tokenType) {
             case TokenType::REAL:
@@ -60,6 +65,7 @@ struct TypeData {
         }
     }
 
+    /// @return строковое представление текущего типа
     std::string ToString() {
         std::string res;
         if (isReference) res += "& ";
@@ -68,6 +74,7 @@ struct TypeData {
         return res;
     }
 
+    /// @return строковое представление типа
     static std::string ToString(const Type &type) {
         switch (type){
             case Type::None:

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <utility>
 
+/// @brief основной класс лексического анализатора
 class Lexer {
 private:
      StateMachine _stateMachine;
@@ -13,8 +14,10 @@ private:
 
 public:
     explicit Lexer(std::string fileName);
+    /// @brief запускает лексический анализ
     void Analyze();
-    const std::vector<Token*>& GetTokens() const;
+    /// @return список всех лексем
+    [[nodiscard]] const std::vector<Token*>& GetTokens() const;
 };
 
 #endif //RUSTCOMPILER_LEXER_H

@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+/// @brief класс, осузествляющий переходы между состояниями
 class Transition {
 private:
     std::vector<State*> _states;
@@ -19,6 +20,8 @@ public:
     Transition();
     ~Transition();
 
+    /// @param currentState текущее состояние
+    /// @param symbol следущий символ
     State* GetState(State* const &currentState, char symbol);
 };
 

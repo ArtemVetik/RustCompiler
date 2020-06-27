@@ -8,16 +8,13 @@
 #include "AST_Tree/AST_Tree.h"
 #include "AST_Tree/Node.h"
 
+/// @brief класс синтаксического анализатора
+/// @details осуществляе разбор токенов, проверку на синтаксическую корректность и построение абстактного синтаксического дерева
 class Parser {
 private:
     std::vector<Token*> _tokens;
     std::vector<Token*>::iterator _currentToken;
     AST_Tree _tree;
-
-    // TODO errors
-    // Examples: if discriminant << 0.0
-    // Examples: let mut array:[id32; 10]
-    // let arr:[bool; 4] = [true, !false, false !true];
 
     // Объявление переменных
     bool LetDecl(Node *&root);
@@ -91,10 +88,13 @@ private:
 
     bool TryGetToken(const TokenType &type);
 public:
-    const AST_Tree &GetASTTree() const;
-
+    /// @param tokens список токенов по которым будет осуществляться разбор
     explicit Parser(const std::vector<Token *> &tokens);
+
+    /// @brief запускает синтаксический анализ
     bool Analyze();
+    /// @return абстрактное синтаксическое дерево
+    [[nodiscard]] const AST_Tree &GetASTTree() const;
 };
 
 #endif //RUSTCOMPILER_PARSER_H

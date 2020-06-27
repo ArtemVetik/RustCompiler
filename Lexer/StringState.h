@@ -4,7 +4,8 @@
 #include "State.h"
 #include <string>
 
-class StringState : public State{
+/// @brief состояние строки
+class StringState : public State {
 private:
     bool _isActive;
 

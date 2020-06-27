@@ -6,6 +6,8 @@
 #include <vector>
 #include <exception>
 
+/// @brief таблица данных
+/// @note основана на списке
 template <typename T>
 class Table {
 private:
@@ -13,9 +15,13 @@ private:
 
 public:
     void AddToTable(const T &data);
+    /// @return true, если значение содержится в таблице
+    /// @return false, если значение не содержится в таблице
     bool Has(const std::string &value) const;
+    /// @return ссылку на элемент таблицы по входящему идентификатору
     T& GetData(const std::string &id);
     const std::vector<T> &GetTable() const;
+    /// @return последний элемент таблицы
     T Back();
 };
 

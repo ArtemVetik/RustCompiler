@@ -8,6 +8,6 @@ Node* const& AST_Tree::GetRoot() const {
     return _root;
 }
 
-void AST_Tree::Traversal() const {
+void AST_Tree::Print() const {
     _root->Traversal();
 }

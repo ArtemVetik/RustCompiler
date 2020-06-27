@@ -8,6 +8,9 @@
 #include "TypeData.h"
 #include "Table.h"
 
+/// @file TableData.h
+
+/// @brief базовая структура для данных
 struct Data {
     TokenLocation location;
     std::string id;
@@ -26,6 +29,7 @@ struct Data {
     virtual ~Data() = default;
 };
 
+/// @brief данные переменной
 struct ID_Data : public Data {
     bool isInitialized;
     bool isMutable;
@@ -40,6 +44,7 @@ struct ID_Data : public Data {
     }
 };
 
+/// @brief данные массива
 struct Array_Data : public Data {
     bool isMutable;
     bool isInitialized;
