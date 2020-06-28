@@ -37,27 +37,27 @@
 3. Сохраняется позиция начала и конца каждого токена
 
 4. Поддержка следующих ключевых слов
-<details>
-       <summary>Список</summary>
-       fn,
-       for,
-       if,
-       loop,
-       while,
-       else,
-       let,
-       mut,
-       f32,
-       i32,
-       usize,
-       println,
-       print,
-       break,
-       return,
-       true,
-       false,
-       bool,
-   </details>
+	<details>
+	       <summary>Список</summary>
+	       fn,
+	       for,
+	       if,
+	       loop,
+	       while,
+	       else,
+	       let,
+	       mut,
+	       f32,
+	       i32,
+	       usize,
+	       println,
+	       print,
+	       break,
+	       return,
+	       true,
+	       false,
+	       bool,
+	   </details>
 	
 ## Синтаксический анализ
 
