@@ -108,7 +108,7 @@ std::vector<ID_Data> SemanticAnalyzer::GroupLetVarDeclaration(Node *const &node)
     const std::vector<Node*> &pats = node->GetChilds();
     for (const auto &pat : pats) {
         std::string id = pat->GetChild(1)->GetData()->token.GetValue();
-        if (_currentBlock->idTable.Has(id) || _currentBlock->arrayTable.Has(id))
+        if (_currentBlock->idTable.Has(id) || _currentBlock->arrayTable.Has(id) || _functionTable.Has(id))
             throw Err::VariableExistingError(id, pat->GetChild(1));
         ID_Data data;
         data.isMutable = pat->GetChild(0) != nullptr;
@@ -174,7 +174,7 @@ ID_Data SemanticAnalyzer::Pat(Node *const &node) {
     data.id = node->GetChild(1)->GetData()->token.GetValue();
     data.location = *(node->GetChild(1)->GetData()->token.GetLocation());
 
-    if (_currentBlock->idTable.Has(data.id) || _currentBlock->arrayTable.Has(data.id))
+    if (_currentBlock->idTable.Has(data.id) || _currentBlock->arrayTable.Has(data.id) || _functionTable.Has(data.id))
         throw Err::VariableExistingError(data.id, node->GetChild(1));
 
     Node* type = node->GetChild(2);
@@ -341,7 +341,7 @@ void SemanticAnalyzer::ArrayDeclaration(Node *const &node) {
 
     Node* arrPat = node->GetChild(0);
     std::string id = arrPat->GetChild(1)->GetData()->token.GetValue();
-    if (_currentBlock->arrayTable.Has(id) || _currentBlock->idTable.Has(id))
+    if (_currentBlock->arrayTable.Has(id) || _currentBlock->idTable.Has(id) || _functionTable.Has(id))
         throw Err::VariableExistingError(id, arrPat->GetChild(1));
 
     Array_Data data;
@@ -607,7 +607,7 @@ void SemanticAnalyzer::FunctionDeclaration(Node *const &node) {
         if (argument == nullptr)
             continue;
         std::string varId = argument->GetChild(2)->GetData()->token.GetValue();
-        if (_currentBlock->idTable.Has(varId) || _currentBlock->arrayTable.Has(varId)) {
+        if (_currentBlock->idTable.Has(varId) || _currentBlock->arrayTable.Has(varId) || _functionTable.Has(varId)) {
             throw Err::VariableExistingError(varId, argument->GetChild(2));
         }
 

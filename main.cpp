@@ -36,7 +36,7 @@ int main() {
         generator.Generate();
         generator.CreateAsmFile();
         //fclose(file);
-        remove("Output/errorOutput.txt");
+        //remove("Output/errorOutput.txt");
     }
     catch (const std::exception& error) {
         //fclose(file);
