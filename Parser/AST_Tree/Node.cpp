@@ -25,7 +25,7 @@ void Node::Traversal() {
 }
 
 Node::Node() {
-    _data = nullptr;
+    _data = new NodeData();
 }
 
 NodeData *Node::GetData() const {

@@ -81,6 +81,8 @@ SemanticError SemanticErrorDebugger::FunctionReturnTypeError(const std::string &
 }
 
 TokenLocation* SemanticErrorDebugger::TryGetNonNullNode(Node *const &node) {
+    if (node == nullptr)
+        return nullptr;
     if (node->GetData()->token.GetLocation() == nullptr) {
         std::vector<Node *> childs = node->GetChilds();
         for (const auto &child : childs) {

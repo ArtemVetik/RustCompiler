@@ -24,6 +24,8 @@ void SemanticAnalyzer::Analyze() {
         tmp = tmp->upperBlock;
 
     CheckInits(*tmp);
+    if (!_functionTable.Has("main"))
+        throw Err::CriticalError("Function main not found", new Node());
 }
 
 void SemanticAnalyzer::Traversal(Node *const &root) {
