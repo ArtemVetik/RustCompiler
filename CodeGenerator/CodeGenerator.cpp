@@ -1195,6 +1195,12 @@ std::string CodeGenerator::Print(Node *const &node) {
 
         }
         else if (expr->GetData()->ruleType == RuleType::Literal) {
+            if (expr->GetData()->token.GetType() == TokenType::BOOLLIT) {
+                fmtString = FmtString(fmtString, MASMType::DWORD);
+                parameters.push(std::string("\tpush ") + (expr->GetData()->token.GetValue() == "true" ? "1" : "0") + "\n");
+                continue;
+            }
+
             MASMType type = (expr->GetData()->token.GetType() == TokenType::INTNUM) ? MASMType::DWORD : MASMType::REAL8;
             fmtString = FmtString(fmtString, type);
             if (type == MASMType::DWORD)
@@ -1207,6 +1213,7 @@ std::string CodeGenerator::Print(Node *const &node) {
         }
         else if (expr->GetData()->ruleType == RuleType::MemberExpression || expr->GetData()->ruleType == RuleType::InternalFuncInvoke ||
                  expr->GetData()->ruleType == RuleType::BinaryExpression || expr->GetData()->ruleType == RuleType::UnaryExpession ||
+                expr->GetData()->ruleType == RuleType::LogicalExpression || expr->GetData()->ruleType == RuleType::BinaryCompExpression ||
                  expr->GetData()->ruleType == RuleType::FuncInvoke) {
             MASMType type = DetermineType(expr).first;
             fmtString = FmtString(fmtString, type);
