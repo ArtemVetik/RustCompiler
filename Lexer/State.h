@@ -7,6 +7,8 @@
 #include "Token.h"
 #include <string>
 
+/// @file State.h
+
 /// @brief базовый класс для всех состояний
 class State {
 public:

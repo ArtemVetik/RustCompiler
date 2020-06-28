@@ -4,6 +4,8 @@
 #include "State.h"
 #include <vector>
 
+/// @file SeparatorState.h
+
 /// @brief состояние разделителей
 /// @details включает в себя комментарии
 /// @note строка разделителей: "+-*/%=><{}[];(),.:!&|"

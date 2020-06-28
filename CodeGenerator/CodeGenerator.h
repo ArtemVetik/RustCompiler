@@ -14,6 +14,8 @@
 #include "../Lexer/Token.h"
 #include "MasmTypeData.h"
 
+/// @file CodeGenerator.h
+
 /// @brief класс генерации ассемблерного кода
 class CodeGenerator {
 private:

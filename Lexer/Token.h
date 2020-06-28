@@ -7,6 +7,8 @@
 #include "TokenType.h"
 #include "../Exceptions/TokenLinePosition.h"
 
+/// @file Token.h
+
 /// @brief класс, описывабщий токен
 class Token {
 private:

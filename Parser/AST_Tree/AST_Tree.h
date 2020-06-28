@@ -5,6 +5,8 @@
 #include <forward_list>
 #include <functional>
 
+/// @file AST_Tree.h
+
 /// @brief абстрактное синтаксическое дерево
 class AST_Tree {
 private:

@@ -4,6 +4,8 @@
 #include "State.h"
 #include <string>
 
+/// @file StringState.h
+
 /// @brief состояние строки
 class StringState : public State {
 private:

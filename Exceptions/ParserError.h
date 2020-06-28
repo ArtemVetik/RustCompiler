@@ -3,6 +3,8 @@
 
 #include "BaseError.h"
 
+/// @file ParserError.h
+
 /// @brief ошибка на этапе синтаксического анализа
 class ParserError : public BaseError {
 public:

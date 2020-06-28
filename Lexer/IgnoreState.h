@@ -4,6 +4,8 @@
 #include "State.h"
 #include <string>
 
+/// @file IgnoreState.h
+
 /// @brief состояние игнорируемых символов
 /// @details содержит символы \\n \\t \\r space
 class IgnoreState : public State {

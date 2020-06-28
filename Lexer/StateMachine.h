@@ -7,6 +7,8 @@
 #include <string>
 #include <cstdlib>
 
+/// @file StateMachine.h
+
 /// @brief Машина состояний лексического анализатора
 /// @details Осуществляет контроль состояний, добавление токенов в список и смену состояний
 class StateMachine {

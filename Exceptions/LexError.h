@@ -3,6 +3,8 @@
 
 #include "BaseError.h"
 
+/// @file LexError.h
+
 /// @brief ошибка на этапе лексического анализа
 class LexError : public BaseError {
 public:

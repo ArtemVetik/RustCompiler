@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+/// @file Transition.h
+
 /// @brief класс, осузествляющий переходы между состояниями
 class Transition {
 private:

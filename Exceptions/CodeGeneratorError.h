@@ -3,6 +3,8 @@
 
 #include "BaseError.h"
 
+/// @file CodeGeneratorError.h
+
 /// @brief ошибка на этапе генерации кода
 class CodeGeneratorError : public BaseError {
 public:

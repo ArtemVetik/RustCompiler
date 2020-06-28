@@ -3,6 +3,8 @@
 
 #include "BaseError.h"
 
+/// @file SemanticError.h
+
 /// @brief ошибка на этапе семантического анализа
 class SemanticError : public BaseError {
 public:

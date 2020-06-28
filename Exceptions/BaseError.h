@@ -6,6 +6,8 @@
 #include "TokenLinePosition.h"
 #include "../Lexer/Token.h"
 
+/// @file BaseError.h
+
 /// @brief базовый класс ошибок компилятора
 class BaseError : public std::exception {
 protected:

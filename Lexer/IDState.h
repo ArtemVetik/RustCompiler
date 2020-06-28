@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+/// @file IDState.h
+
 /// @brief состояние идентификатора
 /// @note включает в себя любые идентификаторы, в том числе ключевые слова
 class IDState : public State {

@@ -8,6 +8,8 @@
 #include "../Exceptions/SemanticError.h"
 #include "../Exceptions/TokenLinePosition.h"
 
+/// @file SemanticErrorDebugger.h
+
 /// @brief статический класс для ошибок семантического анализатора
 class SemanticErrorDebugger final {
 private:

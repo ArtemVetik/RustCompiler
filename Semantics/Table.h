@@ -6,6 +6,8 @@
 #include <vector>
 #include <exception>
 
+/// @file Table.h
+
 /// @brief таблица данных
 /// @note основана на списке
 template <typename T>

@@ -5,6 +5,8 @@
 #include "Table.h"
 #include "TableData.h"
 
+/// @file ProgramBlock.h
+
 /// @brief программный блок
 /// @details содержит таблицы переменных внутри текущего блока а также список вложенных блоков
 template <typename IDType, typename ArrType>

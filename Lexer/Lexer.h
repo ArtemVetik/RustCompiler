@@ -6,6 +6,8 @@
 #include <fstream>
 #include <utility>
 
+/// @file Lexer.h
+
 /// @brief основной класс лексического анализатора
 class Lexer {
 private:

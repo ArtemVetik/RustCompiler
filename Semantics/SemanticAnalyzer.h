@@ -8,6 +8,8 @@
 
 #define Err SemanticErrorDebugger
 
+/// @file SemanticAnalyzer.h
+
 /// @brief семантический анализатор
 class SemanticAnalyzer {
 private:

@@ -3,6 +3,8 @@
 
 #include "State.h"
 
+/// @file NumState.h
+
 /// @brief состояние числа
 /// @details число может быть как целым, так и вещественным. Разделение происходит на этапе формированиия токена
 class NumState : public State {
