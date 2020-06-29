@@ -30,7 +30,7 @@ void StateMachine::GenerateToken() {
     if (!token)
     {
         if (!SplitSeparators(_buffer))
-            throw LexError("Incorrect token: " + _buffer, TokenLocation(_startPos, _endPos));
+            throw LexError("It is impossible to determine token " + _buffer, TokenLocation(_startPos, _endPos));
     }
     else {
         token->SetLocation(TokenLocation(_startPos, _endPos));

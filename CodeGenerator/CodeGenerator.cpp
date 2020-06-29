@@ -16,7 +16,7 @@ CodeGenerator::CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &f
              ".386\t\n"
              ".model flat, stdcall\t\n"
              ".stack 4096h\t\n\n"
-             "include \\masm32\\include\\masm32rt.inc\n"
+             "include ..\\masm32\\include\\masm32rt.inc\n"
              "include customMacros.inc\t\n\n"
              ".code\t\n"
              "\tFINIT\t\n\n";
