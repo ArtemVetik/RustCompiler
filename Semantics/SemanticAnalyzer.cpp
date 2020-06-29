@@ -802,6 +802,8 @@ void SemanticAnalyzer::Print(Node *const &node) {
         isArrayParam = false;
         isArrayFormat = false;
         switch (param->GetData()->ruleType) {
+            case RuleType::LogicalExpression:
+            case RuleType::BinaryCompExpression:
             case RuleType::UnaryExpession:
             case RuleType::BinaryExpression:
             case RuleType::MemberExpression:
