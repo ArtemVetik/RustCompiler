@@ -22,7 +22,6 @@ enum class TokenType {
     BOOL,       ///< bool
     LET,        ///< let
     MUT,        ///< mut
-    FOR,        ///< for
     IF,         ///< if
     LOOP,       ///< loop
     WHILE,      ///< while
@@ -79,7 +78,6 @@ public:
             case TokenType::BREAK:return std::string("BREAK");
             case TokenType::LET:return std::string("LET");
             case TokenType::MUT:return std::string("MUT");
-            case TokenType::FOR:return std::string("FOR");
             case TokenType::IF:return std::string("IF");
             case TokenType::ELSE:return std::string("ELSE");
             case TokenType::PLUS:return std::string("PLUS");

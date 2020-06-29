@@ -14,7 +14,7 @@ Token* NumState::GetToken(const std::string &value) {
         case 0 :
             return new Token(TokenType::INTNUM, value, -1);
         case 1 :
-            return new Token(TokenType::RNUM, value,1);
+            return new Token(TokenType::RNUM, value, 1);
         default:
             return nullptr;
     }

@@ -37,7 +37,6 @@ Token* IDState::GetToken(const std::string &value) {
 
 void IDState::InitKeyWords() {
     _keyWords.emplace_back(std::make_pair("fn", TokenType::FUNCTION));
-    _keyWords.emplace_back(std::make_pair("for", TokenType::FOR));
     _keyWords.emplace_back(std::make_pair("if", TokenType::IF));
     _keyWords.emplace_back(std::make_pair("loop", TokenType::LOOP));
     _keyWords.emplace_back(std::make_pair("while", TokenType::WHILE));

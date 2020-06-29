@@ -86,6 +86,8 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             Traversal(node);
             _currentBlock = _currentBlock->upperBlock;
             break;
+        default:
+            BoolExpr(node);
     }
 }
 
@@ -290,8 +292,19 @@ std::vector<TypeData> SemanticAnalyzer::ArrayElems(Node *const &node) {
 }
 
 std::pair<TypeData, bool> SemanticAnalyzer::MinTerminal(Node *const &node) {
-    if (node->GetData()->ruleType == RuleType::UnaryExpession)
-        return MinTerminal(node->GetChild(0));
+    if (node->GetData()->ruleType == RuleType::UnaryExpession) {
+        std::pair<TypeData, bool> type = MinTerminal(node->GetChild(0));
+        if (node->GetData()->token.GetType() == TokenType::EXCL) {
+            if (type.first.type != Type::Bool || type.second) {
+                throw Err::CriticalError("Unary logical \"not\" cannot be using with int or float or array", node->GetChild(0));
+            }
+        }
+        else if (type.first.type == Type::Bool || type.second) {
+                throw Err::CriticalError("Unary plus or minus cannot be using with bool or array", node->GetChild(0));
+            }
+
+        return type;
+    }
 
     if (node->GetData()->ruleType == RuleType::FuncInvoke)
         return std::make_pair(FunctionInvoke(node), false);

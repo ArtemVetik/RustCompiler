@@ -54,7 +54,8 @@ std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const
                                            return operation == compOperation.operation;
                                        });
     if (foundOperation == _compareOperations.cend())
-        throw std::bad_function_call();
+        throw CodeGeneratorError("Cannot get"
+                                 " compare operation");
 
     switch (compareType) {
         case Reverse:
@@ -62,7 +63,7 @@ std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const
         case Direct:
             return type == MASMType::DWORD ? foundOperation->directCompSigned : foundOperation->directCompUnsigned;
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot get compare operation");
     }
 }
 
@@ -193,16 +194,16 @@ float CodeGenerator::Optimized(Node *const &node) {
             else if (node->GetData()->token.GetValue() == "false") return 0.0f;
             return std::stof(node->GetData()->token.GetValue());
         case RuleType::Identifier:
-            if (insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw CodeGeneratorError("Cannot optimized identifier in cycle");
             id = node->GetData()->token.GetValue();
             if (HasIDInUpper(id)) {
                 MasmID_Data idData = GetID(id);
                 if (idData.isInitialize)
                     return idData.value;
             }
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot find identifier in optimized");
         case RuleType::MemberExpression:
-            if (insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw CodeGeneratorError("Cannot optimized member expression in cycle");
             id = node->GetChild(0)->GetData()->token.GetValue();
             ind = Optimized(node->GetChild(1)->GetChild(0));
             if (HasArrInUpper(id)) {
@@ -210,12 +211,12 @@ float CodeGenerator::Optimized(Node *const &node) {
                 if (arrdata.isInitialize)
                     return arrdata.values[static_cast<int>(ind)];
             }
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot find array in optimized");
         case RuleType::InternalFuncInvoke:
-            if (insideCycle) throw std::bad_function_call();
+            if (insideCycle) throw CodeGeneratorError("Cannot optimized internal function invoke in optimized");
             funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
             if (funcId != "sqrt")
-                throw std::bad_function_call();
+                throw CodeGeneratorError("Cannot find \"sqrt\" in optimized");
 
             id = node->GetChild(0)->GetData()->token.GetValue();
             if (HasIDInUpper(id)) {
@@ -223,9 +224,9 @@ float CodeGenerator::Optimized(Node *const &node) {
                 if (idData.isInitialize)
                     return sqrtf(idData.value);
             }
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot find / internalfuncinvoke in optimized");
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot optimized");
     }
 }
 
@@ -282,7 +283,6 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
     MasmID_Data idData;
     RuleType leftRuleType;
 
-
     switch (node->GetData()->ruleType) {
         case RuleType::LogicalExpression:
         case RuleType::BinaryCompExpression:
@@ -327,7 +327,7 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
         case RuleType::InternalFuncInvoke:
             funcId = node->GetChild(1)->GetChild(0)->GetData()->token.GetValue();
             if (funcId != "sqrt")
-                throw std::bad_function_call();
+                throw CodeGeneratorError("Cannot find \"sqrt\" in calculate expression");
 
             idData = GetID(node->GetChild(0)->GetData()->token.GetValue());
             code += "\tFLD " + idData.id + idData.uid + "\n" + "\tFSQRT\n";
@@ -344,7 +344,7 @@ std::string CodeGenerator::CalculateExpression(Node *const &node, const MASMType
                         "\tpop eax\n";
             break;
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot calculate expression");
     }
 
     return code;
@@ -399,7 +399,7 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
             }
             break;
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use binary operation");
     }
 
     return code;
@@ -411,11 +411,17 @@ std::string CodeGenerator::UnaryOperation(Node *const &operation, const MASMType
 
     TokenType operationType = operation->GetData()->token.GetType();
 
-    if (operationType == TokenType::MINUS || operationType == TokenType::EXCL) {
+    if (operationType == TokenType::MINUS ) {
         if (type == MASMType::DWORD)
             code += "\tpop eax\n\tNEG eax\n\tpush eax\n";
         else if (type == MASMType::REAL8)
             code += "\tFCHS\n";
+    }
+    if (operationType == TokenType::EXCL) {
+        if (type == MASMType::DWORD)
+            code += "\tpop eax\n\tNOT eax\n\tpush eax\n";
+        else
+            throw CodeGeneratorError("Cannot use float in unary operation");
     }
 
     return code;
@@ -457,7 +463,7 @@ std::string CodeGenerator::CalculateIdentifier(Node *const &node) {
         case MASMType::REAL8:
             return "\tFLD " + idData.id + idData.uid + "\n";
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use calculate identifier");
     }
 }
 
@@ -494,7 +500,7 @@ std::string CodeGenerator::CalculateMemberExpression(Node *const &node, const MA
 
 float CodeGenerator::BinaryOperation(float v1, float v2, Node *const &operation) {
     if (operation == nullptr)
-        throw std::bad_function_call();
+        throw CodeGeneratorError("Cannot use binary operation");
 
     switch (operation->GetData()->token.GetType()) {
         case TokenType::PLUS:
@@ -508,13 +514,13 @@ float CodeGenerator::BinaryOperation(float v1, float v2, Node *const &operation)
         case TokenType::MOD:
             return std::fmod(v1, v2);
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use binary operation");
     }
 }
 
 float CodeGenerator::BinaryCompOperation(float v1, float v2, Node *const &operation) {
     if (operation == nullptr)
-        throw std::bad_function_call();
+        throw CodeGeneratorError("Cannot use binary compare operation");
 
     switch (operation->GetData()->token.GetType()) {
         case TokenType::MORE:
@@ -530,13 +536,13 @@ float CodeGenerator::BinaryCompOperation(float v1, float v2, Node *const &operat
         case TokenType::NASSIG:
             return v1 != v2;
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use binary compare operation");
     }
 }
 
 float CodeGenerator::LogicalCompOperation(float v1, float v2, Node *const &operation) {
     if (operation == nullptr)
-        throw std::bad_function_call();
+        throw CodeGeneratorError("Cannot use logical compare operation");
 
     switch (operation->GetData()->token.GetType()) {
         case TokenType::LOR:
@@ -544,7 +550,7 @@ float CodeGenerator::LogicalCompOperation(float v1, float v2, Node *const &opera
         case TokenType::LAND:
             return static_cast<bool>(v1) && static_cast<bool>(v2);
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use logical compare operation");
     }
 }
 
@@ -618,8 +624,7 @@ MasmID_Data &CodeGenerator::GetID(const std::string &id) {
         tmp = tmp->upperBlock;
     } while (tmp);
 
-    std::cout << "ERR ID: " << id << std::endl;
-    throw std::bad_function_call();
+    throw CodeGeneratorError("Cannot GetId");
 }
 
 MasmArray_Data &CodeGenerator::GetArr(const std::string &id) {
@@ -632,7 +637,7 @@ MasmArray_Data &CodeGenerator::GetArr(const std::string &id) {
     } while (tmp);
 
     std::cout << "ERR ARR: " << id << std::endl;
-    throw std::bad_function_call();
+    throw CodeGeneratorError("Cannot GetArr");
 }
 
 std::pair<MASMType, std::string> CodeGenerator::Type(Node *const &typeNode) {
@@ -899,7 +904,7 @@ std::string CodeGenerator::AssignmentByValue(const std::string &id, const MASMTy
             code += "\tFSTP " + id + "\n";
             break;
         default:
-            throw std::bad_function_call();
+            throw CodeGeneratorError("Cannot use assignment by value");
     }
 
     return code;
@@ -911,7 +916,7 @@ std::string CodeGenerator::AssignmentFromStack(const std::string &id, const MASM
     else if (type == MASMType::REAL8)
         return "\tFSTP " + id + "\n";
 
-    throw std::bad_function_call();
+    throw CodeGeneratorError("Cannot use assignment from stack");
 }
 
 std::string CodeGenerator::GetLocalVariables(const ProgramBlock<MasmID_Data, MasmArray_Data> &programmBlock) {
