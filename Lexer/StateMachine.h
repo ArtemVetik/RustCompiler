@@ -1,7 +1,7 @@
 #ifndef RUSTCOMPILER_STATEMACHINE_H
 #define RUSTCOMPILER_STATEMACHINE_H
 
-#include "State.h"
+#include "States/State.h"
 #include "Transition.h"
 #include "../Exceptions/LexError.h"
 #include <string>

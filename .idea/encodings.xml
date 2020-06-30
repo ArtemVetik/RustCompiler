@@ -10,14 +10,20 @@
     <file url="file://$PROJECT_DIR$/Exceptions/ParserError.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Exceptions/SemanticError.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Exceptions/TokenLinePosition.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/IDState.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/IgnoreState.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Lexer/Lexer.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/NumState.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/SeparatorState.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/State.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Lexer/StateMachine.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Lexer/StringState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/IDState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/IDState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/IgnoreState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/IgnoreState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/NumState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/NumState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/SeparatorState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/SeparatorState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/State.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/State.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/StringState.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Lexer/States/StringState.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Lexer/Token.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Lexer/Transition.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Parser.cpp" charset="windows-1251" />

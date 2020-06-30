@@ -355,9 +355,7 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
     TokenType opType = operation->GetData()->token.GetType();
 
     if (opType != TokenType::PLUS && opType != TokenType::MULT) {
-        if (isReverce && type == MASMType::REAL8)
-            code += "\tFXCH\n";
-        else if (!isReverce && type == MASMType::REAL8 && opType == TokenType::MOD)
+        if ((isReverce && type == MASMType::REAL8 && opType != TokenType::MOD) || (!isReverce && type == MASMType::REAL8 && opType == TokenType::MOD))
             code += "\tFXCH\n";
         else if (isReverce && type == MASMType::DWORD)
             popTemplate += "\txchg eax, ebx\n";
@@ -385,14 +383,14 @@ std::string CodeGenerator::BinaryOperation(Node *const &operation, const MASMTyp
             break;
         case TokenType::DIV:
             if (type == MASMType::DWORD)
-                code += popTemplate + "\txor edx, edx\n\tidiv ebx\n\tpush eax\n";
+                code += popTemplate + "\txor edx, edx\n\tcdq\n\tidiv ebx\n\tpush eax\n";
             else if (type == MASMType::REAL8) {
                 code += "\tFDIV\n";
             }
             break;
         case TokenType::MOD:
             if (type == MASMType::DWORD)
-                code += popTemplate + "\txor edx, edx\n\tidiv ebx\n\tpush edx\n";
+                code += popTemplate + "\txor edx, edx\n\tcdq\n\tidiv ebx\n\tpush edx\n";
             else if (type == MASMType::REAL8) {
                 code += "\tFPREM\n\tFSTP st(1)\n";
             }
@@ -474,7 +472,7 @@ std::string CodeGenerator::CalculateMemberExpression(Node *const &node, const MA
         int ind = static_cast<int>(Optimized(node->GetChild(1)->GetChild(0)));
         code += "\tmov ebx, " + std::to_string(ind) + "\n";
     }
-    catch (std::exception &err) {
+    catch (const std::exception&err) {
         code += CalculateExpression(node->GetChild(1)->GetChild(0), MASMType::DWORD);
         code += "\tpop ebx\n";
     }
@@ -766,7 +764,7 @@ std::string CodeGenerator::IDAssignment(const std::string &id, Node *const &expr
             idData.isInitialize = true;
             code += AssignmentByValue(idData.id + idData.uid, type.first, value);
         }
-        catch (std::exception &err) {
+        catch (const std::exception&err) {
             if (_rulesCount[RulesForLabels::While] != 0 || _rulesCount[RulesForLabels::Loop] != 0)
                 GetID(id).isInitialize = false;
             code += CalculateExpression(expression, type.first);
@@ -838,7 +836,7 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
             arrData.values[ind] = value;
             code += esiMember + AssignmentByValue(idMasm, type.first, value);
         }
-        catch (std::exception &err) {
+        catch (const std::exception&err) {
             if (_rulesCount[RulesForLabels::While] != 0 || _rulesCount[RulesForLabels::Loop] != 0)
                 GetArr(id).isInitialize = false;
             code += CalculateExpression(expression, type.first);
@@ -858,7 +856,7 @@ std::string CodeGenerator::MemberArrayAssignment(const std::string &id, Node *co
             ind = static_cast<unsigned int>(Optimized(indNode));
             code += MemberArrayAssignment(id, expression, ind);
         }
-        catch (std::exception &err) {
+        catch (const std::exception&err) {
             MasmArray_Data &arrData = GetArr(id);
             if (_rulesCount[RulesForLabels::While] != 0 || _rulesCount[RulesForLabels::Loop] != 0)
                 arrData.isInitialize = false;
@@ -994,7 +992,7 @@ std::string CodeGenerator::FunctionInvoke(Node *const &node) {
                 parameters.push(real8Number.first);
             }
         }
-        catch (std::exception &err) {
+        catch (const std::exception&err) {
             if (param->GetData()->ruleType == RuleType::ArrayArg || HasArrInUpper(param->GetData()->token.GetValue())) {
                 MasmArray_Data arrayData;
                 if (param->GetData()->ruleType == RuleType::ArrayArg)
@@ -1091,9 +1089,11 @@ std::string CodeGenerator::TryOptimizedWithPush(Node* const &node, const MASMTyp
         float value = Optimized(node);
         if (type == MASMType::DWORD)
             code += "\tpush " + std::to_string(static_cast<int>(value)) + "\n";
-        else code += "\tFLD FP8(" + std::to_string(value) + ")\n";
+        else {
+            code += "\tFLD FP8(" + std::to_string(value) + ")\n";
+        }
     }
-    catch (std::exception & error) {
+    catch (const std::exception&error) {
         code += CalculateExpression(node, type);
     }
 
@@ -1230,7 +1230,7 @@ std::string CodeGenerator::Print(Node *const &node) {
                     parameters.push("");
                 }
             }
-            catch (std::exception &err) {
+            catch (const std::exception&err) {
                 if (type == MASMType::DWORD)
                     parameters.push(CalculateExpression(expr, type));
                 else if (type == MASMType::REAL8) {
@@ -1313,7 +1313,7 @@ std::string CodeGenerator::ReturnExpression(Node* const &node) {
             code += "\tFromFPUToEaxEdx\n";
         }
     }
-    catch (std::exception &err) {
+    catch (const std::exception&err) {
         code += CalculateExpression(node->GetChild(0), type);
         if (type == MASMType::DWORD)
             code += "\tpop eax\n";
@@ -1333,9 +1333,16 @@ std::pair<std::string, std::string> CodeGenerator::PushReal8(double value) {
 
     std::stringstream stream;
     stream << std::hex << DoubleToHex(value);
-    std::string hexStr = (value < 0) ? "0" : "";
-    code.first = "\tpush " + hexStr + stream.str().substr(0, 8) + "h\n";
-    code.second = "\tpush " + stream.str().substr(7, 8) + "h\n";
+    std::string firstPart = stream.str().substr(0, 8);
+    std::string secondPart = stream.str().substr(7, 8);
+
+    if (firstPart[0] < '0' || firstPart[0] > '9')
+        firstPart.insert(0, "0");
+    if (secondPart[0] < '0' || secondPart[0] > '9')
+        secondPart.insert(0, "0");
+
+    code.first = "\tpush " + firstPart + "h\n";
+    code.second = "\tpush " + secondPart + "h\n";
 
     return code;
 }

@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include <algorithm>
-#include "TokenType.h"
-#include "Token.h"
+#include "../TokenType.h"
+#include "../Token.h"
 #include <string>
 
 /// @file State.h

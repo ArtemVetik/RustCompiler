@@ -1,12 +1,12 @@
 #ifndef RUSTCOMPILER_TRANSITION_H
 #define RUSTCOMPILER_TRANSITION_H
 
-#include "State.h"
-#include "IDState.h"
-#include "NumState.h"
-#include "IgnoreState.h"
-#include "StringState.h"
-#include "SeparatorState.h"
+#include "States/State.h"
+#include "States/IDState.h"
+#include "States/NumState.h"
+#include "States/IgnoreState.h"
+#include "States/StringState.h"
+#include "States/SeparatorState.h"
 #include "../Exceptions/LexError.h"
 #include <string>
 #include <vector>

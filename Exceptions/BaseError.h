@@ -9,7 +9,7 @@
 /// @file BaseError.h
 
 /// @brief базовый класс ошибок компилятора
-class BaseError : public std::exception {
+class BaseError : public std::exception{
 protected:
     std::string _error;
     TokenLocation _location;
