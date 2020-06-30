@@ -14,7 +14,7 @@ public:
 
     explicit ParserError(const char &expectedSymbol, Token* const &token, TokenLocation lastSymbolLocation = {}) : BaseError(std::string(1, expectedSymbol), token) {
         if (token == nullptr) {
-            _error = std::string("Expected ") + expectedSymbol + ", found end of file";
+            _error = std::string("ParserError:\n\tExpected ") + expectedSymbol + ", found end of file";
             _location = lastSymbolLocation;
         }
         else
@@ -25,7 +25,7 @@ public:
 
     explicit ParserError(const std::string &expectedExpression, Token* const &token, TokenLocation lastSymbolLocation = {}) : BaseError(expectedExpression, token) {
         if (token == nullptr) {
-            _error = std::string("Expected ") + expectedExpression + ", found end of file";
+            _error = std::string("ParserError:\n\tExpected ") + expectedExpression + ", found end of file";
             _location = lastSymbolLocation;
         }
         else

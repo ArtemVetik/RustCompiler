@@ -20,17 +20,17 @@
 class CodeGenerator {
 private:
     union {
-        uint32_t uu;
-        float d;
+        uint32_t uint32;
+        float f32;
     } Converter32{};
 
     union {
-        uint64_t uu;
-        double d;
+        uint64_t uint64;
+        double f64;
     } Converter64{};
 
     enum RulesForLabels {
-        While = 0, Loop, If, Else, Block
+        While = 0, Loop, If, Else, Block,
     };
 
     enum CompareType {

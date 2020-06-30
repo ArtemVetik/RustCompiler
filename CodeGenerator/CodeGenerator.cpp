@@ -54,8 +54,7 @@ std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const
                                            return operation == compOperation.operation;
                                        });
     if (foundOperation == _compareOperations.cend())
-        throw CodeGeneratorError("Cannot get"
-                                 " compare operation");
+        throw CodeGeneratorError("Cannot get compare operation");
 
     switch (compareType) {
         case Reverse:
@@ -68,13 +67,13 @@ std::string CodeGenerator::GetCompareOperation(const TokenType &operation, const
 }
 
 uint32_t CodeGenerator::FloatToHex(float value) {
-    Converter32.d = value;
-    return Converter32.uu;
+    Converter32.f32 = value;
+    return Converter32.uint32;
 }
 
 uint64_t CodeGenerator::DoubleToHex(double value) {
-    Converter64.d = value;
-    return Converter64.uu;
+    Converter64.f64 = value;
+    return Converter64.uint64;
 }
 
 void CodeGenerator::Generate() {

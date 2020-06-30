@@ -604,20 +604,23 @@ bool Parser::ElseTail(Node *&root) {
     if (_currentToken >= _tokens.end())
         return false;
 
+    auto saveToken = _currentToken;
+
     if (TryGetToken(TokenType::ELSE)) {
         _currentToken++;
-        auto saveToken = _currentToken;
+        saveToken = _currentToken;
         if (IfExpr(root)) return true;
         _currentToken = saveToken;
         if (TryGetToken(TokenType::LFIGBR)) {
             _currentToken++;
-            if (Block(root)) {
-                if (TryGetToken(TokenType::RFIGBR)) {
-                    _currentToken++;
-                    return true;
-                }
-                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
+            saveToken = _currentToken;
+            if (!Block(root))
+                _currentToken = saveToken;
+            if (TryGetToken(TokenType::RFIGBR)) {
+                _currentToken++;
+                return true;
             }
+            else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
         else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
@@ -631,27 +634,29 @@ bool Parser::IfExpr(Node *&root) {
 
     Node *boolExprNode = nullptr, *blockNode = nullptr, *elseTailNode = nullptr;
 
+    auto saveToken = _currentToken;
+
     if (TryGetToken(TokenType::IF)) {
         root = new Node(new NodeData(**_currentToken, RuleType::IfExpr));
         _currentToken++;
         if (BoolExpr(boolExprNode)) {
             if (TryGetToken(TokenType::LFIGBR)) {
                 _currentToken++;
-                if (Block(blockNode)) {
-                    if (TryGetToken(TokenType::RFIGBR)) {
-                        _currentToken++;
-                        auto saveToken = _currentToken;
-                        if (!ElseTail(elseTailNode)) {
-                            _currentToken = saveToken;
-                        }
-                        root->AddChild(boolExprNode);
-                        root->AddChild(blockNode);
-                        root->AddChild(elseTailNode);
-                        AST_Tree::DeleteNode(boolExprNode, blockNode, elseTailNode);
-                        return true;
-                    }
-                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
+                saveToken = _currentToken;
+                if (!Block(blockNode))
+                    _currentToken = saveToken;
+                if (TryGetToken(TokenType::RFIGBR)) {
+                    _currentToken++;
+                    saveToken = _currentToken;
+                    if (!ElseTail(elseTailNode))
+                        _currentToken = saveToken;
+                    root->AddChild(boolExprNode);
+                    root->AddChild(blockNode);
+                    root->AddChild(elseTailNode);
+                    AST_Tree::DeleteNode(boolExprNode, blockNode, elseTailNode);
+                    return true;
                 }
+                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
             else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
@@ -998,16 +1003,17 @@ bool Parser::WhileExpr(Node *&root) {
         if (BoolExpr(boolExprNode)){
             if (TryGetToken(TokenType::LFIGBR)) {
                 _currentToken++;
-                if (Block(blockNode)) {
-                    if (TryGetToken(TokenType::RFIGBR)) {
-                        _currentToken++;
-                        root->AddChild(boolExprNode);
-                        root->AddChild(blockNode);
-                        AST_Tree::DeleteNode(boolExprNode, blockNode);
-                        return true;
-                    }
-                    else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
+                saveToken = _currentToken;
+                if (!Block(blockNode))
+                    _currentToken = saveToken;
+                if (TryGetToken(TokenType::RFIGBR)) {
+                    _currentToken++;
+                    root->AddChild(boolExprNode);
+                    root->AddChild(blockNode);
+                    AST_Tree::DeleteNode(boolExprNode, blockNode);
+                    return true;
                 }
+                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
             }
             else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
@@ -1031,15 +1037,16 @@ bool Parser::LoopExpr(Node *&root) {
         _currentToken++;
         if (TryGetToken(TokenType::LFIGBR)) {
             _currentToken++;
-            if (Block(blockNode)) {
-                if (TryGetToken(TokenType::RFIGBR)) {
-                    _currentToken++;
-                    root->AddChild(blockNode);
-                    AST_Tree::DeleteNode(blockNode);
-                    return true;
-                }
-                else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
+            saveToken = _currentToken;
+            if (!Block(blockNode))
+                _currentToken = saveToken;
+            if (TryGetToken(TokenType::RFIGBR)) {
+                _currentToken++;
+                root->AddChild(blockNode);
+                AST_Tree::DeleteNode(blockNode);
+                return true;
             }
+            else throw ParserError('}', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
         }
         else throw ParserError('{', _currentToken < _tokens.end() ? *_currentToken : nullptr, *_tokens.back()->GetLocation());
     }
