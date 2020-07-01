@@ -10,7 +10,7 @@
 
 /// @file SemanticAnalyzer.h
 
-/// @brief семантический анализатор
+/// @brief Семантический анализатор
 class SemanticAnalyzer {
 private:
     Node* _root;
@@ -68,7 +68,7 @@ public:
     explicit SemanticAnalyzer(const AST_Tree &tree);
     ~SemanticAnalyzer();
 
-    /// @brief запускает семантический анализ
+    /// @brief Запускает семантический анализ
     void Analyze();
     /// @return таблица функций, сформированная на этапе семантического анализа
     [[nodiscard]] const Table<Function_Data> &GetFunctionTable() const;

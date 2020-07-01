@@ -5,7 +5,7 @@
 
 /// @file SemanticError.h
 
-/// @brief ошибка на этапе семантического анализа
+/// @brief Ошибка на этапе семантического анализа
 class SemanticError : public BaseError {
 public:
     explicit SemanticError(const std::string &error, const TokenLocation& location) : BaseError(error, location) {

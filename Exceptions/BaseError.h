@@ -8,7 +8,7 @@
 
 /// @file BaseError.h
 
-/// @brief базовый класс ошибок компилятора
+/// @brief Базовый класс ошибок компилятора
 class BaseError : public std::exception{
 protected:
     std::string _error;
@@ -28,7 +28,7 @@ public:
         _error = error;
     }
 
-    /// @brief возвращает позицию токена
+    /// @brief Возвращает позицию токена
     const TokenLocation& GetTokenLocation() const {
         return _location;
     }

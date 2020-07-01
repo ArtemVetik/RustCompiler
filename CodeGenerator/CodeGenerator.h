@@ -16,7 +16,7 @@
 
 /// @file CodeGenerator.h
 
-/// @brief класс генерации ассемблерного кода
+/// @brief Класс генерации ассемблерного кода
 class CodeGenerator {
 private:
     union {
@@ -123,10 +123,10 @@ public:
     /// @param funcTable таблица функций, полученная на этапе семантического разбора
     explicit CodeGenerator(const AST_Tree &tree, const Table<Function_Data> &funcTable);
     ~CodeGenerator();
-    /// @brief запуск генерации кода
+    /// @brief Запуск генерации кода
     void Generate();
-    /// @brief создание ассемблерного файла
-    /// @note создает файл с именем temp.asm в подкаталоге TempCompile
+    /// @brief Создание ассемблерного файла
+    /// @note Создает файл с именем temp.asm в подкаталоге TempCompile
     void CreateAsmFile();
 };
 

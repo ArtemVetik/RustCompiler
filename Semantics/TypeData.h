@@ -5,7 +5,7 @@
 
 /// @file TypeData.h
 
-/// @brief тип переменной на входном языке
+/// @brief Тип переменной на входном языке
 enum class Type {
     None, ///< неизвестный тип
 
@@ -18,7 +18,7 @@ enum class Type {
 
 };
 
-/// @brief Данный о типе
+/// @brief Данные о типе
 struct TypeData {
     bool isReference; ///< @brief является ли ссылочным типом
     bool isMutable; ///< @brief является ли mutable типом
@@ -44,7 +44,7 @@ struct TypeData {
         return !(*this == right);
     }
 
-    /// @brief перевод из TokenType в Type
+    /// @brief Перевод из TokenType в Type
     static Type ToType(const TokenType &tokenType) {
         switch (tokenType) {
             case TokenType::REAL:

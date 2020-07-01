@@ -6,9 +6,9 @@
 
 /// @file SeparatorState.h
 
-/// @brief состояние разделителей
-/// @details включает в себя комментарии
-/// @note строка разделителей: "+-*/%=><{}[];(),.:!&|"
+/// @brief Состояние разделителей
+/// @details Включает в себя комментарии
+/// @note Строка разделителей: "+-*/%=><{}[];(),.:!&|"
 class SeparatorState : public State {
 private:
     enum class CommentType {
@@ -29,7 +29,7 @@ public:
     bool Contains(char sym) override;
     bool CanTransitTo(char sym) override;
     Token* GetToken(const std::string &value) override;
-    /// @brief разделяет выражение на составные разделители
+    /// @brief Разделяет выражение на составные разделители
     /// @code fn function()->i32{ // разделит выражение ()-> на 3 токена: '(', ')', '->'
     ///     ...
     /// } @endcode

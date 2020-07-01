@@ -5,7 +5,7 @@
 
 /// @file LexError.h
 
-/// @brief ошибка на этапе лексического анализа
+/// @brief Ошибка на этапе лексического анализа
 class LexError : public BaseError {
 public:
     explicit LexError(const std::string &error, const TokenLocation &location) : BaseError(error, location) {

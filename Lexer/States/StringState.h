@@ -6,7 +6,7 @@
 
 /// @file StringState.h
 
-/// @brief состояние строки
+/// @brief Состояние строки
 class StringState : public State {
 private:
     bool _isActive;

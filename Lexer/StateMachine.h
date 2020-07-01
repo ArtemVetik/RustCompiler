@@ -24,10 +24,10 @@ private:
 public:
     StateMachine();
     ~StateMachine();
-    /// @brief получение символа
-    /// @details определяет по входящему символу состояние и в случае необходимости производит смену состояний
+    /// @brief Получение символа
+    /// @details Определяет по входящему символу состояние и в случае необходимости производит смену состояний
     void TakeSymbol(char symbol);
-    /// @brief формирует токен по буфферу
+    /// @brief Формирует токен по буфферу
     void GenerateToken();
     void PrintTokens() const;
 

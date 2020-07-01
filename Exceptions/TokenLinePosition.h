@@ -3,7 +3,7 @@
 
 /// @file TokenLinePosition.h
 
-/// @brief позиция символа в файле
+/// @brief Позиция символа в файле
 struct TokenLinePosition {
     unsigned int line; ///< @brief строка
     unsigned int column; ///< @brief столбец
@@ -13,7 +13,7 @@ struct TokenLinePosition {
     TokenLinePosition(const unsigned int &line, const unsigned int &column, const unsigned int &linearPosition)
         : line(line), column(column), linearPosition(linearPosition) { }
 
-    /// @brief меняет позицию строки и столбца по входящему символу
+    /// @brief Меняет позицию строки и столбца по входящему символу
     void AddSymbol(const char &symbol) {
         linearPosition++;
         if (symbol == '\n') {
@@ -36,7 +36,7 @@ struct TokenLinePosition {
     }
 };
 
-/// @brief позиция токена
+/// @brief Позиция токена
 struct TokenLocation {
     TokenLinePosition start; ///< @brief позиция первого символа
     TokenLinePosition end; ///< @brief позиция последнего символа

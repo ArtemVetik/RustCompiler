@@ -9,7 +9,7 @@
 
 /// @file Token.h
 
-/// @brief класс, описывабщий токен
+/// @brief Класс, описывабщий токен
 class Token {
 private:
     TokenLocation* _location;
@@ -21,7 +21,7 @@ public:
     explicit Token(const std::string &value = "");
     Token(const TokenType &type, std::string value, int id);
     ~Token();
-    /// @brief задает позицию токена в тексте программы
+    /// @brief Задает позицию токена в тексте программы
     /// @param location позиция токена
     void SetLocation(const TokenLocation &location);
     /// @return возвращает позицию токена

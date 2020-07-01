@@ -6,8 +6,8 @@
 
 /// @file IgnoreState.h
 
-/// @brief состояние игнорируемых символов
-/// @details содержит символы \\n \\t \\r space
+/// @brief Состояние игнорируемых символов
+/// @details Содержит символы \\n \\t \\r space
 class IgnoreState : public State {
 private:
     std::string _ignoreSymbols = " \n\r\t";

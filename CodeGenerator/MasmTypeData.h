@@ -6,7 +6,7 @@
 
 /// @file MasmTypeData.h
 
-/// @brief тип в макро ассемблере
+/// @brief Тип в макро ассемблере
 enum class MASMType {
     DWORD, ///< целочисленный тип
     REAL8, ///< вещественный тип

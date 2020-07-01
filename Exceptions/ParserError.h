@@ -5,7 +5,7 @@
 
 /// @file ParserError.h
 
-/// @brief ошибка на этапе синтаксического анализа
+/// @brief Ошибка на этапе синтаксического анализа
 class ParserError : public BaseError {
 public:
     ParserError() : BaseError("", TokenLocation()) {

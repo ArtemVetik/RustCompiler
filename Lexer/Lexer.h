@@ -8,7 +8,7 @@
 
 /// @file Lexer.h
 
-/// @brief основной класс лексического анализатора
+/// @brief Основной класс лексического анализатора
 class Lexer {
 private:
      StateMachine _stateMachine;
@@ -16,7 +16,7 @@ private:
 
 public:
     explicit Lexer(std::string fileName);
-    /// @brief запускает лексический анализ
+    /// @brief Запускает лексический анализ
     void Analyze();
     /// @return список всех лексем
     [[nodiscard]] const std::vector<Token*>& GetTokens() const;

@@ -10,7 +10,7 @@
 
 /// @file TableData.h
 
-/// @brief базовая структура для данных
+/// @brief Базовая структура для данных семантического анализатора
 struct Data {
     TokenLocation location;
     std::string id;
@@ -29,7 +29,7 @@ struct Data {
     virtual ~Data() = default;
 };
 
-/// @brief данные переменной
+/// @brief Данные переменной
 struct ID_Data : public Data {
     bool isInitialized;
     bool isMutable;
@@ -44,7 +44,7 @@ struct ID_Data : public Data {
     }
 };
 
-/// @brief данные массива
+/// @brief Данные массива
 struct Array_Data : public Data {
     bool isMutable;
     bool isInitialized;

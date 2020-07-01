@@ -7,7 +7,7 @@
 
 /// @file AST_Tree.h
 
-/// @brief абстрактное синтаксическое дерево
+/// @brief Абстрактное синтаксическое дерево
 class AST_Tree {
 private:
     Node* _root;
@@ -17,11 +17,11 @@ public:
     ~AST_Tree() = default;
     /// @return корень дерева
     [[nodiscard]] Node* const& GetRoot() const;
-    /// @brief вывод дерева
-    /// @note осуществляет симметричный обход дерева и вывод данных в узлах
+    /// @brief Вывод дерева
+    /// @note Осуществляет симметричный обход дерева и вывод данных в узлах
     void Print() const;
 
-    /// @brief удаление вершин
+    /// @brief Удаление вершин
     template<typename... T>
     static void DeleteNode(T& ... nodes) {
         for (auto &node : std::forward_list<std::reference_wrapper<Node*>>{nodes...}) {

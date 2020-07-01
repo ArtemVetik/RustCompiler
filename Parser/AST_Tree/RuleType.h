@@ -3,7 +3,7 @@
 
 /// @file RuleType.h
 
-/// @brief тип правил для вершин AST дерева
+/// @brief Тип правил для вершин AST дерева
 enum RuleType {
     AssignmentExpression,
     BinaryExpression,

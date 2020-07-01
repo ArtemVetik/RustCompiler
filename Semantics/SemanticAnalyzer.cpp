@@ -87,6 +87,8 @@ void SemanticAnalyzer::CheckRule(Node* const &node) {
             _currentBlock = _currentBlock->upperBlock;
             break;
         default:
+            if (node->GetData()->ruleType == RuleType::Break)
+                break;
             BoolExpr(node);
     }
 }

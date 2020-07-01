@@ -5,7 +5,7 @@
 
 /// @file CodeGeneratorError.h
 
-/// @brief ошибка на этапе генерации кода
+/// @brief Ошибка на этапе генерации кода
 class CodeGeneratorError : public BaseError {
 public:
     explicit CodeGeneratorError(const std::string &error) : BaseError(error, nullptr) {

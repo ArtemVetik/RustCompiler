@@ -13,7 +13,7 @@
 
 /// @file Transition.h
 
-/// @brief класс, осузествляющий переходы между состояниями
+/// @brief Класс, осузествляющий переходы между состояниями
 class Transition {
 private:
     std::vector<State*> _states;

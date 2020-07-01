@@ -8,8 +8,8 @@
 
 /// @file Table.h
 
-/// @brief таблица данных
-/// @note основана на списке
+/// @brief Таблица данных
+/// @note Основана на списке
 template <typename T>
 class Table {
 private:

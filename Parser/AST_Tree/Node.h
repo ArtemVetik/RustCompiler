@@ -9,7 +9,7 @@
 
 /// @file Node.h
 
-/// @brief данный в вершине
+/// @brief Данные в вершине
 struct NodeData {
     Token token;
     RuleType ruleType;
@@ -27,7 +27,7 @@ struct NodeData {
     }
 };
 
-/// @brief вершина дерева
+/// @brief Вершина дерева
 class Node {
 private:
     NodeData* _data;
@@ -43,7 +43,7 @@ public:
     [[nodiscard]] const std::vector<Node*> &GetChilds() const;
     [[nodiscard]] Node* const &GetChild(const unsigned int &ind) const;
     [[nodiscard]] NodeData* GetData() const;
-    /// @brief симметричный обход дерева
+    /// @brief Симметричный обход дерева
     void Traversal();
 };
 
